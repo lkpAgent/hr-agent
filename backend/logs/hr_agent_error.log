@@ -1,0 +1,18 @@
+2025-10-02 11:07:32 - app.core.database - ERROR - database - init_db - Error initializing database: [WinError 1225] 远程计算机拒绝网络连接。
+2025-10-02 11:07:32 - main - ERROR - main - lifespan - Failed to initialize database: [WinError 1225] 远程计算机拒绝网络连接。
+2025-10-02 11:12:15 - app.core.exception_handlers - ERROR - exception_handlers - starlette_http_exception_handler - Starlette HTTP Exception: Not Found
+2025-10-02 11:12:15 - app.core.exception_handlers - ERROR - exception_handlers - starlette_http_exception_handler - Starlette HTTP Exception: Not Found
+2025-10-02 11:13:02 - app.core.exception_handlers - ERROR - exception_handlers - starlette_http_exception_handler - Starlette HTTP Exception: Not Found
+2025-10-02 11:13:02 - app.core.exception_handlers - ERROR - exception_handlers - starlette_http_exception_handler - Starlette HTTP Exception: Not Found
+2025-10-02 11:13:06 - app.core.exception_handlers - ERROR - exception_handlers - starlette_http_exception_handler - Starlette HTTP Exception: Not Found
+2025-10-02 11:13:24 - app.core.exception_handlers - ERROR - exception_handlers - starlette_http_exception_handler - Starlette HTTP Exception: Not Found
+2025-10-02 11:13:30 - app.core.exception_handlers - ERROR - exception_handlers - starlette_http_exception_handler - Starlette HTTP Exception: Not Found
+2025-10-02 11:13:30 - app.core.exception_handlers - ERROR - exception_handlers - starlette_http_exception_handler - Starlette HTTP Exception: Not Found
+2025-10-02 11:13:38 - app.core.exception_handlers - ERROR - exception_handlers - starlette_http_exception_handler - Starlette HTTP Exception: Not Found
+2025-10-02 11:14:26 - app.core.exception_handlers - ERROR - exception_handlers - starlette_http_exception_handler - Starlette HTTP Exception: Not Found
+2025-10-02 11:14:45 - app.core.exception_handlers - ERROR - exception_handlers - starlette_http_exception_handler - Starlette HTTP Exception: Not Found
+2025-10-02 11:14:45 - app.core.exception_handlers - ERROR - exception_handlers - starlette_http_exception_handler - Starlette HTTP Exception: Not Found
+2025-10-02 11:15:06 - app.core.exception_handlers - ERROR - exception_handlers - starlette_http_exception_handler - Starlette HTTP Exception: Not Found
+2025-10-02 11:15:19 - app.core.exception_handlers - ERROR - exception_handlers - starlette_http_exception_handler - Starlette HTTP Exception: Not Found
+2025-10-02 11:16:58 - app.core.exception_handlers - ERROR - exception_handlers - starlette_http_exception_handler - Starlette HTTP Exception: Method Not Allowed
+2025-10-02 11:17:10 - app.core.exception_handlers - ERROR - exception_handlers - starlette_http_exception_handler - Starlette HTTP Exception: Not Found

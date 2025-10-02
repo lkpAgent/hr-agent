@@ -1,0 +1,501 @@
+2025-10-02 11:21:23 - app.core.database - ERROR - database - init_db - Error initializing database: [WinError 1225] 远程计算机拒绝网络连接。
+2025-10-02 11:21:23 - main - ERROR - main - lifespan - Failed to initialize database: [WinError 1225] 远程计算机拒绝网络连接。
+2025-10-02 11:21:56 - app.core.database - ERROR - database - init_db - Error initializing database: [WinError 1225] 远程计算机拒绝网络连接。
+2025-10-02 11:21:56 - main - ERROR - main - lifespan - Failed to initialize database: [WinError 1225] 远程计算机拒绝网络连接。
+2025-10-02 11:22:31 - app.core.database - ERROR - database - init_db - Error initializing database: [WinError 1225] 远程计算机拒绝网络连接。
+2025-10-02 11:22:31 - main - ERROR - main - lifespan - Failed to initialize database: [WinError 1225] 远程计算机拒绝网络连接。
+2025-10-02 11:28:01 - app.core.database - ERROR - database - init_db - Error initializing database: [WinError 1225] 远程计算机拒绝网络连接。
+2025-10-02 11:28:01 - main - ERROR - main - lifespan - Failed to initialize database: [WinError 1225] 远程计算机拒绝网络连接。
+2025-10-02 12:00:36 - app.core.exception_handlers - ERROR - exception_handlers - starlette_http_exception_handler - Starlette HTTP Exception: Not Found
+2025-10-02 12:02:35 - app.core.exception_handlers - ERROR - exception_handlers - starlette_http_exception_handler - Starlette HTTP Exception: Not Found
+2025-10-02 12:03:05 - app.core.exception_handlers - ERROR - exception_handlers - generic_exception_handler - Unhandled Exception: 'UserService' object has no attribute 'authenticate'
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 98, in receive
+    return self.receive_nowait()
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 93, in receive_nowait
+    raise WouldBlock
+anyio.WouldBlock
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 78, in call_next
+    message = await recv_stream.receive()
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 118, in receive
+    raise EndOfStream
+anyio.EndOfStream
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\errors.py", line 162, in __call__
+    await self.app(scope, receive, _send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 108, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "E:\workspace-py\hr-agent\backend\app\core\middleware.py", line 48, in dispatch
+    response = await call_next(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 84, in call_next
+    raise app_exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 70, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 108, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "E:\workspace-py\hr-agent\backend\app\core\middleware.py", line 25, in dispatch
+    response = await call_next(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 84, in call_next
+    raise app_exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 70, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\cors.py", line 91, in __call__
+    await self.simple_response(scope, receive, send, request_headers=headers)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\cors.py", line 146, in simple_response
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\exceptions.py", line 79, in __call__
+    raise exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\exceptions.py", line 68, in __call__
+    await self.app(scope, receive, sender)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\middleware\asyncexitstack.py", line 20, in __call__
+    raise e
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\middleware\asyncexitstack.py", line 17, in __call__
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 718, in __call__
+    await route.handle(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 276, in handle
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 66, in app
+    response = await func(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\routing.py", line 274, in app
+    raw_response = await run_endpoint_function(
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\routing.py", line 191, in run_endpoint_function
+    return await dependant.call(**values)
+  File "E:\workspace-py\hr-agent\backend\app\api\v1\endpoints\auth.py", line 60, in login
+    user = await user_service.authenticate(form_data.username, form_data.password)
+AttributeError: 'UserService' object has no attribute 'authenticate'
+2025-10-02 12:04:28 - app.core.exception_handlers - ERROR - exception_handlers - generic_exception_handler - Unhandled Exception: 'UserService' object has no attribute 'authenticate'
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 98, in receive
+    return self.receive_nowait()
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 93, in receive_nowait
+    raise WouldBlock
+anyio.WouldBlock
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 78, in call_next
+    message = await recv_stream.receive()
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 118, in receive
+    raise EndOfStream
+anyio.EndOfStream
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\errors.py", line 162, in __call__
+    await self.app(scope, receive, _send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 108, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "E:\workspace-py\hr-agent\backend\app\core\middleware.py", line 48, in dispatch
+    response = await call_next(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 84, in call_next
+    raise app_exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 70, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 108, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "E:\workspace-py\hr-agent\backend\app\core\middleware.py", line 25, in dispatch
+    response = await call_next(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 84, in call_next
+    raise app_exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 70, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\cors.py", line 91, in __call__
+    await self.simple_response(scope, receive, send, request_headers=headers)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\cors.py", line 146, in simple_response
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\exceptions.py", line 79, in __call__
+    raise exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\exceptions.py", line 68, in __call__
+    await self.app(scope, receive, sender)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\middleware\asyncexitstack.py", line 20, in __call__
+    raise e
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\middleware\asyncexitstack.py", line 17, in __call__
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 718, in __call__
+    await route.handle(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 276, in handle
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 66, in app
+    response = await func(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\routing.py", line 274, in app
+    raw_response = await run_endpoint_function(
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\routing.py", line 191, in run_endpoint_function
+    return await dependant.call(**values)
+  File "E:\workspace-py\hr-agent\backend\app\api\v1\endpoints\auth.py", line 60, in login
+    user = await user_service.authenticate(form_data.username, form_data.password)
+AttributeError: 'UserService' object has no attribute 'authenticate'
+2025-10-02 12:05:33 - app.core.exception_handlers - ERROR - exception_handlers - generic_exception_handler - Unhandled Exception: 'UserService' object has no attribute 'authenticate'
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 98, in receive
+    return self.receive_nowait()
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 93, in receive_nowait
+    raise WouldBlock
+anyio.WouldBlock
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 78, in call_next
+    message = await recv_stream.receive()
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 118, in receive
+    raise EndOfStream
+anyio.EndOfStream
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\errors.py", line 162, in __call__
+    await self.app(scope, receive, _send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 108, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "E:\workspace-py\hr-agent\backend\app\core\middleware.py", line 48, in dispatch
+    response = await call_next(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 84, in call_next
+    raise app_exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 70, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 108, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "E:\workspace-py\hr-agent\backend\app\core\middleware.py", line 25, in dispatch
+    response = await call_next(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 84, in call_next
+    raise app_exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 70, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\cors.py", line 91, in __call__
+    await self.simple_response(scope, receive, send, request_headers=headers)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\cors.py", line 146, in simple_response
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\exceptions.py", line 79, in __call__
+    raise exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\exceptions.py", line 68, in __call__
+    await self.app(scope, receive, sender)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\middleware\asyncexitstack.py", line 20, in __call__
+    raise e
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\middleware\asyncexitstack.py", line 17, in __call__
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 718, in __call__
+    await route.handle(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 276, in handle
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 66, in app
+    response = await func(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\routing.py", line 274, in app
+    raw_response = await run_endpoint_function(
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\routing.py", line 191, in run_endpoint_function
+    return await dependant.call(**values)
+  File "E:\workspace-py\hr-agent\backend\app\api\v1\endpoints\auth.py", line 60, in login
+    user = await user_service.authenticate(form_data.username, form_data.password)
+AttributeError: 'UserService' object has no attribute 'authenticate'
+2025-10-02 12:06:44 - app.core.exception_handlers - ERROR - exception_handlers - generic_exception_handler - Unhandled Exception: 'UserService' object has no attribute 'authenticate'
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 98, in receive
+    return self.receive_nowait()
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 93, in receive_nowait
+    raise WouldBlock
+anyio.WouldBlock
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 78, in call_next
+    message = await recv_stream.receive()
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 118, in receive
+    raise EndOfStream
+anyio.EndOfStream
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\errors.py", line 162, in __call__
+    await self.app(scope, receive, _send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 108, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "E:\workspace-py\hr-agent\backend\app\core\middleware.py", line 48, in dispatch
+    response = await call_next(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 84, in call_next
+    raise app_exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 70, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 108, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "E:\workspace-py\hr-agent\backend\app\core\middleware.py", line 25, in dispatch
+    response = await call_next(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 84, in call_next
+    raise app_exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 70, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\cors.py", line 83, in __call__
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\exceptions.py", line 79, in __call__
+    raise exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\exceptions.py", line 68, in __call__
+    await self.app(scope, receive, sender)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\middleware\asyncexitstack.py", line 20, in __call__
+    raise e
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\middleware\asyncexitstack.py", line 17, in __call__
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 718, in __call__
+    await route.handle(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 276, in handle
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 66, in app
+    response = await func(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\routing.py", line 274, in app
+    raw_response = await run_endpoint_function(
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\routing.py", line 191, in run_endpoint_function
+    return await dependant.call(**values)
+  File "E:\workspace-py\hr-agent\backend\app\api\v1\endpoints\auth.py", line 60, in login
+    user = await user_service.authenticate(form_data.username, form_data.password)
+AttributeError: 'UserService' object has no attribute 'authenticate'
+2025-10-02 12:08:04 - app.core.exception_handlers - ERROR - exception_handlers - generic_exception_handler - Unhandled Exception: 'UserService' object has no attribute 'authenticate'
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 98, in receive
+    return self.receive_nowait()
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 93, in receive_nowait
+    raise WouldBlock
+anyio.WouldBlock
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 78, in call_next
+    message = await recv_stream.receive()
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 118, in receive
+    raise EndOfStream
+anyio.EndOfStream
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\errors.py", line 162, in __call__
+    await self.app(scope, receive, _send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 108, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "E:\workspace-py\hr-agent\backend\app\core\middleware.py", line 48, in dispatch
+    response = await call_next(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 84, in call_next
+    raise app_exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 70, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 108, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "E:\workspace-py\hr-agent\backend\app\core\middleware.py", line 25, in dispatch
+    response = await call_next(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 84, in call_next
+    raise app_exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 70, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\cors.py", line 83, in __call__
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\exceptions.py", line 79, in __call__
+    raise exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\exceptions.py", line 68, in __call__
+    await self.app(scope, receive, sender)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\middleware\asyncexitstack.py", line 20, in __call__
+    raise e
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\middleware\asyncexitstack.py", line 17, in __call__
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 718, in __call__
+    await route.handle(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 276, in handle
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 66, in app
+    response = await func(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\routing.py", line 274, in app
+    raw_response = await run_endpoint_function(
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\routing.py", line 191, in run_endpoint_function
+    return await dependant.call(**values)
+  File "E:\workspace-py\hr-agent\backend\app\api\v1\endpoints\auth.py", line 60, in login
+    user = await user_service.authenticate(form_data.username, form_data.password)
+AttributeError: 'UserService' object has no attribute 'authenticate'
+2025-10-02 12:08:38 - app.core.exception_handlers - ERROR - exception_handlers - generic_exception_handler - Unhandled Exception: 'UserService' object has no attribute 'authenticate'
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 98, in receive
+    return self.receive_nowait()
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 93, in receive_nowait
+    raise WouldBlock
+anyio.WouldBlock
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 78, in call_next
+    message = await recv_stream.receive()
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 118, in receive
+    raise EndOfStream
+anyio.EndOfStream
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\errors.py", line 162, in __call__
+    await self.app(scope, receive, _send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 108, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "E:\workspace-py\hr-agent\backend\app\core\middleware.py", line 48, in dispatch
+    response = await call_next(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 84, in call_next
+    raise app_exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 70, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 108, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "E:\workspace-py\hr-agent\backend\app\core\middleware.py", line 25, in dispatch
+    response = await call_next(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 84, in call_next
+    raise app_exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 70, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\cors.py", line 83, in __call__
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\exceptions.py", line 79, in __call__
+    raise exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\exceptions.py", line 68, in __call__
+    await self.app(scope, receive, sender)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\middleware\asyncexitstack.py", line 20, in __call__
+    raise e
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\middleware\asyncexitstack.py", line 17, in __call__
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 718, in __call__
+    await route.handle(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 276, in handle
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 66, in app
+    response = await func(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\routing.py", line 274, in app
+    raw_response = await run_endpoint_function(
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\routing.py", line 191, in run_endpoint_function
+    return await dependant.call(**values)
+  File "E:\workspace-py\hr-agent\backend\app\api\v1\endpoints\auth.py", line 60, in login
+    user = await user_service.authenticate(form_data.username, form_data.password)
+AttributeError: 'UserService' object has no attribute 'authenticate'
+2025-10-02 12:10:17 - app.api.v1.endpoints.auth - ERROR - auth - login - Login error: 
+Traceback (most recent call last):
+  File "E:\workspace-py\hr-agent\backend\app\api\v1\endpoints\auth.py", line 73, in login
+    raise HTTPException(
+fastapi.exceptions.HTTPException
+2025-10-02 12:10:17 - app.core.exception_handlers - ERROR - exception_handlers - http_exception_handler - HTTP Exception: Incorrect username or password
+2025-10-02 12:10:19 - app.api.v1.endpoints.auth - ERROR - auth - login - Login error: 
+Traceback (most recent call last):
+  File "E:\workspace-py\hr-agent\backend\app\api\v1\endpoints\auth.py", line 73, in login
+    raise HTTPException(
+fastapi.exceptions.HTTPException
+2025-10-02 12:10:19 - app.core.exception_handlers - ERROR - exception_handlers - http_exception_handler - HTTP Exception: Incorrect username or password
+2025-10-02 15:22:55 - app.services.user_service - ERROR - user_service - get_user_by_username - Error getting user by username admin: (sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.ConnectionDoesNotExistError'>: connection was closed in the middle of operation
+[SQL: SELECT users.username, users.email, users.full_name, users.hashed_password, users.phone, users.department, users.position, users.employee_id, users.role, users.is_superuser, users.is_verified, users.bio, users.avatar_url, users.last_login, users.id, users.created_at, users.updated_at, users.is_active, users.created_by, users.updated_by 
+FROM users 
+WHERE users.username = $1::VARCHAR AND users.is_active = true]
+[parameters: ('admin',)]
+(Background on this error at: https://sqlalche.me/e/20/dbapi)
+2025-10-02 15:22:55 - app.services.user_service - ERROR - user_service - authenticate - Error authenticating user: (sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.ConnectionDoesNotExistError'>: connection was closed in the middle of operation
+[SQL: SELECT users.username, users.email, users.full_name, users.hashed_password, users.phone, users.department, users.position, users.employee_id, users.role, users.is_superuser, users.is_verified, users.bio, users.avatar_url, users.last_login, users.id, users.created_at, users.updated_at, users.is_active, users.created_by, users.updated_by 
+FROM users 
+WHERE users.username = $1::VARCHAR AND users.is_active = true]
+[parameters: ('admin',)]
+(Background on this error at: https://sqlalche.me/e/20/dbapi)
+2025-10-02 15:22:55 - app.api.v1.endpoints.auth - ERROR - auth - login - Login error: 
+Traceback (most recent call last):
+  File "E:\workspace-py\hr-agent\backend\app\api\v1\endpoints\auth.py", line 73, in login
+    raise HTTPException(
+fastapi.exceptions.HTTPException
+2025-10-02 15:22:55 - app.core.exception_handlers - ERROR - exception_handlers - http_exception_handler - HTTP Exception: Incorrect username or password
+2025-10-02 15:22:57 - app.core.exception_handlers - ERROR - exception_handlers - http_exception_handler - HTTP Exception: Not authenticated
+2025-10-02 15:22:59 - app.core.exception_handlers - ERROR - exception_handlers - http_exception_handler - HTTP Exception: Could not validate credentials
+2025-10-02 15:23:41 - app.core.exception_handlers - ERROR - exception_handlers - generic_exception_handler - Unhandled Exception: 'UserService' object has no attribute 'get_by_id'
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 98, in receive
+    return self.receive_nowait()
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 93, in receive_nowait
+    raise WouldBlock
+anyio.WouldBlock
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 78, in call_next
+    message = await recv_stream.receive()
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 118, in receive
+    raise EndOfStream
+anyio.EndOfStream
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\errors.py", line 162, in __call__
+    await self.app(scope, receive, _send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 108, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "E:\workspace-py\hr-agent\backend\app\core\middleware.py", line 48, in dispatch
+    response = await call_next(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 84, in call_next
+    raise app_exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 70, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 108, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "E:\workspace-py\hr-agent\backend\app\core\middleware.py", line 25, in dispatch
+    response = await call_next(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 84, in call_next
+    raise app_exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 70, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\cors.py", line 83, in __call__
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\exceptions.py", line 79, in __call__
+    raise exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\exceptions.py", line 68, in __call__
+    await self.app(scope, receive, sender)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\middleware\asyncexitstack.py", line 20, in __call__
+    raise e
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\middleware\asyncexitstack.py", line 17, in __call__
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 718, in __call__
+    await route.handle(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 276, in handle
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 66, in app
+    response = await func(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\routing.py", line 264, in app
+    solved_result = await solve_dependencies(
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\dependencies\utils.py", line 592, in solve_dependencies
+    solved = await call(**sub_values)
+  File "E:\workspace-py\hr-agent\backend\app\api\deps.py", line 43, in get_current_user
+    user = await user_service.get_by_id(user_id)
+AttributeError: 'UserService' object has no attribute 'get_by_id'
+2025-10-02 15:23:43 - app.core.exception_handlers - ERROR - exception_handlers - http_exception_handler - HTTP Exception: Not authenticated
+2025-10-02 15:23:45 - app.core.exception_handlers - ERROR - exception_handlers - http_exception_handler - HTTP Exception: Could not validate credentials
+2025-10-02 15:25:13 - app.core.exception_handlers - ERROR - exception_handlers - http_exception_handler - HTTP Exception: Not authenticated
+2025-10-02 15:25:15 - app.core.exception_handlers - ERROR - exception_handlers - http_exception_handler - HTTP Exception: Could not validate credentials
+2025-10-02 15:26:27 - app.core.exception_handlers - ERROR - exception_handlers - http_exception_handler - HTTP Exception: Not authenticated
+2025-10-02 15:26:29 - app.core.exception_handlers - ERROR - exception_handlers - http_exception_handler - HTTP Exception: Could not validate credentials
+2025-10-02 15:35:21 - app.services.user_service - ERROR - user_service - get_user_by_username - Error getting user by username admin: (sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.ConnectionDoesNotExistError'>: connection was closed in the middle of operation
+[SQL: SELECT users.username, users.email, users.full_name, users.hashed_password, users.phone, users.department, users.position, users.employee_id, users.role, users.is_superuser, users.is_verified, users.bio, users.avatar_url, users.last_login, users.id, users.created_at, users.updated_at, users.is_active, users.created_by, users.updated_by 
+FROM users 
+WHERE users.username = $1::VARCHAR AND users.is_active = true]
+[parameters: ('admin',)]
+(Background on this error at: https://sqlalche.me/e/20/dbapi)
+2025-10-02 15:35:21 - app.services.user_service - ERROR - user_service - authenticate - Error authenticating user: (sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.ConnectionDoesNotExistError'>: connection was closed in the middle of operation
+[SQL: SELECT users.username, users.email, users.full_name, users.hashed_password, users.phone, users.department, users.position, users.employee_id, users.role, users.is_superuser, users.is_verified, users.bio, users.avatar_url, users.last_login, users.id, users.created_at, users.updated_at, users.is_active, users.created_by, users.updated_by 
+FROM users 
+WHERE users.username = $1::VARCHAR AND users.is_active = true]
+[parameters: ('admin',)]
+(Background on this error at: https://sqlalche.me/e/20/dbapi)
+2025-10-02 15:35:21 - app.api.v1.endpoints.auth - ERROR - auth - login - Login error: 
+Traceback (most recent call last):
+  File "E:\workspace-py\hr-agent\backend\app\api\v1\endpoints\auth.py", line 73, in login
+    raise HTTPException(
+fastapi.exceptions.HTTPException
+2025-10-02 15:35:21 - app.core.exception_handlers - ERROR - exception_handlers - http_exception_handler - HTTP Exception: Incorrect username or password
+2025-10-02 15:35:23 - app.core.exception_handlers - ERROR - exception_handlers - http_exception_handler - HTTP Exception: Not authenticated
+2025-10-02 15:35:25 - app.core.exception_handlers - ERROR - exception_handlers - http_exception_handler - HTTP Exception: Could not validate credentials

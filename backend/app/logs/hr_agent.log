@@ -1,0 +1,1192 @@
+2025-10-02 11:21:19 - app.core.logging - INFO - logging - setup_logging - Logging configuration setup complete
+2025-10-02 11:21:19 - main - INFO - main - lifespan - Logging configured
+2025-10-02 11:21:23 - app.core.database - ERROR - database - init_db - Error initializing database: [WinError 1225] 远程计算机拒绝网络连接。
+2025-10-02 11:21:23 - main - ERROR - main - lifespan - Failed to initialize database: [WinError 1225] 远程计算机拒绝网络连接。
+2025-10-02 11:21:52 - app.core.logging - INFO - logging - setup_logging - Logging configuration setup complete
+2025-10-02 11:21:52 - main - INFO - main - lifespan - Logging configured
+2025-10-02 11:21:56 - app.core.database - ERROR - database - init_db - Error initializing database: [WinError 1225] 远程计算机拒绝网络连接。
+2025-10-02 11:21:56 - main - ERROR - main - lifespan - Failed to initialize database: [WinError 1225] 远程计算机拒绝网络连接。
+2025-10-02 11:22:26 - app.core.logging - INFO - logging - setup_logging - Logging configuration setup complete
+2025-10-02 11:22:26 - main - INFO - main - lifespan - Logging configured
+2025-10-02 11:22:31 - app.core.database - ERROR - database - init_db - Error initializing database: [WinError 1225] 远程计算机拒绝网络连接。
+2025-10-02 11:22:31 - main - ERROR - main - lifespan - Failed to initialize database: [WinError 1225] 远程计算机拒绝网络连接。
+2025-10-02 11:27:57 - app.core.logging - INFO - logging - setup_logging - Logging configuration setup complete
+2025-10-02 11:27:57 - main - INFO - main - lifespan - Logging configured
+2025-10-02 11:28:01 - app.core.database - ERROR - database - init_db - Error initializing database: [WinError 1225] 远程计算机拒绝网络连接。
+2025-10-02 11:28:01 - main - ERROR - main - lifespan - Failed to initialize database: [WinError 1225] 远程计算机拒绝网络连接。
+2025-10-02 11:31:47 - app.core.logging - INFO - logging - setup_logging - Logging configuration setup complete
+2025-10-02 11:31:47 - main - INFO - main - lifespan - Logging configured
+2025-10-02 11:31:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - select pg_catalog.version()
+2025-10-02 11:31:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [raw sql] ()
+2025-10-02 11:31:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - select current_schema()
+2025-10-02 11:31:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [raw sql] ()
+2025-10-02 11:31:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - show standard_conforming_strings
+2025-10-02 11:31:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [raw sql] ()
+2025-10-02 11:31:47 - sqlalchemy.engine.Engine - INFO - base - _begin_impl - BEGIN (implicit)
+2025-10-02 11:31:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - CREATE EXTENSION IF NOT EXISTS vector
+2025-10-02 11:31:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [generated in 0.00036s] ()
+2025-10-02 11:31:47 - app.core.database - INFO - database - init_db - pgvector extension enabled
+2025-10-02 11:31:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 11:31:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [generated in 0.00045s] ('users', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 11:31:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 11:31:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.03057s ago] ('conversations', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 11:31:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 11:31:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.04679s ago] ('messages', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 11:31:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 11:31:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.06165s ago] ('documents', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 11:31:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 11:31:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.07621s ago] ('document_chunks', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 11:31:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 11:31:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.09144s ago] ('knowledge_bases', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 11:31:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 11:31:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.1063s ago] ('faqs', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 11:31:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_type.typname 
+FROM pg_catalog.pg_type JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_type.typnamespace 
+WHERE pg_catalog.pg_type.typname = $1::VARCHAR AND pg_catalog.pg_type_is_visible(pg_catalog.pg_type.oid) AND pg_catalog.pg_namespace.nspname != $2::VARCHAR
+2025-10-02 11:31:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [generated in 0.00040s] ('userrole', 'pg_catalog')
+2025-10-02 11:31:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_type.typname 
+FROM pg_catalog.pg_type JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_type.typnamespace 
+WHERE pg_catalog.pg_type.typname = $1::VARCHAR AND pg_catalog.pg_type_is_visible(pg_catalog.pg_type.oid) AND pg_catalog.pg_namespace.nspname != $2::VARCHAR
+2025-10-02 11:31:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.02767s ago] ('conversationstatus', 'pg_catalog')
+2025-10-02 11:31:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_type.typname 
+FROM pg_catalog.pg_type JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_type.typnamespace 
+WHERE pg_catalog.pg_type.typname = $1::VARCHAR AND pg_catalog.pg_type_is_visible(pg_catalog.pg_type.oid) AND pg_catalog.pg_namespace.nspname != $2::VARCHAR
+2025-10-02 11:31:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.04144s ago] ('messagerole', 'pg_catalog')
+2025-10-02 11:31:47 - sqlalchemy.engine.Engine - INFO - base - _commit_impl - COMMIT
+2025-10-02 11:31:47 - app.core.database - INFO - database - init_db - Database initialized successfully
+2025-10-02 11:31:47 - main - INFO - main - lifespan - Database initialized successfully
+2025-10-02 11:31:47 - main - INFO - main - lifespan - HR Agent Backend started successfully
+2025-10-02 11:32:10 - app.core.middleware - INFO - middleware - dispatch - Request: GET http://localhost:8000/api/v1/health
+2025-10-02 11:32:10 - app.core.middleware - INFO - middleware - dispatch - Response: 200 - Processing time: 0.0010s
+2025-10-02 11:33:13 - main - INFO - main - lifespan - Shutting down HR Agent Backend...
+2025-10-02 11:33:13 - app.core.database - INFO - database - close_db - Database connections closed
+2025-10-02 11:33:13 - main - INFO - main - lifespan - Database connections closed
+2025-10-02 11:33:13 - main - INFO - main - lifespan - HR Agent Backend shutdown complete
+2025-10-02 11:33:17 - app.core.logging - INFO - logging - setup_logging - Logging configuration setup complete
+2025-10-02 11:33:17 - main - INFO - main - lifespan - Logging configured
+2025-10-02 11:33:18 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - select pg_catalog.version()
+2025-10-02 11:33:18 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [raw sql] ()
+2025-10-02 11:33:18 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - select current_schema()
+2025-10-02 11:33:18 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [raw sql] ()
+2025-10-02 11:33:18 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - show standard_conforming_strings
+2025-10-02 11:33:18 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [raw sql] ()
+2025-10-02 11:33:18 - sqlalchemy.engine.Engine - INFO - base - _begin_impl - BEGIN (implicit)
+2025-10-02 11:33:18 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - CREATE EXTENSION IF NOT EXISTS vector
+2025-10-02 11:33:18 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [generated in 0.00037s] ()
+2025-10-02 11:33:18 - app.core.database - INFO - database - init_db - pgvector extension enabled
+2025-10-02 11:33:18 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 11:33:18 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [generated in 0.00081s] ('users', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 11:33:18 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 11:33:18 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.01995s ago] ('conversations', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 11:33:18 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 11:33:18 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.02888s ago] ('messages', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 11:33:18 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 11:33:18 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.03759s ago] ('documents', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 11:33:18 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 11:33:18 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.04641s ago] ('document_chunks', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 11:33:18 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 11:33:18 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.05566s ago] ('knowledge_bases', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 11:33:18 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 11:33:18 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.06455s ago] ('faqs', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 11:33:18 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_type.typname 
+FROM pg_catalog.pg_type JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_type.typnamespace 
+WHERE pg_catalog.pg_type.typname = $1::VARCHAR AND pg_catalog.pg_type_is_visible(pg_catalog.pg_type.oid) AND pg_catalog.pg_namespace.nspname != $2::VARCHAR
+2025-10-02 11:33:18 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [generated in 0.00029s] ('userrole', 'pg_catalog')
+2025-10-02 11:33:18 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_type.typname 
+FROM pg_catalog.pg_type JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_type.typnamespace 
+WHERE pg_catalog.pg_type.typname = $1::VARCHAR AND pg_catalog.pg_type_is_visible(pg_catalog.pg_type.oid) AND pg_catalog.pg_namespace.nspname != $2::VARCHAR
+2025-10-02 11:33:18 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.01609s ago] ('conversationstatus', 'pg_catalog')
+2025-10-02 11:33:18 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_type.typname 
+FROM pg_catalog.pg_type JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_type.typnamespace 
+WHERE pg_catalog.pg_type.typname = $1::VARCHAR AND pg_catalog.pg_type_is_visible(pg_catalog.pg_type.oid) AND pg_catalog.pg_namespace.nspname != $2::VARCHAR
+2025-10-02 11:33:18 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.02385s ago] ('messagerole', 'pg_catalog')
+2025-10-02 11:33:18 - sqlalchemy.engine.Engine - INFO - base - _commit_impl - COMMIT
+2025-10-02 11:33:18 - app.core.database - INFO - database - init_db - Database initialized successfully
+2025-10-02 11:33:18 - main - INFO - main - lifespan - Database initialized successfully
+2025-10-02 11:33:18 - main - INFO - main - lifespan - HR Agent Backend started successfully
+2025-10-02 11:39:28 - app.core.logging - INFO - logging - setup_logging - Logging configuration setup complete
+2025-10-02 11:39:28 - main - INFO - main - lifespan - Logging configured
+2025-10-02 11:39:29 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - select pg_catalog.version()
+2025-10-02 11:39:29 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [raw sql] ()
+2025-10-02 11:39:29 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - select current_schema()
+2025-10-02 11:39:29 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [raw sql] ()
+2025-10-02 11:39:29 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - show standard_conforming_strings
+2025-10-02 11:39:29 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [raw sql] ()
+2025-10-02 11:39:29 - sqlalchemy.engine.Engine - INFO - base - _begin_impl - BEGIN (implicit)
+2025-10-02 11:39:29 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - CREATE EXTENSION IF NOT EXISTS vector
+2025-10-02 11:39:29 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [generated in 0.00034s] ()
+2025-10-02 11:39:29 - app.core.database - INFO - database - init_db - pgvector extension enabled
+2025-10-02 11:39:29 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 11:39:29 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [generated in 0.00035s] ('users', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 11:39:29 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 11:39:29 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.02222s ago] ('conversations', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 11:39:29 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 11:39:29 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.04964s ago] ('messages', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 11:39:29 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 11:39:29 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.06918s ago] ('documents', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 11:39:29 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 11:39:29 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.08263s ago] ('document_chunks', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 11:39:29 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 11:39:29 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.09317s ago] ('knowledge_bases', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 11:39:29 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 11:39:29 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.1036s ago] ('faqs', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 11:39:29 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_type.typname 
+FROM pg_catalog.pg_type JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_type.typnamespace 
+WHERE pg_catalog.pg_type.typname = $1::VARCHAR AND pg_catalog.pg_type_is_visible(pg_catalog.pg_type.oid) AND pg_catalog.pg_namespace.nspname != $2::VARCHAR
+2025-10-02 11:39:29 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [generated in 0.00033s] ('userrole', 'pg_catalog')
+2025-10-02 11:39:29 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_type.typname 
+FROM pg_catalog.pg_type JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_type.typnamespace 
+WHERE pg_catalog.pg_type.typname = $1::VARCHAR AND pg_catalog.pg_type_is_visible(pg_catalog.pg_type.oid) AND pg_catalog.pg_namespace.nspname != $2::VARCHAR
+2025-10-02 11:39:29 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.01993s ago] ('conversationstatus', 'pg_catalog')
+2025-10-02 11:39:29 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_type.typname 
+FROM pg_catalog.pg_type JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_type.typnamespace 
+WHERE pg_catalog.pg_type.typname = $1::VARCHAR AND pg_catalog.pg_type_is_visible(pg_catalog.pg_type.oid) AND pg_catalog.pg_namespace.nspname != $2::VARCHAR
+2025-10-02 11:39:29 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.02983s ago] ('messagerole', 'pg_catalog')
+2025-10-02 11:39:29 - sqlalchemy.engine.Engine - INFO - base - _commit_impl - COMMIT
+2025-10-02 11:39:29 - app.core.database - INFO - database - init_db - Database initialized successfully
+2025-10-02 11:39:29 - main - INFO - main - lifespan - Database initialized successfully
+2025-10-02 11:39:29 - main - INFO - main - lifespan - HR Agent Backend started successfully
+2025-10-02 12:00:36 - app.core.middleware - INFO - middleware - dispatch - Request: GET http://localhost:8000/api/v1/docs?ide_webview_request_time=1759375029046
+2025-10-02 12:00:36 - app.core.middleware - INFO - middleware - dispatch - Response: 200 - Processing time: 0.0012s
+2025-10-02 12:00:36 - app.core.middleware - INFO - middleware - dispatch - Request: GET http://localhost:8000/api/v1/openapi.json
+2025-10-02 12:00:36 - app.core.middleware - INFO - middleware - dispatch - Response: 200 - Processing time: 0.0485s
+2025-10-02 12:00:36 - app.core.middleware - INFO - middleware - dispatch - Request: GET http://localhost:8000/@vite/client
+2025-10-02 12:00:36 - app.core.exception_handlers - ERROR - exception_handlers - starlette_http_exception_handler - Starlette HTTP Exception: Not Found
+2025-10-02 12:00:36 - app.core.middleware - INFO - middleware - dispatch - Response: 404 - Processing time: 0.0041s
+2025-10-02 12:02:34 - app.core.middleware - INFO - middleware - dispatch - Request: GET http://localhost:8000/api/v1/docs?ide_webview_request_time=1759375029046
+2025-10-02 12:02:34 - app.core.middleware - INFO - middleware - dispatch - Response: 200 - Processing time: 0.0020s
+2025-10-02 12:02:34 - app.core.middleware - INFO - middleware - dispatch - Request: GET http://localhost:8000/api/v1/openapi.json
+2025-10-02 12:02:34 - app.core.middleware - INFO - middleware - dispatch - Response: 200 - Processing time: 0.0017s
+2025-10-02 12:02:35 - app.core.middleware - INFO - middleware - dispatch - Request: GET http://localhost:8000/@vite/client
+2025-10-02 12:02:35 - app.core.exception_handlers - ERROR - exception_handlers - starlette_http_exception_handler - Starlette HTTP Exception: Not Found
+2025-10-02 12:02:35 - app.core.middleware - INFO - middleware - dispatch - Response: 404 - Processing time: 0.0025s
+2025-10-02 12:02:45 - app.core.middleware - INFO - middleware - dispatch - Request: GET http://localhost:8000/api/v1/docs
+2025-10-02 12:02:45 - app.core.middleware - INFO - middleware - dispatch - Response: 200 - Processing time: 0.0000s
+2025-10-02 12:02:45 - app.core.middleware - INFO - middleware - dispatch - Request: GET http://localhost:8000/api/v1/openapi.json
+2025-10-02 12:02:45 - app.core.middleware - INFO - middleware - dispatch - Response: 200 - Processing time: 0.0023s
+2025-10-02 12:03:05 - app.core.middleware - INFO - middleware - dispatch - Request: POST http://localhost:8000/api/v1/auth/login
+2025-10-02 12:03:05 - app.core.exception_handlers - ERROR - exception_handlers - generic_exception_handler - Unhandled Exception: 'UserService' object has no attribute 'authenticate'
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 98, in receive
+    return self.receive_nowait()
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 93, in receive_nowait
+    raise WouldBlock
+anyio.WouldBlock
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 78, in call_next
+    message = await recv_stream.receive()
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 118, in receive
+    raise EndOfStream
+anyio.EndOfStream
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\errors.py", line 162, in __call__
+    await self.app(scope, receive, _send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 108, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "E:\workspace-py\hr-agent\backend\app\core\middleware.py", line 48, in dispatch
+    response = await call_next(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 84, in call_next
+    raise app_exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 70, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 108, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "E:\workspace-py\hr-agent\backend\app\core\middleware.py", line 25, in dispatch
+    response = await call_next(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 84, in call_next
+    raise app_exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 70, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\cors.py", line 91, in __call__
+    await self.simple_response(scope, receive, send, request_headers=headers)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\cors.py", line 146, in simple_response
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\exceptions.py", line 79, in __call__
+    raise exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\exceptions.py", line 68, in __call__
+    await self.app(scope, receive, sender)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\middleware\asyncexitstack.py", line 20, in __call__
+    raise e
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\middleware\asyncexitstack.py", line 17, in __call__
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 718, in __call__
+    await route.handle(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 276, in handle
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 66, in app
+    response = await func(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\routing.py", line 274, in app
+    raw_response = await run_endpoint_function(
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\routing.py", line 191, in run_endpoint_function
+    return await dependant.call(**values)
+  File "E:\workspace-py\hr-agent\backend\app\api\v1\endpoints\auth.py", line 60, in login
+    user = await user_service.authenticate(form_data.username, form_data.password)
+AttributeError: 'UserService' object has no attribute 'authenticate'
+2025-10-02 12:03:05 - main - INFO - main - lifespan - Shutting down HR Agent Backend...
+2025-10-02 12:03:24 - app.core.database - INFO - database - close_db - Database connections closed
+2025-10-02 12:03:24 - main - INFO - main - lifespan - Database connections closed
+2025-10-02 12:03:24 - main - INFO - main - lifespan - HR Agent Backend shutdown complete
+2025-10-02 12:03:28 - app.core.logging - INFO - logging - setup_logging - Logging configuration setup complete
+2025-10-02 12:03:28 - main - INFO - main - lifespan - Logging configured
+2025-10-02 12:03:28 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - select pg_catalog.version()
+2025-10-02 12:03:28 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [raw sql] ()
+2025-10-02 12:03:28 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - select current_schema()
+2025-10-02 12:03:28 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [raw sql] ()
+2025-10-02 12:03:28 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - show standard_conforming_strings
+2025-10-02 12:03:28 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [raw sql] ()
+2025-10-02 12:03:28 - sqlalchemy.engine.Engine - INFO - base - _begin_impl - BEGIN (implicit)
+2025-10-02 12:03:28 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - CREATE EXTENSION IF NOT EXISTS vector
+2025-10-02 12:03:28 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [generated in 0.00034s] ()
+2025-10-02 12:03:28 - app.core.database - INFO - database - init_db - pgvector extension enabled
+2025-10-02 12:03:28 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 12:03:28 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [generated in 0.00042s] ('users', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 12:03:28 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 12:03:28 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.02998s ago] ('conversations', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 12:03:29 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 12:03:29 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.04426s ago] ('messages', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 12:03:29 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 12:03:29 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.05833s ago] ('documents', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 12:03:29 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 12:03:29 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.07208s ago] ('document_chunks', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 12:03:29 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 12:03:29 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.08716s ago] ('knowledge_bases', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 12:03:29 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 12:03:29 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.1042s ago] ('faqs', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 12:03:29 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_type.typname 
+FROM pg_catalog.pg_type JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_type.typnamespace 
+WHERE pg_catalog.pg_type.typname = $1::VARCHAR AND pg_catalog.pg_type_is_visible(pg_catalog.pg_type.oid) AND pg_catalog.pg_namespace.nspname != $2::VARCHAR
+2025-10-02 12:03:29 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [generated in 0.00029s] ('userrole', 'pg_catalog')
+2025-10-02 12:03:29 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_type.typname 
+FROM pg_catalog.pg_type JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_type.typnamespace 
+WHERE pg_catalog.pg_type.typname = $1::VARCHAR AND pg_catalog.pg_type_is_visible(pg_catalog.pg_type.oid) AND pg_catalog.pg_namespace.nspname != $2::VARCHAR
+2025-10-02 12:03:29 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.02825s ago] ('conversationstatus', 'pg_catalog')
+2025-10-02 12:03:29 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_type.typname 
+FROM pg_catalog.pg_type JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_type.typnamespace 
+WHERE pg_catalog.pg_type.typname = $1::VARCHAR AND pg_catalog.pg_type_is_visible(pg_catalog.pg_type.oid) AND pg_catalog.pg_namespace.nspname != $2::VARCHAR
+2025-10-02 12:03:29 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.04356s ago] ('messagerole', 'pg_catalog')
+2025-10-02 12:03:29 - sqlalchemy.engine.Engine - INFO - base - _commit_impl - COMMIT
+2025-10-02 12:03:29 - app.core.database - INFO - database - init_db - Database initialized successfully
+2025-10-02 12:03:29 - main - INFO - main - lifespan - Database initialized successfully
+2025-10-02 12:03:29 - main - INFO - main - lifespan - HR Agent Backend started successfully
+2025-10-02 12:03:46 - app.core.logging - INFO - logging - setup_logging - Logging configuration setup complete
+2025-10-02 12:03:46 - main - INFO - main - lifespan - Logging configured
+2025-10-02 12:03:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - select pg_catalog.version()
+2025-10-02 12:03:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [raw sql] ()
+2025-10-02 12:03:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - select current_schema()
+2025-10-02 12:03:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [raw sql] ()
+2025-10-02 12:03:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - show standard_conforming_strings
+2025-10-02 12:03:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [raw sql] ()
+2025-10-02 12:03:47 - sqlalchemy.engine.Engine - INFO - base - _begin_impl - BEGIN (implicit)
+2025-10-02 12:03:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - CREATE EXTENSION IF NOT EXISTS vector
+2025-10-02 12:03:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [generated in 0.00033s] ()
+2025-10-02 12:03:47 - app.core.database - INFO - database - init_db - pgvector extension enabled
+2025-10-02 12:03:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 12:03:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [generated in 0.00031s] ('users', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 12:03:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 12:03:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.03839s ago] ('conversations', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 12:03:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 12:03:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.05922s ago] ('messages', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 12:03:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 12:03:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.07902s ago] ('documents', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 12:03:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 12:03:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.0968s ago] ('document_chunks', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 12:03:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 12:03:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.1156s ago] ('knowledge_bases', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 12:03:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 12:03:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.1335s ago] ('faqs', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 12:03:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_type.typname 
+FROM pg_catalog.pg_type JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_type.typnamespace 
+WHERE pg_catalog.pg_type.typname = $1::VARCHAR AND pg_catalog.pg_type_is_visible(pg_catalog.pg_type.oid) AND pg_catalog.pg_namespace.nspname != $2::VARCHAR
+2025-10-02 12:03:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [generated in 0.00115s] ('userrole', 'pg_catalog')
+2025-10-02 12:03:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_type.typname 
+FROM pg_catalog.pg_type JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_type.typnamespace 
+WHERE pg_catalog.pg_type.typname = $1::VARCHAR AND pg_catalog.pg_type_is_visible(pg_catalog.pg_type.oid) AND pg_catalog.pg_namespace.nspname != $2::VARCHAR
+2025-10-02 12:03:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.03966s ago] ('conversationstatus', 'pg_catalog')
+2025-10-02 12:03:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_type.typname 
+FROM pg_catalog.pg_type JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_type.typnamespace 
+WHERE pg_catalog.pg_type.typname = $1::VARCHAR AND pg_catalog.pg_type_is_visible(pg_catalog.pg_type.oid) AND pg_catalog.pg_namespace.nspname != $2::VARCHAR
+2025-10-02 12:03:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.0571s ago] ('messagerole', 'pg_catalog')
+2025-10-02 12:03:47 - sqlalchemy.engine.Engine - INFO - base - _commit_impl - COMMIT
+2025-10-02 12:03:48 - app.core.database - INFO - database - init_db - Database initialized successfully
+2025-10-02 12:03:48 - main - INFO - main - lifespan - Database initialized successfully
+2025-10-02 12:03:48 - main - INFO - main - lifespan - HR Agent Backend started successfully
+2025-10-02 12:04:28 - app.core.middleware - INFO - middleware - dispatch - Request: POST http://localhost:8000/api/v1/auth/login
+2025-10-02 12:04:28 - app.core.exception_handlers - ERROR - exception_handlers - generic_exception_handler - Unhandled Exception: 'UserService' object has no attribute 'authenticate'
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 98, in receive
+    return self.receive_nowait()
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 93, in receive_nowait
+    raise WouldBlock
+anyio.WouldBlock
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 78, in call_next
+    message = await recv_stream.receive()
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 118, in receive
+    raise EndOfStream
+anyio.EndOfStream
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\errors.py", line 162, in __call__
+    await self.app(scope, receive, _send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 108, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "E:\workspace-py\hr-agent\backend\app\core\middleware.py", line 48, in dispatch
+    response = await call_next(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 84, in call_next
+    raise app_exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 70, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 108, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "E:\workspace-py\hr-agent\backend\app\core\middleware.py", line 25, in dispatch
+    response = await call_next(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 84, in call_next
+    raise app_exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 70, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\cors.py", line 91, in __call__
+    await self.simple_response(scope, receive, send, request_headers=headers)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\cors.py", line 146, in simple_response
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\exceptions.py", line 79, in __call__
+    raise exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\exceptions.py", line 68, in __call__
+    await self.app(scope, receive, sender)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\middleware\asyncexitstack.py", line 20, in __call__
+    raise e
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\middleware\asyncexitstack.py", line 17, in __call__
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 718, in __call__
+    await route.handle(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 276, in handle
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 66, in app
+    response = await func(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\routing.py", line 274, in app
+    raw_response = await run_endpoint_function(
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\routing.py", line 191, in run_endpoint_function
+    return await dependant.call(**values)
+  File "E:\workspace-py\hr-agent\backend\app\api\v1\endpoints\auth.py", line 60, in login
+    user = await user_service.authenticate(form_data.username, form_data.password)
+AttributeError: 'UserService' object has no attribute 'authenticate'
+2025-10-02 12:05:33 - app.core.middleware - INFO - middleware - dispatch - Request: POST http://localhost:8000/api/v1/auth/login
+2025-10-02 12:05:33 - app.core.exception_handlers - ERROR - exception_handlers - generic_exception_handler - Unhandled Exception: 'UserService' object has no attribute 'authenticate'
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 98, in receive
+    return self.receive_nowait()
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 93, in receive_nowait
+    raise WouldBlock
+anyio.WouldBlock
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 78, in call_next
+    message = await recv_stream.receive()
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 118, in receive
+    raise EndOfStream
+anyio.EndOfStream
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\errors.py", line 162, in __call__
+    await self.app(scope, receive, _send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 108, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "E:\workspace-py\hr-agent\backend\app\core\middleware.py", line 48, in dispatch
+    response = await call_next(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 84, in call_next
+    raise app_exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 70, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 108, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "E:\workspace-py\hr-agent\backend\app\core\middleware.py", line 25, in dispatch
+    response = await call_next(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 84, in call_next
+    raise app_exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 70, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\cors.py", line 91, in __call__
+    await self.simple_response(scope, receive, send, request_headers=headers)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\cors.py", line 146, in simple_response
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\exceptions.py", line 79, in __call__
+    raise exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\exceptions.py", line 68, in __call__
+    await self.app(scope, receive, sender)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\middleware\asyncexitstack.py", line 20, in __call__
+    raise e
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\middleware\asyncexitstack.py", line 17, in __call__
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 718, in __call__
+    await route.handle(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 276, in handle
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 66, in app
+    response = await func(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\routing.py", line 274, in app
+    raw_response = await run_endpoint_function(
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\routing.py", line 191, in run_endpoint_function
+    return await dependant.call(**values)
+  File "E:\workspace-py\hr-agent\backend\app\api\v1\endpoints\auth.py", line 60, in login
+    user = await user_service.authenticate(form_data.username, form_data.password)
+AttributeError: 'UserService' object has no attribute 'authenticate'
+2025-10-02 12:06:25 - app.core.middleware - INFO - middleware - dispatch - Request: GET http://localhost:8000/api/v1/health
+2025-10-02 12:06:25 - app.core.middleware - INFO - middleware - dispatch - Response: 200 - Processing time: 0.0020s
+2025-10-02 12:06:44 - app.core.middleware - INFO - middleware - dispatch - Request: POST http://localhost:8000/api/v1/auth/login
+2025-10-02 12:06:44 - app.core.exception_handlers - ERROR - exception_handlers - generic_exception_handler - Unhandled Exception: 'UserService' object has no attribute 'authenticate'
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 98, in receive
+    return self.receive_nowait()
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 93, in receive_nowait
+    raise WouldBlock
+anyio.WouldBlock
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 78, in call_next
+    message = await recv_stream.receive()
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 118, in receive
+    raise EndOfStream
+anyio.EndOfStream
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\errors.py", line 162, in __call__
+    await self.app(scope, receive, _send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 108, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "E:\workspace-py\hr-agent\backend\app\core\middleware.py", line 48, in dispatch
+    response = await call_next(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 84, in call_next
+    raise app_exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 70, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 108, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "E:\workspace-py\hr-agent\backend\app\core\middleware.py", line 25, in dispatch
+    response = await call_next(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 84, in call_next
+    raise app_exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 70, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\cors.py", line 83, in __call__
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\exceptions.py", line 79, in __call__
+    raise exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\exceptions.py", line 68, in __call__
+    await self.app(scope, receive, sender)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\middleware\asyncexitstack.py", line 20, in __call__
+    raise e
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\middleware\asyncexitstack.py", line 17, in __call__
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 718, in __call__
+    await route.handle(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 276, in handle
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 66, in app
+    response = await func(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\routing.py", line 274, in app
+    raw_response = await run_endpoint_function(
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\routing.py", line 191, in run_endpoint_function
+    return await dependant.call(**values)
+  File "E:\workspace-py\hr-agent\backend\app\api\v1\endpoints\auth.py", line 60, in login
+    user = await user_service.authenticate(form_data.username, form_data.password)
+AttributeError: 'UserService' object has no attribute 'authenticate'
+2025-10-02 12:08:04 - app.core.middleware - INFO - middleware - dispatch - Request: POST http://localhost:8000/api/v1/auth/login
+2025-10-02 12:08:04 - app.core.exception_handlers - ERROR - exception_handlers - generic_exception_handler - Unhandled Exception: 'UserService' object has no attribute 'authenticate'
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 98, in receive
+    return self.receive_nowait()
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 93, in receive_nowait
+    raise WouldBlock
+anyio.WouldBlock
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 78, in call_next
+    message = await recv_stream.receive()
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 118, in receive
+    raise EndOfStream
+anyio.EndOfStream
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\errors.py", line 162, in __call__
+    await self.app(scope, receive, _send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 108, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "E:\workspace-py\hr-agent\backend\app\core\middleware.py", line 48, in dispatch
+    response = await call_next(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 84, in call_next
+    raise app_exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 70, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 108, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "E:\workspace-py\hr-agent\backend\app\core\middleware.py", line 25, in dispatch
+    response = await call_next(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 84, in call_next
+    raise app_exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 70, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\cors.py", line 83, in __call__
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\exceptions.py", line 79, in __call__
+    raise exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\exceptions.py", line 68, in __call__
+    await self.app(scope, receive, sender)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\middleware\asyncexitstack.py", line 20, in __call__
+    raise e
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\middleware\asyncexitstack.py", line 17, in __call__
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 718, in __call__
+    await route.handle(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 276, in handle
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 66, in app
+    response = await func(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\routing.py", line 274, in app
+    raw_response = await run_endpoint_function(
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\routing.py", line 191, in run_endpoint_function
+    return await dependant.call(**values)
+  File "E:\workspace-py\hr-agent\backend\app\api\v1\endpoints\auth.py", line 60, in login
+    user = await user_service.authenticate(form_data.username, form_data.password)
+AttributeError: 'UserService' object has no attribute 'authenticate'
+2025-10-02 12:08:36 - app.core.middleware - INFO - middleware - dispatch - Request: GET http://localhost:8000/api/v1/health
+2025-10-02 12:08:36 - app.core.middleware - INFO - middleware - dispatch - Response: 200 - Processing time: 0.0010s
+2025-10-02 12:08:38 - app.core.middleware - INFO - middleware - dispatch - Request: POST http://localhost:8000/api/v1/auth/login
+2025-10-02 12:08:38 - app.core.exception_handlers - ERROR - exception_handlers - generic_exception_handler - Unhandled Exception: 'UserService' object has no attribute 'authenticate'
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 98, in receive
+    return self.receive_nowait()
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 93, in receive_nowait
+    raise WouldBlock
+anyio.WouldBlock
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 78, in call_next
+    message = await recv_stream.receive()
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 118, in receive
+    raise EndOfStream
+anyio.EndOfStream
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\errors.py", line 162, in __call__
+    await self.app(scope, receive, _send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 108, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "E:\workspace-py\hr-agent\backend\app\core\middleware.py", line 48, in dispatch
+    response = await call_next(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 84, in call_next
+    raise app_exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 70, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 108, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "E:\workspace-py\hr-agent\backend\app\core\middleware.py", line 25, in dispatch
+    response = await call_next(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 84, in call_next
+    raise app_exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 70, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\cors.py", line 83, in __call__
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\exceptions.py", line 79, in __call__
+    raise exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\exceptions.py", line 68, in __call__
+    await self.app(scope, receive, sender)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\middleware\asyncexitstack.py", line 20, in __call__
+    raise e
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\middleware\asyncexitstack.py", line 17, in __call__
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 718, in __call__
+    await route.handle(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 276, in handle
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 66, in app
+    response = await func(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\routing.py", line 274, in app
+    raw_response = await run_endpoint_function(
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\routing.py", line 191, in run_endpoint_function
+    return await dependant.call(**values)
+  File "E:\workspace-py\hr-agent\backend\app\api\v1\endpoints\auth.py", line 60, in login
+    user = await user_service.authenticate(form_data.username, form_data.password)
+AttributeError: 'UserService' object has no attribute 'authenticate'
+2025-10-02 12:08:41 - main - INFO - main - lifespan - Shutting down HR Agent Backend...
+2025-10-02 12:09:00 - app.core.database - INFO - database - close_db - Database connections closed
+2025-10-02 12:09:00 - main - INFO - main - lifespan - Database connections closed
+2025-10-02 12:09:00 - main - INFO - main - lifespan - HR Agent Backend shutdown complete
+2025-10-02 12:09:04 - app.core.logging - INFO - logging - setup_logging - Logging configuration setup complete
+2025-10-02 12:09:04 - main - INFO - main - lifespan - Logging configured
+2025-10-02 12:09:04 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - select pg_catalog.version()
+2025-10-02 12:09:04 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [raw sql] ()
+2025-10-02 12:09:04 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - select current_schema()
+2025-10-02 12:09:04 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [raw sql] ()
+2025-10-02 12:09:05 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - show standard_conforming_strings
+2025-10-02 12:09:05 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [raw sql] ()
+2025-10-02 12:09:05 - sqlalchemy.engine.Engine - INFO - base - _begin_impl - BEGIN (implicit)
+2025-10-02 12:09:05 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - CREATE EXTENSION IF NOT EXISTS vector
+2025-10-02 12:09:05 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [generated in 0.00039s] ()
+2025-10-02 12:09:05 - app.core.database - INFO - database - init_db - pgvector extension enabled
+2025-10-02 12:09:05 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 12:09:05 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [generated in 0.00055s] ('users', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 12:09:05 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 12:09:05 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.03088s ago] ('conversations', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 12:09:05 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 12:09:05 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.04612s ago] ('messages', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 12:09:05 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 12:09:05 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.0625s ago] ('documents', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 12:09:05 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 12:09:05 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.07806s ago] ('document_chunks', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 12:09:05 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 12:09:05 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.09385s ago] ('knowledge_bases', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 12:09:05 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 12:09:05 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.1093s ago] ('faqs', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 12:09:05 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_type.typname 
+FROM pg_catalog.pg_type JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_type.typnamespace 
+WHERE pg_catalog.pg_type.typname = $1::VARCHAR AND pg_catalog.pg_type_is_visible(pg_catalog.pg_type.oid) AND pg_catalog.pg_namespace.nspname != $2::VARCHAR
+2025-10-02 12:09:05 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [generated in 0.00044s] ('userrole', 'pg_catalog')
+2025-10-02 12:09:05 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_type.typname 
+FROM pg_catalog.pg_type JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_type.typnamespace 
+WHERE pg_catalog.pg_type.typname = $1::VARCHAR AND pg_catalog.pg_type_is_visible(pg_catalog.pg_type.oid) AND pg_catalog.pg_namespace.nspname != $2::VARCHAR
+2025-10-02 12:09:05 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.0312s ago] ('conversationstatus', 'pg_catalog')
+2025-10-02 12:09:05 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_type.typname 
+FROM pg_catalog.pg_type JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_type.typnamespace 
+WHERE pg_catalog.pg_type.typname = $1::VARCHAR AND pg_catalog.pg_type_is_visible(pg_catalog.pg_type.oid) AND pg_catalog.pg_namespace.nspname != $2::VARCHAR
+2025-10-02 12:09:05 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.04582s ago] ('messagerole', 'pg_catalog')
+2025-10-02 12:09:05 - sqlalchemy.engine.Engine - INFO - base - _commit_impl - COMMIT
+2025-10-02 12:09:05 - app.core.database - INFO - database - init_db - Database initialized successfully
+2025-10-02 12:09:05 - main - INFO - main - lifespan - Database initialized successfully
+2025-10-02 12:09:05 - main - INFO - main - lifespan - HR Agent Backend started successfully
+2025-10-02 12:09:34 - main - INFO - main - lifespan - Shutting down HR Agent Backend...
+2025-10-02 12:09:34 - app.core.database - INFO - database - close_db - Database connections closed
+2025-10-02 12:09:34 - main - INFO - main - lifespan - Database connections closed
+2025-10-02 12:09:34 - main - INFO - main - lifespan - HR Agent Backend shutdown complete
+2025-10-02 12:09:38 - app.core.logging - INFO - logging - setup_logging - Logging configuration setup complete
+2025-10-02 12:09:38 - main - INFO - main - lifespan - Logging configured
+2025-10-02 12:09:38 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - select pg_catalog.version()
+2025-10-02 12:09:38 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [raw sql] ()
+2025-10-02 12:09:38 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - select current_schema()
+2025-10-02 12:09:38 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [raw sql] ()
+2025-10-02 12:09:38 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - show standard_conforming_strings
+2025-10-02 12:09:38 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [raw sql] ()
+2025-10-02 12:09:39 - sqlalchemy.engine.Engine - INFO - base - _begin_impl - BEGIN (implicit)
+2025-10-02 12:09:39 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - CREATE EXTENSION IF NOT EXISTS vector
+2025-10-02 12:09:39 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [generated in 0.00038s] ()
+2025-10-02 12:09:39 - app.core.database - INFO - database - init_db - pgvector extension enabled
+2025-10-02 12:09:39 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 12:09:39 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [generated in 0.00042s] ('users', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 12:09:39 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 12:09:39 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.03586s ago] ('conversations', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 12:09:39 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 12:09:39 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.05315s ago] ('messages', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 12:09:39 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 12:09:39 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.07043s ago] ('documents', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 12:09:39 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 12:09:39 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.08715s ago] ('document_chunks', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 12:09:39 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 12:09:39 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.1046s ago] ('knowledge_bases', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 12:09:39 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 12:09:39 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.1224s ago] ('faqs', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 12:09:39 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_type.typname 
+FROM pg_catalog.pg_type JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_type.typnamespace 
+WHERE pg_catalog.pg_type.typname = $1::VARCHAR AND pg_catalog.pg_type_is_visible(pg_catalog.pg_type.oid) AND pg_catalog.pg_namespace.nspname != $2::VARCHAR
+2025-10-02 12:09:39 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [generated in 0.00048s] ('userrole', 'pg_catalog')
+2025-10-02 12:09:39 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_type.typname 
+FROM pg_catalog.pg_type JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_type.typnamespace 
+WHERE pg_catalog.pg_type.typname = $1::VARCHAR AND pg_catalog.pg_type_is_visible(pg_catalog.pg_type.oid) AND pg_catalog.pg_namespace.nspname != $2::VARCHAR
+2025-10-02 12:09:39 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.03304s ago] ('conversationstatus', 'pg_catalog')
+2025-10-02 12:09:39 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_type.typname 
+FROM pg_catalog.pg_type JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_type.typnamespace 
+WHERE pg_catalog.pg_type.typname = $1::VARCHAR AND pg_catalog.pg_type_is_visible(pg_catalog.pg_type.oid) AND pg_catalog.pg_namespace.nspname != $2::VARCHAR
+2025-10-02 12:09:39 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.04943s ago] ('messagerole', 'pg_catalog')
+2025-10-02 12:09:39 - sqlalchemy.engine.Engine - INFO - base - _commit_impl - COMMIT
+2025-10-02 12:09:39 - app.core.database - INFO - database - init_db - Database initialized successfully
+2025-10-02 12:09:39 - main - INFO - main - lifespan - Database initialized successfully
+2025-10-02 12:09:39 - main - INFO - main - lifespan - HR Agent Backend started successfully
+2025-10-02 12:09:45 - app.core.middleware - INFO - middleware - dispatch - Request: GET http://localhost:8000/api/v1/health
+2025-10-02 12:09:45 - app.core.middleware - INFO - middleware - dispatch - Response: 200 - Processing time: 0.0010s
+2025-10-02 12:09:47 - app.core.middleware - INFO - middleware - dispatch - Request: POST http://localhost:8000/api/v1/auth/login
+2025-10-02 12:09:47 - app.api.v1.endpoints.auth - INFO - auth - login - Login attempt for username: admin
+2025-10-02 12:09:47 - app.api.v1.endpoints.auth - INFO - auth - login - UserService created successfully
+2025-10-02 12:09:47 - sqlalchemy.engine.Engine - INFO - base - _begin_impl - BEGIN (implicit)
+2025-10-02 12:09:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT users.username, users.email, users.full_name, users.hashed_password, users.phone, users.department, users.position, users.employee_id, users.role, users.is_superuser, users.is_verified, users.bio, users.avatar_url, users.last_login, users.id, users.created_at, users.updated_at, users.is_active, users.created_by, users.updated_by 
+FROM users 
+WHERE users.username = $1::VARCHAR AND users.is_active = true
+2025-10-02 12:09:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [generated in 0.00056s] ('admin',)
+2025-10-02 12:09:47 - passlib.handlers.bcrypt - WARNING - bcrypt - _load_backend_mixin - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\passlib\handlers\bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2025-10-02 12:09:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - UPDATE users SET last_login=now(), updated_at=$1::TIMESTAMP WITHOUT TIME ZONE WHERE users.id = $2::UUID
+2025-10-02 12:09:47 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [generated in 0.00050s] (datetime.datetime(2025, 10, 2, 4, 9, 47, 949678), UUID('e5b1dc69-0e61-4d8d-8e51-fd662291e8f2'))
+2025-10-02 12:09:47 - sqlalchemy.engine.Engine - INFO - base - _commit_impl - COMMIT
+2025-10-02 12:09:48 - app.api.v1.endpoints.auth - INFO - auth - login - Authentication result: True
+2025-10-02 12:09:48 - app.api.v1.endpoints.auth - INFO - auth - login - Creating access token for user: admin
+2025-10-02 12:09:48 - app.api.v1.endpoints.auth - INFO - auth - login - Login successful for user: admin
+2025-10-02 12:09:48 - app.core.middleware - INFO - middleware - dispatch - Response: 200 - Processing time: 0.5120s
+2025-10-02 12:10:17 - app.core.middleware - INFO - middleware - dispatch - Request: POST http://localhost:8000/api/v1/auth/login
+2025-10-02 12:10:17 - app.api.v1.endpoints.auth - INFO - auth - login - Login attempt for username: admin
+2025-10-02 12:10:17 - app.api.v1.endpoints.auth - INFO - auth - login - UserService created successfully
+2025-10-02 12:10:17 - sqlalchemy.engine.Engine - INFO - base - _begin_impl - BEGIN (implicit)
+2025-10-02 12:10:17 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT users.username, users.email, users.full_name, users.hashed_password, users.phone, users.department, users.position, users.employee_id, users.role, users.is_superuser, users.is_verified, users.bio, users.avatar_url, users.last_login, users.id, users.created_at, users.updated_at, users.is_active, users.created_by, users.updated_by 
+FROM users 
+WHERE users.username = $1::VARCHAR AND users.is_active = true
+2025-10-02 12:10:17 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 29.88s ago] ('admin',)
+2025-10-02 12:10:17 - app.api.v1.endpoints.auth - INFO - auth - login - Authentication result: False
+2025-10-02 12:10:17 - app.api.v1.endpoints.auth - WARNING - auth - login - Authentication failed for username: admin
+2025-10-02 12:10:17 - app.api.v1.endpoints.auth - ERROR - auth - login - Login error: 
+Traceback (most recent call last):
+  File "E:\workspace-py\hr-agent\backend\app\api\v1\endpoints\auth.py", line 73, in login
+    raise HTTPException(
+fastapi.exceptions.HTTPException
+2025-10-02 12:10:17 - sqlalchemy.engine.Engine - INFO - base - _rollback_impl - ROLLBACK
+2025-10-02 12:10:17 - app.core.exception_handlers - ERROR - exception_handlers - http_exception_handler - HTTP Exception: Incorrect username or password
+2025-10-02 12:10:17 - app.core.middleware - INFO - middleware - dispatch - Response: 401 - Processing time: 0.2984s
+2025-10-02 12:10:19 - app.core.middleware - INFO - middleware - dispatch - Request: POST http://localhost:8000/api/v1/auth/login
+2025-10-02 12:10:19 - app.api.v1.endpoints.auth - INFO - auth - login - Login attempt for username: wronguser
+2025-10-02 12:10:19 - app.api.v1.endpoints.auth - INFO - auth - login - UserService created successfully
+2025-10-02 12:10:19 - sqlalchemy.engine.Engine - INFO - base - _begin_impl - BEGIN (implicit)
+2025-10-02 12:10:19 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT users.username, users.email, users.full_name, users.hashed_password, users.phone, users.department, users.position, users.employee_id, users.role, users.is_superuser, users.is_verified, users.bio, users.avatar_url, users.last_login, users.id, users.created_at, users.updated_at, users.is_active, users.created_by, users.updated_by 
+FROM users 
+WHERE users.username = $1::VARCHAR AND users.is_active = true
+2025-10-02 12:10:19 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 32.23s ago] ('wronguser',)
+2025-10-02 12:10:19 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT users.username, users.email, users.full_name, users.hashed_password, users.phone, users.department, users.position, users.employee_id, users.role, users.is_superuser, users.is_verified, users.bio, users.avatar_url, users.last_login, users.id, users.created_at, users.updated_at, users.is_active, users.created_by, users.updated_by 
+FROM users 
+WHERE users.email = $1::VARCHAR AND users.is_active = true
+2025-10-02 12:10:19 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [generated in 0.00048s] ('wronguser',)
+2025-10-02 12:10:19 - app.api.v1.endpoints.auth - INFO - auth - login - Authentication result: False
+2025-10-02 12:10:19 - app.api.v1.endpoints.auth - WARNING - auth - login - Authentication failed for username: wronguser
+2025-10-02 12:10:19 - app.api.v1.endpoints.auth - ERROR - auth - login - Login error: 
+Traceback (most recent call last):
+  File "E:\workspace-py\hr-agent\backend\app\api\v1\endpoints\auth.py", line 73, in login
+    raise HTTPException(
+fastapi.exceptions.HTTPException
+2025-10-02 12:10:19 - sqlalchemy.engine.Engine - INFO - base - _rollback_impl - ROLLBACK
+2025-10-02 12:10:19 - app.core.exception_handlers - ERROR - exception_handlers - http_exception_handler - HTTP Exception: Incorrect username or password
+2025-10-02 12:10:19 - app.core.middleware - INFO - middleware - dispatch - Response: 401 - Processing time: 0.0921s
+2025-10-02 12:10:21 - app.core.middleware - INFO - middleware - dispatch - Request: POST http://localhost:8000/api/v1/auth/login
+2025-10-02 12:10:21 - app.core.exception_handlers - WARNING - exception_handlers - validation_exception_handler - Validation Error: [{'type': 'missing', 'loc': ('body', 'username'), 'msg': 'Field required', 'input': None, 'url': 'https://errors.pydantic.dev/2.5/v/missing'}]
+2025-10-02 12:10:21 - app.core.middleware - INFO - middleware - dispatch - Response: 422 - Processing time: 0.0030s
+2025-10-02 12:10:23 - app.core.middleware - INFO - middleware - dispatch - Request: POST http://localhost:8000/api/v1/auth/login
+2025-10-02 12:10:23 - app.core.exception_handlers - WARNING - exception_handlers - validation_exception_handler - Validation Error: [{'type': 'missing', 'loc': ('body', 'password'), 'msg': 'Field required', 'input': None, 'url': 'https://errors.pydantic.dev/2.5/v/missing'}]
+2025-10-02 12:10:23 - app.core.middleware - INFO - middleware - dispatch - Response: 422 - Processing time: 0.0020s
+2025-10-02 12:10:25 - app.core.middleware - INFO - middleware - dispatch - Request: POST http://localhost:8000/api/v1/auth/login
+2025-10-02 12:10:25 - app.core.exception_handlers - WARNING - exception_handlers - validation_exception_handler - Validation Error: [{'type': 'missing', 'loc': ('body', 'username'), 'msg': 'Field required', 'input': None, 'url': 'https://errors.pydantic.dev/2.5/v/missing'}, {'type': 'missing', 'loc': ('body', 'password'), 'msg': 'Field required', 'input': None, 'url': 'https://errors.pydantic.dev/2.5/v/missing'}]
+2025-10-02 12:10:25 - app.core.middleware - INFO - middleware - dispatch - Response: 422 - Processing time: 0.0026s
+2025-10-02 15:22:35 - app.core.middleware - INFO - middleware - dispatch - Request: POST http://localhost:8000/api/v1/auth/login
+2025-10-02 15:22:35 - app.api.v1.endpoints.auth - INFO - auth - login - Login attempt for username: admin
+2025-10-02 15:22:35 - app.api.v1.endpoints.auth - INFO - auth - login - UserService created successfully
+2025-10-02 15:22:35 - sqlalchemy.engine.Engine - INFO - base - _begin_impl - BEGIN (implicit)
+2025-10-02 15:22:35 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT users.username, users.email, users.full_name, users.hashed_password, users.phone, users.department, users.position, users.employee_id, users.role, users.is_superuser, users.is_verified, users.bio, users.avatar_url, users.last_login, users.id, users.created_at, users.updated_at, users.is_active, users.created_by, users.updated_by 
+FROM users 
+WHERE users.username = $1::VARCHAR AND users.is_active = true
+2025-10-02 15:22:35 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 1.157e+04s ago] ('admin',)
+2025-10-02 15:22:55 - app.services.user_service - ERROR - user_service - get_user_by_username - Error getting user by username admin: (sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.ConnectionDoesNotExistError'>: connection was closed in the middle of operation
+[SQL: SELECT users.username, users.email, users.full_name, users.hashed_password, users.phone, users.department, users.position, users.employee_id, users.role, users.is_superuser, users.is_verified, users.bio, users.avatar_url, users.last_login, users.id, users.created_at, users.updated_at, users.is_active, users.created_by, users.updated_by 
+FROM users 
+WHERE users.username = $1::VARCHAR AND users.is_active = true]
+[parameters: ('admin',)]
+(Background on this error at: https://sqlalche.me/e/20/dbapi)
+2025-10-02 15:22:55 - app.services.user_service - ERROR - user_service - authenticate - Error authenticating user: (sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.ConnectionDoesNotExistError'>: connection was closed in the middle of operation
+[SQL: SELECT users.username, users.email, users.full_name, users.hashed_password, users.phone, users.department, users.position, users.employee_id, users.role, users.is_superuser, users.is_verified, users.bio, users.avatar_url, users.last_login, users.id, users.created_at, users.updated_at, users.is_active, users.created_by, users.updated_by 
+FROM users 
+WHERE users.username = $1::VARCHAR AND users.is_active = true]
+[parameters: ('admin',)]
+(Background on this error at: https://sqlalche.me/e/20/dbapi)
+2025-10-02 15:22:55 - app.api.v1.endpoints.auth - INFO - auth - login - Authentication result: False
+2025-10-02 15:22:55 - app.api.v1.endpoints.auth - WARNING - auth - login - Authentication failed for username: admin
+2025-10-02 15:22:55 - app.api.v1.endpoints.auth - ERROR - auth - login - Login error: 
+Traceback (most recent call last):
+  File "E:\workspace-py\hr-agent\backend\app\api\v1\endpoints\auth.py", line 73, in login
+    raise HTTPException(
+fastapi.exceptions.HTTPException
+2025-10-02 15:22:55 - app.core.exception_handlers - ERROR - exception_handlers - http_exception_handler - HTTP Exception: Incorrect username or password
+2025-10-02 15:22:55 - app.core.middleware - INFO - middleware - dispatch - Response: 401 - Processing time: 19.1861s
+2025-10-02 15:22:57 - app.core.middleware - INFO - middleware - dispatch - Request: GET http://localhost:8000/api/v1/auth/me
+2025-10-02 15:22:57 - app.core.exception_handlers - ERROR - exception_handlers - http_exception_handler - HTTP Exception: Not authenticated
+2025-10-02 15:22:57 - app.core.middleware - INFO - middleware - dispatch - Response: 401 - Processing time: 0.0020s
+2025-10-02 15:22:59 - app.core.middleware - INFO - middleware - dispatch - Request: GET http://localhost:8000/api/v1/auth/me
+2025-10-02 15:22:59 - app.core.exception_handlers - ERROR - exception_handlers - http_exception_handler - HTTP Exception: Could not validate credentials
+2025-10-02 15:22:59 - app.core.middleware - INFO - middleware - dispatch - Response: 401 - Processing time: 0.0010s
+2025-10-02 15:23:09 - app.core.middleware - INFO - middleware - dispatch - Request: GET http://localhost:8000/api/v1/health
+2025-10-02 15:23:09 - app.core.middleware - INFO - middleware - dispatch - Response: 200 - Processing time: 0.0011s
+2025-10-02 15:23:11 - app.core.middleware - INFO - middleware - dispatch - Request: POST http://localhost:8000/api/v1/auth/login
+2025-10-02 15:23:11 - app.api.v1.endpoints.auth - INFO - auth - login - Login attempt for username: admin
+2025-10-02 15:23:11 - app.api.v1.endpoints.auth - INFO - auth - login - UserService created successfully
+2025-10-02 15:23:11 - sqlalchemy.engine.Engine - INFO - base - _begin_impl - BEGIN (implicit)
+2025-10-02 15:23:11 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT users.username, users.email, users.full_name, users.hashed_password, users.phone, users.department, users.position, users.employee_id, users.role, users.is_superuser, users.is_verified, users.bio, users.avatar_url, users.last_login, users.id, users.created_at, users.updated_at, users.is_active, users.created_by, users.updated_by 
+FROM users 
+WHERE users.username = $1::VARCHAR AND users.is_active = true
+2025-10-02 15:23:11 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 1.16e+04s ago] ('admin',)
+2025-10-02 15:23:11 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - UPDATE users SET last_login=now(), updated_at=$1::TIMESTAMP WITHOUT TIME ZONE WHERE users.id = $2::UUID
+2025-10-02 15:23:11 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 1.16e+04s ago] (datetime.datetime(2025, 10, 2, 7, 23, 11, 667028), UUID('e5b1dc69-0e61-4d8d-8e51-fd662291e8f2'))
+2025-10-02 15:23:11 - sqlalchemy.engine.Engine - INFO - base - _commit_impl - COMMIT
+2025-10-02 15:23:11 - app.api.v1.endpoints.auth - INFO - auth - login - Authentication result: True
+2025-10-02 15:23:11 - app.api.v1.endpoints.auth - INFO - auth - login - Creating access token for user: admin
+2025-10-02 15:23:11 - app.api.v1.endpoints.auth - INFO - auth - login - Login successful for user: admin
+2025-10-02 15:23:11 - app.core.middleware - INFO - middleware - dispatch - Response: 200 - Processing time: 0.5556s
+2025-10-02 15:23:39 - app.core.middleware - INFO - middleware - dispatch - Request: POST http://localhost:8000/api/v1/auth/login
+2025-10-02 15:23:39 - app.api.v1.endpoints.auth - INFO - auth - login - Login attempt for username: admin
+2025-10-02 15:23:39 - app.api.v1.endpoints.auth - INFO - auth - login - UserService created successfully
+2025-10-02 15:23:39 - sqlalchemy.engine.Engine - INFO - base - _begin_impl - BEGIN (implicit)
+2025-10-02 15:23:39 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT users.username, users.email, users.full_name, users.hashed_password, users.phone, users.department, users.position, users.employee_id, users.role, users.is_superuser, users.is_verified, users.bio, users.avatar_url, users.last_login, users.id, users.created_at, users.updated_at, users.is_active, users.created_by, users.updated_by 
+FROM users 
+WHERE users.username = $1::VARCHAR AND users.is_active = true
+2025-10-02 15:23:39 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 1.163e+04s ago] ('admin',)
+2025-10-02 15:23:39 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - UPDATE users SET last_login=now(), updated_at=$1::TIMESTAMP WITHOUT TIME ZONE WHERE users.id = $2::UUID
+2025-10-02 15:23:39 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 1.163e+04s ago] (datetime.datetime(2025, 10, 2, 7, 23, 39, 730080), UUID('e5b1dc69-0e61-4d8d-8e51-fd662291e8f2'))
+2025-10-02 15:23:39 - sqlalchemy.engine.Engine - INFO - base - _commit_impl - COMMIT
+2025-10-02 15:23:39 - app.api.v1.endpoints.auth - INFO - auth - login - Authentication result: True
+2025-10-02 15:23:39 - app.api.v1.endpoints.auth - INFO - auth - login - Creating access token for user: admin
+2025-10-02 15:23:39 - app.api.v1.endpoints.auth - INFO - auth - login - Login successful for user: admin
+2025-10-02 15:23:39 - app.core.middleware - INFO - middleware - dispatch - Response: 200 - Processing time: 0.2885s
+2025-10-02 15:23:41 - app.core.middleware - INFO - middleware - dispatch - Request: GET http://localhost:8000/api/v1/auth/me
+2025-10-02 15:23:41 - app.core.exception_handlers - ERROR - exception_handlers - generic_exception_handler - Unhandled Exception: 'UserService' object has no attribute 'get_by_id'
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 98, in receive
+    return self.receive_nowait()
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 93, in receive_nowait
+    raise WouldBlock
+anyio.WouldBlock
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 78, in call_next
+    message = await recv_stream.receive()
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 118, in receive
+    raise EndOfStream
+anyio.EndOfStream
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\errors.py", line 162, in __call__
+    await self.app(scope, receive, _send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 108, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "E:\workspace-py\hr-agent\backend\app\core\middleware.py", line 48, in dispatch
+    response = await call_next(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 84, in call_next
+    raise app_exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 70, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 108, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "E:\workspace-py\hr-agent\backend\app\core\middleware.py", line 25, in dispatch
+    response = await call_next(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 84, in call_next
+    raise app_exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 70, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\cors.py", line 83, in __call__
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\exceptions.py", line 79, in __call__
+    raise exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\exceptions.py", line 68, in __call__
+    await self.app(scope, receive, sender)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\middleware\asyncexitstack.py", line 20, in __call__
+    raise e
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\middleware\asyncexitstack.py", line 17, in __call__
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 718, in __call__
+    await route.handle(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 276, in handle
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 66, in app
+    response = await func(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\routing.py", line 264, in app
+    solved_result = await solve_dependencies(
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\dependencies\utils.py", line 592, in solve_dependencies
+    solved = await call(**sub_values)
+  File "E:\workspace-py\hr-agent\backend\app\api\deps.py", line 43, in get_current_user
+    user = await user_service.get_by_id(user_id)
+AttributeError: 'UserService' object has no attribute 'get_by_id'
+2025-10-02 15:23:43 - app.core.middleware - INFO - middleware - dispatch - Request: GET http://localhost:8000/api/v1/auth/me
+2025-10-02 15:23:43 - app.core.exception_handlers - ERROR - exception_handlers - http_exception_handler - HTTP Exception: Not authenticated
+2025-10-02 15:23:43 - app.core.middleware - INFO - middleware - dispatch - Response: 401 - Processing time: 0.0020s
+2025-10-02 15:23:45 - app.core.middleware - INFO - middleware - dispatch - Request: GET http://localhost:8000/api/v1/auth/me
+2025-10-02 15:23:45 - app.core.exception_handlers - ERROR - exception_handlers - http_exception_handler - HTTP Exception: Could not validate credentials
+2025-10-02 15:23:45 - app.core.middleware - INFO - middleware - dispatch - Response: 401 - Processing time: 0.0020s
+2025-10-02 15:25:08 - app.core.middleware - INFO - middleware - dispatch - Request: POST http://localhost:8000/api/v1/auth/login
+2025-10-02 15:25:08 - app.api.v1.endpoints.auth - INFO - auth - login - Login attempt for username: admin
+2025-10-02 15:25:08 - app.api.v1.endpoints.auth - INFO - auth - login - UserService created successfully
+2025-10-02 15:25:08 - sqlalchemy.engine.Engine - INFO - base - _begin_impl - BEGIN (implicit)
+2025-10-02 15:25:08 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT users.username, users.email, users.full_name, users.hashed_password, users.phone, users.department, users.position, users.employee_id, users.role, users.is_superuser, users.is_verified, users.bio, users.avatar_url, users.last_login, users.id, users.created_at, users.updated_at, users.is_active, users.created_by, users.updated_by 
+FROM users 
+WHERE users.username = $1::VARCHAR AND users.is_active = true
+2025-10-02 15:25:08 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 1.172e+04s ago] ('admin',)
+2025-10-02 15:25:08 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - UPDATE users SET last_login=now(), updated_at=$1::TIMESTAMP WITHOUT TIME ZONE WHERE users.id = $2::UUID
+2025-10-02 15:25:08 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 1.172e+04s ago] (datetime.datetime(2025, 10, 2, 7, 25, 8, 997156), UUID('e5b1dc69-0e61-4d8d-8e51-fd662291e8f2'))
+2025-10-02 15:25:09 - sqlalchemy.engine.Engine - INFO - base - _commit_impl - COMMIT
+2025-10-02 15:25:09 - app.api.v1.endpoints.auth - INFO - auth - login - Authentication result: True
+2025-10-02 15:25:09 - app.api.v1.endpoints.auth - INFO - auth - login - Creating access token for user: admin
+2025-10-02 15:25:09 - app.api.v1.endpoints.auth - INFO - auth - login - Login successful for user: admin
+2025-10-02 15:25:09 - app.core.middleware - INFO - middleware - dispatch - Response: 200 - Processing time: 0.2727s
+2025-10-02 15:25:11 - app.core.middleware - INFO - middleware - dispatch - Request: GET http://localhost:8000/api/v1/auth/me
+2025-10-02 15:25:13 - app.core.middleware - INFO - middleware - dispatch - Request: GET http://localhost:8000/api/v1/auth/me
+2025-10-02 15:25:13 - app.core.exception_handlers - ERROR - exception_handlers - http_exception_handler - HTTP Exception: Not authenticated
+2025-10-02 15:25:13 - app.core.middleware - INFO - middleware - dispatch - Response: 401 - Processing time: 0.0030s
+2025-10-02 15:25:15 - app.core.middleware - INFO - middleware - dispatch - Request: GET http://localhost:8000/api/v1/auth/me
+2025-10-02 15:25:15 - app.core.exception_handlers - ERROR - exception_handlers - http_exception_handler - HTTP Exception: Could not validate credentials
+2025-10-02 15:25:15 - app.core.middleware - INFO - middleware - dispatch - Response: 401 - Processing time: 0.0020s
+2025-10-02 15:26:22 - app.core.middleware - INFO - middleware - dispatch - Request: POST http://localhost:8000/api/v1/auth/login
+2025-10-02 15:26:22 - app.api.v1.endpoints.auth - INFO - auth - login - Login attempt for username: admin
+2025-10-02 15:26:22 - app.api.v1.endpoints.auth - INFO - auth - login - UserService created successfully
+2025-10-02 15:26:22 - sqlalchemy.engine.Engine - INFO - base - _begin_impl - BEGIN (implicit)
+2025-10-02 15:26:22 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT users.username, users.email, users.full_name, users.hashed_password, users.phone, users.department, users.position, users.employee_id, users.role, users.is_superuser, users.is_verified, users.bio, users.avatar_url, users.last_login, users.id, users.created_at, users.updated_at, users.is_active, users.created_by, users.updated_by 
+FROM users 
+WHERE users.username = $1::VARCHAR AND users.is_active = true
+2025-10-02 15:26:22 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 1.18e+04s ago] ('admin',)
+2025-10-02 15:26:23 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - UPDATE users SET last_login=now(), updated_at=$1::TIMESTAMP WITHOUT TIME ZONE WHERE users.id = $2::UUID
+2025-10-02 15:26:23 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 1.18e+04s ago] (datetime.datetime(2025, 10, 2, 7, 26, 23, 223436), UUID('e5b1dc69-0e61-4d8d-8e51-fd662291e8f2'))
+2025-10-02 15:26:23 - sqlalchemy.engine.Engine - INFO - base - _commit_impl - COMMIT
+2025-10-02 15:26:23 - app.api.v1.endpoints.auth - INFO - auth - login - Authentication result: True
+2025-10-02 15:26:23 - app.api.v1.endpoints.auth - INFO - auth - login - Creating access token for user: admin
+2025-10-02 15:26:23 - app.api.v1.endpoints.auth - INFO - auth - login - Login successful for user: admin
+2025-10-02 15:26:23 - app.core.middleware - INFO - middleware - dispatch - Response: 200 - Processing time: 0.2891s
+2025-10-02 15:26:25 - app.core.middleware - INFO - middleware - dispatch - Request: GET http://localhost:8000/api/v1/auth/me
+2025-10-02 15:26:27 - app.core.middleware - INFO - middleware - dispatch - Request: GET http://localhost:8000/api/v1/auth/me
+2025-10-02 15:26:27 - app.core.exception_handlers - ERROR - exception_handlers - http_exception_handler - HTTP Exception: Not authenticated
+2025-10-02 15:26:27 - app.core.middleware - INFO - middleware - dispatch - Response: 401 - Processing time: 0.0010s
+2025-10-02 15:26:29 - app.core.middleware - INFO - middleware - dispatch - Request: GET http://localhost:8000/api/v1/auth/me
+2025-10-02 15:26:29 - app.core.exception_handlers - ERROR - exception_handlers - http_exception_handler - HTTP Exception: Could not validate credentials
+2025-10-02 15:26:29 - app.core.middleware - INFO - middleware - dispatch - Response: 401 - Processing time: 0.0021s
+2025-10-02 15:35:02 - app.core.middleware - INFO - middleware - dispatch - Request: POST http://localhost:8000/api/v1/auth/login
+2025-10-02 15:35:02 - app.api.v1.endpoints.auth - INFO - auth - login - Login attempt for username: admin
+2025-10-02 15:35:02 - app.api.v1.endpoints.auth - INFO - auth - login - UserService created successfully
+2025-10-02 15:35:02 - sqlalchemy.engine.Engine - INFO - base - _begin_impl - BEGIN (implicit)
+2025-10-02 15:35:02 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT users.username, users.email, users.full_name, users.hashed_password, users.phone, users.department, users.position, users.employee_id, users.role, users.is_superuser, users.is_verified, users.bio, users.avatar_url, users.last_login, users.id, users.created_at, users.updated_at, users.is_active, users.created_by, users.updated_by 
+FROM users 
+WHERE users.username = $1::VARCHAR AND users.is_active = true
+2025-10-02 15:35:02 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 1.231e+04s ago] ('admin',)
+2025-10-02 15:35:21 - app.services.user_service - ERROR - user_service - get_user_by_username - Error getting user by username admin: (sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.ConnectionDoesNotExistError'>: connection was closed in the middle of operation
+[SQL: SELECT users.username, users.email, users.full_name, users.hashed_password, users.phone, users.department, users.position, users.employee_id, users.role, users.is_superuser, users.is_verified, users.bio, users.avatar_url, users.last_login, users.id, users.created_at, users.updated_at, users.is_active, users.created_by, users.updated_by 
+FROM users 
+WHERE users.username = $1::VARCHAR AND users.is_active = true]
+[parameters: ('admin',)]
+(Background on this error at: https://sqlalche.me/e/20/dbapi)
+2025-10-02 15:35:21 - app.services.user_service - ERROR - user_service - authenticate - Error authenticating user: (sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.ConnectionDoesNotExistError'>: connection was closed in the middle of operation
+[SQL: SELECT users.username, users.email, users.full_name, users.hashed_password, users.phone, users.department, users.position, users.employee_id, users.role, users.is_superuser, users.is_verified, users.bio, users.avatar_url, users.last_login, users.id, users.created_at, users.updated_at, users.is_active, users.created_by, users.updated_by 
+FROM users 
+WHERE users.username = $1::VARCHAR AND users.is_active = true]
+[parameters: ('admin',)]
+(Background on this error at: https://sqlalche.me/e/20/dbapi)
+2025-10-02 15:35:21 - app.api.v1.endpoints.auth - INFO - auth - login - Authentication result: False
+2025-10-02 15:35:21 - app.api.v1.endpoints.auth - WARNING - auth - login - Authentication failed for username: admin
+2025-10-02 15:35:21 - app.api.v1.endpoints.auth - ERROR - auth - login - Login error: 
+Traceback (most recent call last):
+  File "E:\workspace-py\hr-agent\backend\app\api\v1\endpoints\auth.py", line 73, in login
+    raise HTTPException(
+fastapi.exceptions.HTTPException
+2025-10-02 15:35:21 - app.core.exception_handlers - ERROR - exception_handlers - http_exception_handler - HTTP Exception: Incorrect username or password
+2025-10-02 15:35:21 - app.core.middleware - INFO - middleware - dispatch - Response: 401 - Processing time: 19.1879s
+2025-10-02 15:35:23 - app.core.middleware - INFO - middleware - dispatch - Request: GET http://localhost:8000/api/v1/auth/me
+2025-10-02 15:35:23 - app.core.exception_handlers - ERROR - exception_handlers - http_exception_handler - HTTP Exception: Not authenticated
+2025-10-02 15:35:23 - app.core.middleware - INFO - middleware - dispatch - Response: 401 - Processing time: 0.0020s
+2025-10-02 15:35:25 - app.core.middleware - INFO - middleware - dispatch - Request: GET http://localhost:8000/api/v1/auth/me
+2025-10-02 15:35:25 - app.core.exception_handlers - ERROR - exception_handlers - http_exception_handler - HTTP Exception: Could not validate credentials
+2025-10-02 15:35:25 - app.core.middleware - INFO - middleware - dispatch - Response: 401 - Processing time: 0.0010s
+2025-10-02 15:35:41 - app.core.middleware - INFO - middleware - dispatch - Request: GET http://localhost:8000/api/v1/health
+2025-10-02 15:35:41 - app.core.middleware - INFO - middleware - dispatch - Response: 200 - Processing time: 0.0010s
+2025-10-02 15:35:43 - app.core.middleware - INFO - middleware - dispatch - Request: POST http://localhost:8000/api/v1/auth/login
+2025-10-02 15:35:43 - app.api.v1.endpoints.auth - INFO - auth - login - Login attempt for username: admin
+2025-10-02 15:35:43 - app.api.v1.endpoints.auth - INFO - auth - login - UserService created successfully
+2025-10-02 15:35:43 - sqlalchemy.engine.Engine - INFO - base - _begin_impl - BEGIN (implicit)
+2025-10-02 15:35:43 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT users.username, users.email, users.full_name, users.hashed_password, users.phone, users.department, users.position, users.employee_id, users.role, users.is_superuser, users.is_verified, users.bio, users.avatar_url, users.last_login, users.id, users.created_at, users.updated_at, users.is_active, users.created_by, users.updated_by 
+FROM users 
+WHERE users.username = $1::VARCHAR AND users.is_active = true
+2025-10-02 15:35:43 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 1.236e+04s ago] ('admin',)
+2025-10-02 15:35:43 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - UPDATE users SET last_login=now(), updated_at=$1::TIMESTAMP WITHOUT TIME ZONE WHERE users.id = $2::UUID
+2025-10-02 15:35:43 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 1.236e+04s ago] (datetime.datetime(2025, 10, 2, 7, 35, 43, 978928), UUID('e5b1dc69-0e61-4d8d-8e51-fd662291e8f2'))
+2025-10-02 15:35:44 - sqlalchemy.engine.Engine - INFO - base - _commit_impl - COMMIT
+2025-10-02 15:35:44 - app.api.v1.endpoints.auth - INFO - auth - login - Authentication result: True
+2025-10-02 15:35:44 - app.api.v1.endpoints.auth - INFO - auth - login - Creating access token for user: admin
+2025-10-02 15:35:44 - app.api.v1.endpoints.auth - INFO - auth - login - Login successful for user: admin
+2025-10-02 15:35:44 - app.core.middleware - INFO - middleware - dispatch - Response: 200 - Processing time: 0.5884s
+2025-10-02 15:35:44 - main - INFO - main - lifespan - Shutting down HR Agent Backend...
+2025-10-02 15:35:44 - app.core.database - INFO - database - close_db - Database connections closed
+2025-10-02 15:35:44 - main - INFO - main - lifespan - Database connections closed
+2025-10-02 15:35:44 - main - INFO - main - lifespan - HR Agent Backend shutdown complete
+2025-10-02 15:35:48 - app.core.logging - INFO - logging - setup_logging - Logging configuration setup complete
+2025-10-02 15:35:48 - main - INFO - main - lifespan - Logging configured
+2025-10-02 15:35:48 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - select pg_catalog.version()
+2025-10-02 15:35:48 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [raw sql] ()
+2025-10-02 15:35:48 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - select current_schema()
+2025-10-02 15:35:48 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [raw sql] ()
+2025-10-02 15:35:48 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - show standard_conforming_strings
+2025-10-02 15:35:48 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [raw sql] ()
+2025-10-02 15:35:48 - sqlalchemy.engine.Engine - INFO - base - _begin_impl - BEGIN (implicit)
+2025-10-02 15:35:48 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - CREATE EXTENSION IF NOT EXISTS vector
+2025-10-02 15:35:48 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [generated in 0.00037s] ()
+2025-10-02 15:35:48 - app.core.database - INFO - database - init_db - pgvector extension enabled
+2025-10-02 15:35:48 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 15:35:48 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [generated in 0.00046s] ('users', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 15:35:48 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 15:35:48 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.02125s ago] ('conversations', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 15:35:48 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 15:35:48 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.03124s ago] ('messages', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 15:35:48 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 15:35:48 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.04098s ago] ('documents', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 15:35:48 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 15:35:48 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.05088s ago] ('document_chunks', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 15:35:48 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 15:35:48 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.06052s ago] ('knowledge_bases', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 15:35:48 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-02 15:35:48 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.07051s ago] ('faqs', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-02 15:35:48 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_type.typname 
+FROM pg_catalog.pg_type JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_type.typnamespace 
+WHERE pg_catalog.pg_type.typname = $1::VARCHAR AND pg_catalog.pg_type_is_visible(pg_catalog.pg_type.oid) AND pg_catalog.pg_namespace.nspname != $2::VARCHAR
+2025-10-02 15:35:48 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [generated in 0.00054s] ('userrole', 'pg_catalog')
+2025-10-02 15:35:48 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_type.typname 
+FROM pg_catalog.pg_type JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_type.typnamespace 
+WHERE pg_catalog.pg_type.typname = $1::VARCHAR AND pg_catalog.pg_type_is_visible(pg_catalog.pg_type.oid) AND pg_catalog.pg_namespace.nspname != $2::VARCHAR
+2025-10-02 15:35:48 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.02029s ago] ('conversationstatus', 'pg_catalog')
+2025-10-02 15:35:48 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_type.typname 
+FROM pg_catalog.pg_type JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_type.typnamespace 
+WHERE pg_catalog.pg_type.typname = $1::VARCHAR AND pg_catalog.pg_type_is_visible(pg_catalog.pg_type.oid) AND pg_catalog.pg_namespace.nspname != $2::VARCHAR
+2025-10-02 15:35:48 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.03079s ago] ('messagerole', 'pg_catalog')
+2025-10-02 15:35:48 - sqlalchemy.engine.Engine - INFO - base - _commit_impl - COMMIT
+2025-10-02 15:35:48 - app.core.database - INFO - database - init_db - Database initialized successfully
+2025-10-02 15:35:48 - main - INFO - main - lifespan - Database initialized successfully
+2025-10-02 15:35:48 - main - INFO - main - lifespan - HR Agent Backend started successfully
+2025-10-02 15:35:50 - main - INFO - main - lifespan - Shutting down HR Agent Backend...
+2025-10-02 15:35:50 - app.core.database - INFO - database - close_db - Database connections closed
+2025-10-02 15:35:50 - main - INFO - main - lifespan - Database connections closed
+2025-10-02 15:35:50 - main - INFO - main - lifespan - HR Agent Backend shutdown complete
