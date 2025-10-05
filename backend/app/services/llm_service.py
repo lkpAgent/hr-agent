@@ -1,44 +1,46 @@
 """
-LLM service for AI interactions using LangChain
+LLM service for AI interactions using OpenAI client
 """
 import logging
+import httpx
+import asyncio
+import openai
 from typing import List, Dict, Any, Optional, AsyncGenerator
-from langchain_openai import OpenAI, ChatOpenAI, OpenAIEmbeddings
-from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
-from langchain_core.callbacks import AsyncCallbackHandler
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+# Removed LangChain imports to avoid compatibility issues
 
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
 
-class StreamingCallbackHandler(AsyncCallbackHandler):
-    """Callback handler for streaming responses"""
-    
-    def __init__(self):
-        self.tokens = []
-    
-    async def on_llm_new_token(self, token: str, **kwargs) -> None:
-        """Handle new token from LLM"""
-        self.tokens.append(token)
-
-
 class LLMService:
     """Service for LLM interactions"""
     
     def __init__(self):
-        self.chat_model = ChatOpenAI(
-            model_name=settings.OPENAI_MODEL,
-            openai_api_key=settings.OPENAI_API_KEY,
-            temperature=0.7,
-            streaming=True
-        )
+        # Initialize OpenAI client with configured LLM
+        llm_api_key = getattr(settings, 'LLM_API_KEY', None) or settings.OPENAI_API_KEY
+        llm_base_url = getattr(settings, 'LLM_BASE_URL', None) or 'https://api.openai.com/v1'
+        self.llm_model = getattr(settings, 'LLM_MODEL', 'gpt-3.5-turbo')
         
-        self.embeddings = OpenAIEmbeddings(
-            model=settings.OPENAI_EMBEDDING_MODEL,
-            openai_api_key=settings.OPENAI_API_KEY
-        )
+        # Only pass base_url if it's not the default OpenAI URL
+        client_kwargs = {'api_key': llm_api_key}
+        if llm_base_url != 'https://api.openai.com/v1':
+            client_kwargs['base_url'] = llm_base_url
+            
+        self.client = openai.AsyncOpenAI(**client_kwargs)
+        
+        # For embeddings, we'll use a custom implementation since we have a different API
+        self.embedding_api_key = settings.EMBEDDING_API_KEY or settings.OPENAI_API_KEY
+        self.embedding_base_url = settings.EMBEDDING_BASE_URL or 'https://api.openai.com/v1'
+        self.embedding_model = settings.EMBEDDING_MODEL or 'text-embedding-ada-002'
+        
+        # Debug logging
+        logger.info(f"Settings EMBEDDING_API_KEY: {'***' if settings.EMBEDDING_API_KEY else 'None'}")
+        logger.info(f"Settings EMBEDDING_BASE_URL: {settings.EMBEDDING_BASE_URL}")
+        logger.info(f"Settings EMBEDDING_MODEL: {settings.EMBEDDING_MODEL}")
+        logger.info(f"Embedding config - API Key: {'***' if self.embedding_api_key else 'None'}")
+        logger.info(f"Embedding config - Base URL: {self.embedding_base_url}")
+        logger.info(f"Embedding config - Model: {self.embedding_model}")
         
         # HR-specific system prompt
         self.system_prompt = """You are an AI assistant specialized in Human Resources. 
@@ -65,25 +67,28 @@ class LLMService:
         Generate a response using the chat model
         """
         try:
-            messages = [SystemMessage(content=self.system_prompt)]
+            messages = [{"role": "system", "content": self.system_prompt}]
             
             # Add conversation history
             if conversation_history:
                 for msg in conversation_history[-10:]:  # Keep last 10 messages
-                    if msg["role"] == "user":
-                        messages.append(HumanMessage(content=msg["content"]))
-                    elif msg["role"] == "assistant":
-                        messages.append(AIMessage(content=msg["content"]))
+                    messages.append({"role": msg["role"], "content": msg["content"]})
             
             # Add context if provided
             if context:
                 context_message = f"Relevant context: {context}\n\nUser question: {message}"
-                messages.append(HumanMessage(content=context_message))
+                messages.append({"role": "user", "content": context_message})
             else:
-                messages.append(HumanMessage(content=message))
+                messages.append({"role": "user", "content": message})
             
-            response = await self.chat_model.agenerate([messages])
-            return response.generations[0][0].text
+            response = await self.client.chat.completions.create(
+                model=self.llm_model,
+                messages=messages,
+                temperature=0.7,
+                max_tokens=2000
+            )
+            
+            return response.choices[0].message.content
             
         except Exception as e:
             logger.error(f"Error generating response: {e}")
@@ -99,28 +104,32 @@ class LLMService:
         Generate a streaming response
         """
         try:
-            callback = StreamingCallbackHandler()
-            
-            messages = [SystemMessage(content=self.system_prompt)]
+            messages = [{"role": "system", "content": self.system_prompt}]
             
             # Add conversation history
             if conversation_history:
                 for msg in conversation_history[-10:]:
-                    if msg["role"] == "user":
-                        messages.append(HumanMessage(content=msg["content"]))
-                    elif msg["role"] == "assistant":
-                        messages.append(AIMessage(content=msg["content"]))
+                    messages.append({"role": msg["role"], "content": msg["content"]})
             
             # Add context if provided
             if context:
                 context_message = f"Relevant context: {context}\n\nUser question: {message}"
-                messages.append(HumanMessage(content=context_message))
+                messages.append({"role": "user", "content": context_message})
             else:
-                messages.append(HumanMessage(content=message))
+                messages.append({"role": "user", "content": message})
             
             # Stream the response
-            async for token in self.chat_model.astream(messages, callbacks=[callback]):
-                yield token.content
+            stream = await self.client.chat.completions.create(
+                model=self.llm_model,
+                messages=messages,
+                temperature=0.7,
+                max_tokens=2000,
+                stream=True
+            )
+            
+            async for chunk in stream:
+                if chunk.choices[0].delta.content:
+                    yield chunk.choices[0].delta.content
                 
         except Exception as e:
             logger.error(f"Error streaming response: {e}")
@@ -128,22 +137,60 @@ class LLMService:
     
     async def generate_embedding(self, text: str) -> List[float]:
         """
-        Generate embedding for text
+        Generate embedding for text using configured embedding API
         """
         try:
-            embedding = await self.embeddings.aembed_query(text)
-            return embedding
+            async with httpx.AsyncClient() as client:
+                headers = {
+                    "Authorization": f"Bearer {self.embedding_api_key}",
+                    "Content-Type": "application/json"
+                }
+                
+                data = {
+                    "model": self.embedding_model,
+                    "input": text
+                }
+                
+                response = await client.post(
+                    f"{self.embedding_base_url}/embeddings",
+                    headers=headers,
+                    json=data,
+                    timeout=30.0
+                )
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    return result["data"][0]["embedding"]
+                else:
+                    logger.error(f"Embedding API error: {response.status_code} - {response.text}")
+                    raise Exception(f"Embedding API error: {response.status_code}")
             
         except Exception as e:
             logger.error(f"Error generating embedding: {e}")
             raise
+    
+    def generate_embedding_sync(self, text: str) -> List[float]:
+        """
+        Synchronous version of generate_embedding for use in non-async contexts
+        """
+        try:
+            loop = asyncio.get_event_loop()
+            return loop.run_until_complete(self.generate_embedding(text))
+        except RuntimeError:
+            # If no event loop is running, create a new one
+            return asyncio.run(self.generate_embedding(text))
     
     async def generate_embeddings_batch(self, texts: List[str]) -> List[List[float]]:
         """
         Generate embeddings for multiple texts
         """
         try:
-            embeddings = await self.embeddings.aembed_documents(texts)
+            embeddings = []
+            for text in texts:
+                embedding = await self.generate_embedding(text)
+                embeddings.append(embedding)
+                # Add small delay to avoid rate limiting
+                await asyncio.sleep(0.1)
             return embeddings
             
         except Exception as e:
@@ -161,9 +208,14 @@ class LLMService:
 
 Summary:"""
             
-            messages = [HumanMessage(content=prompt)]
-            response = await self.chat_model.agenerate([messages])
-            return response.generations[0][0].text.strip()
+            response = await self.client.chat.completions.create(
+                model=self.llm_model,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.7,
+                max_tokens=max_length * 2  # Allow some buffer for tokens
+            )
+            
+            return response.choices[0].message.content.strip()
             
         except Exception as e:
             logger.error(f"Error summarizing text: {e}")
@@ -181,9 +233,13 @@ Return only the keywords separated by commas, maximum {max_keywords} keywords:
 
 Keywords:"""
             
-            messages = [HumanMessage(content=prompt)]
-            response = await self.chat_model.agenerate([messages])
-            keywords_text = response.generations[0][0].text.strip()
+            response = await self.client.chat.completions.create(
+                model=self.llm_model,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.7,
+                max_tokens=200
+            )
+            keywords_text = response.choices[0].message.content.strip()
             
             # Parse keywords
             keywords = [kw.strip() for kw in keywords_text.split(",")]
@@ -205,9 +261,13 @@ Context: {context}
 
 Provide 5 short, relevant questions (one per line):"""
             
-            messages = [HumanMessage(content=prompt)]
-            response = await self.chat_model.agenerate([messages])
-            suggestions_text = response.generations[0][0].text.strip()
+            response = await self.client.chat.completions.create(
+                model=self.llm_model,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.7,
+                max_tokens=300
+            )
+            suggestions_text = response.choices[0].message.content.strip()
             
             # Parse suggestions
             suggestions = [s.strip() for s in suggestions_text.split("\n") if s.strip()]

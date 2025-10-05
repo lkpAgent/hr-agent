@@ -129,7 +129,7 @@ const routes = [
           {
             path: 'qa',
             name: 'KnowledgeQA',
-            component: () => import('@/views/assistant/KnowledgeQA.vue'),
+            component: () => import('@/views/training/KnowledgeAssistant.vue'),
             meta: { 
               title: '知识问答',
               requiresAuth: true
@@ -194,10 +194,18 @@ router.beforeEach(async (to, from, next) => {
     document.title = `${to.meta.title} - HR Agent`
   }
   
-  if (requiresAuth && !authStore.isAuthenticated) {
-    // 需要登录但未登录，跳转到登录页
-    next('/login')
-  } else if (to.path === '/login' && authStore.isAuthenticated) {
+  // 如果需要认证，先检查认证状态
+  if (requiresAuth) {
+    await authStore.checkAuth()
+    
+    if (!authStore.isAuthenticated) {
+      // 需要登录但未登录，跳转到登录页
+      next('/login')
+      return
+    }
+  }
+  
+  if (to.path === '/login' && authStore.isAuthenticated) {
     // 已登录用户访问登录页，跳转到首页
     next('/')
   } else {

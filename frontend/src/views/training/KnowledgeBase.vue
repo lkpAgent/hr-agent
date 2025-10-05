@@ -103,27 +103,27 @@
                   @selection-change="handleSelectionChange"
                 >
                   <el-table-column type="selection" width="55" />
-                  <el-table-column prop="name" label="文件名" min-width="200">
+                  <el-table-column prop="filename" label="文档名称" min-width="200">
                     <template #default="{ row }">
-                      <div class="file-info">
-                        <el-icon class="file-icon">
-                          <Document v-if="row.type === 'pdf'" />
-                          <DocumentCopy v-else-if="row.type === 'doc'" />
+                      <div class="document-name">
+                        <el-icon class="doc-icon">
+                          <Document v-if="row.mime_type?.includes('pdf')" />
+                          <DocumentCopy v-else-if="row.mime_type?.includes('word') || row.mime_type?.includes('document')" />
                           <Tickets v-else />
                         </el-icon>
-                        <span class="file-name">{{ row.name }}</span>
+                        <span>{{ row.filename }}</span>
                       </div>
                     </template>
                   </el-table-column>
-                  <el-table-column prop="size" label="大小" width="100">
+                  <el-table-column prop="file_size" label="文件大小" width="120">
                     <template #default="{ row }">
-                      {{ formatFileSize(row.size) }}
+                      {{ formatFileSize(row.file_size) }}
                     </template>
                   </el-table-column>
-                  <el-table-column prop="chunkCount" label="分块数" width="100" />
-                  <el-table-column prop="uploadTime" label="上传时间" width="160">
+                  <el-table-column prop="category" label="分类" width="100" />
+                  <el-table-column prop="created_at" label="上传时间" width="180">
                     <template #default="{ row }">
-                      {{ formatTime(row.uploadTime) }}
+                      {{ formatTime(row.created_at) }}
                     </template>
                   </el-table-column>
                   <el-table-column label="操作" width="150" fixed="right">
@@ -161,7 +161,7 @@
       <!-- 新建知识库对话框 -->
       <el-dialog
         v-model="showCreateKnowledgeBaseDialog"
-        title="新建知识库"
+        :title="editingKnowledgeBase ? '编辑知识库' : '新建知识库'"
         width="500px"
         @close="resetKnowledgeBaseForm"
       >
@@ -180,7 +180,9 @@
         </el-form>
         <template #footer>
           <el-button @click="showCreateKnowledgeBaseDialog = false">取消</el-button>
-          <el-button type="primary" @click="createKnowledgeBase" :loading="creating">确定</el-button>
+          <el-button type="primary" @click="createKnowledgeBaseHandler" :loading="creating">
+            {{ editingKnowledgeBase ? '更新' : '创建' }}
+          </el-button>
         </template>
       </el-dialog>
 
@@ -269,6 +271,19 @@ import {
   Delete,
   UploadFilled
 } from '@element-plus/icons-vue'
+import { 
+  getKnowledgeBases, 
+  createKnowledgeBase, 
+  updateKnowledgeBase, 
+  deleteKnowledgeBase,
+  getKnowledgeBaseDocuments,
+  deleteDocument as deleteDocumentAPI,
+  getDocumentChunks
+} from '@/api/knowledgeBase'
+import { useAuthStore } from '@/stores/auth'
+
+// 认证store
+const authStore = useAuthStore()
 
 // 响应式数据
 const searchQuery = ref('')
@@ -299,72 +314,29 @@ const knowledgeBaseRules = {
   ]
 }
 
+// 表单引用
+const knowledgeBaseFormRef = ref()
+
 // 上传相关
 const uploadRef = ref()
 const fileList = ref([])
-const uploadAction = '/api/documents/upload'
+const uploadAction = '/api/v1/documents/upload'
 const uploadHeaders = computed(() => ({
-  'Authorization': `Bearer ${localStorage.getItem('token')}`
+  'Authorization': `Bearer ${authStore.token}`
 }))
 const uploadData = computed(() => ({
-  knowledgeBaseId: selectedKnowledgeBase.value?.id
+  knowledge_base_id: selectedKnowledgeBase.value?.id
 }))
 
 // 预览相关
 const previewDocument = ref(null)
 const documentChunks = ref([])
 
-// 模拟数据
-const knowledgeBases = ref([
-  {
-    id: 1,
-    name: '前端开发知识库',
-    description: '包含前端开发相关的技术文档和最佳实践',
-    documentCount: 25,
-    updatedAt: '2024-01-15 10:30:00'
-  },
-  {
-    id: 2,
-    name: '后端开发知识库',
-    description: '后端开发技术栈和架构设计文档',
-    documentCount: 18,
-    updatedAt: '2024-01-14 16:45:00'
-  },
-  {
-    id: 3,
-    name: '产品设计知识库',
-    description: '产品设计流程和用户体验相关文档',
-    documentCount: 12,
-    updatedAt: '2024-01-13 09:20:00'
-  }
-])
-
-const documents = ref([
-  {
-    id: 1,
-    name: 'Vue.js 开发指南.pdf',
-    type: 'pdf',
-    size: 2048576,
-    chunkCount: 15,
-    uploadTime: '2024-01-15 10:30:00'
-  },
-  {
-    id: 2,
-    name: 'React 最佳实践.docx',
-    type: 'doc',
-    size: 1536000,
-    chunkCount: 12,
-    uploadTime: '2024-01-14 16:45:00'
-  },
-  {
-    id: 3,
-    name: 'JavaScript 高级编程.txt',
-    type: 'txt',
-    size: 512000,
-    chunkCount: 8,
-    uploadTime: '2024-01-13 09:20:00'
-  }
-])
+// 数据状态
+const knowledgeBases = ref([])
+const documents = ref([])
+const loading = ref(false)
+const editingKnowledgeBase = ref(null)
 
 // 计算属性
 const filteredKnowledgeBases = computed(() => {
@@ -376,6 +348,19 @@ const filteredKnowledgeBases = computed(() => {
 })
 
 // 方法
+const loadKnowledgeBases = async () => {
+  loading.value = true
+  try {
+    const response = await getKnowledgeBases()
+    knowledgeBases.value = response || []
+  } catch (error) {
+    console.error('加载知识库列表失败:', error)
+    ElMessage.error('加载知识库列表失败')
+  } finally {
+    loading.value = false
+  }
+}
+
 const handleSearch = () => {
   // 搜索逻辑
 }
@@ -386,66 +371,99 @@ const selectKnowledgeBase = (kb) => {
 }
 
 const loadDocuments = async () => {
+  if (!selectedKnowledgeBase.value) return
+  
   documentsLoading.value = true
   try {
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 500))
-    // 这里应该调用实际的API
+    const response = await getKnowledgeBaseDocuments(selectedKnowledgeBase.value.id, {
+      skip: (currentPage.value - 1) * pageSize.value,
+      limit: pageSize.value
+    })
+    documents.value = response.documents || []
+    totalDocuments.value = response.total || 0
   } catch (error) {
+    console.error('加载文档失败:', error)
     ElMessage.error('加载文档失败')
   } finally {
     documentsLoading.value = false
   }
 }
 
-const handleKnowledgeBaseAction = ({ action, kb }) => {
+const handleKnowledgeBaseAction = async ({ action, kb }) => {
   if (action === 'edit') {
     // 编辑知识库
     knowledgeBaseForm.name = kb.name
     knowledgeBaseForm.description = kb.description
+    editingKnowledgeBase.value = kb
     showCreateKnowledgeBaseDialog.value = true
   } else if (action === 'delete') {
+    // 删除知识库
     ElMessageBox.confirm(
-      `确定要删除知识库"${kb.name}"吗？此操作不可恢复。`,
+      `确定要删除知识库"${kb.name}"吗？`,
       '确认删除',
       {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       }
-    ).then(() => {
-      // 删除知识库
-      const index = knowledgeBases.value.findIndex(item => item.id === kb.id)
-      if (index > -1) {
-        knowledgeBases.value.splice(index, 1)
+    ).then(async () => {
+      try {
+        await deleteKnowledgeBase(kb.id)
+        
         if (selectedKnowledgeBase.value?.id === kb.id) {
           selectedKnowledgeBase.value = null
+          documents.value = []
         }
+        
         ElMessage.success('删除成功')
+        await loadKnowledgeBases()
+      } catch (error) {
+        console.error('删除知识库失败:', error)
+        ElMessage.error('删除失败')
       }
-    }).catch(() => {})
+    }).catch(() => {
+      // 取消删除
+    })
   }
 }
 
-const createKnowledgeBase = async () => {
-  creating.value = true
+const createKnowledgeBaseHandler = async () => {
+  if (!knowledgeBaseFormRef.value) return
+  
   try {
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    await knowledgeBaseFormRef.value.validate()
+    creating.value = true
     
-    const newKb = {
-      id: Date.now(),
+    const kbData = {
       name: knowledgeBaseForm.name,
       description: knowledgeBaseForm.description,
-      documentCount: 0,
-      updatedAt: new Date().toLocaleString()
+      is_public: true,
+      is_searchable: true,
+      category: null,
+      tags: [],
+      meta_data: {}
     }
     
-    knowledgeBases.value.unshift(newKb)
+    if (editingKnowledgeBase.value) {
+      // 编辑模式
+      await updateKnowledgeBase(editingKnowledgeBase.value.id, kbData)
+      ElMessage.success('知识库更新成功')
+    } else {
+      // 创建模式
+      await createKnowledgeBase(kbData)
+      ElMessage.success('知识库创建成功')
+    }
+    
     showCreateKnowledgeBaseDialog.value = false
-    ElMessage.success('创建成功')
+    resetKnowledgeBaseForm()
+    
+    // 重新加载知识库列表
+    await loadKnowledgeBases()
   } catch (error) {
-    ElMessage.error('创建失败')
+    console.error('操作知识库失败:', error)
+    if (error !== false) { // 验证失败时不显示错误
+      ElMessage.error(editingKnowledgeBase.value ? '更新知识库失败' : '创建知识库失败')
+    }
   } finally {
     creating.value = false
   }
@@ -454,6 +472,10 @@ const createKnowledgeBase = async () => {
 const resetKnowledgeBaseForm = () => {
   knowledgeBaseForm.name = ''
   knowledgeBaseForm.description = ''
+  editingKnowledgeBase.value = null
+  if (knowledgeBaseFormRef.value) {
+    knowledgeBaseFormRef.value.clearValidate()
+  }
 }
 
 const handleSelectionChange = (selection) => {
@@ -469,22 +491,10 @@ const previewDocumentHandler = (doc) => {
 const loadDocumentChunks = async (documentId) => {
   documentChunks.value = []
   try {
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    // 模拟分段数据
-    documentChunks.value = [
-      {
-        content: '这是文档的第一个分段内容，包含了关于Vue.js基础概念的介绍。Vue.js是一个渐进式JavaScript框架，用于构建用户界面。它的核心库只关注视图层，易于上手，便于与第三方库或既有项目整合。'
-      },
-      {
-        content: '第二个分段讲述了Vue.js的响应式系统。Vue.js使用了基于依赖追踪的响应式系统，当数据发生变化时，视图会自动更新。这种机制让开发者可以专注于业务逻辑，而不需要手动操作DOM。'
-      },
-      {
-        content: '第三个分段介绍了组件系统。组件是Vue.js最强大的功能之一，它允许我们将UI拆分成独立、可复用的部分。每个组件都有自己的模板、脚本和样式，可以独立开发和测试。'
-      }
-    ]
+    const response = await getDocumentChunks(documentId)
+    documentChunks.value = response.chunks || []
   } catch (error) {
+    console.error('加载文档分块失败:', error)
     ElMessage.error('加载文档内容失败')
   }
 }
@@ -498,11 +508,22 @@ const deleteDocument = (doc) => {
       cancelButtonText: '取消',
       type: 'warning'
     }
-  ).then(() => {
-    const index = documents.value.findIndex(item => item.id === doc.id)
-    if (index > -1) {
-      documents.value.splice(index, 1)
+  ).then(async () => {
+    try {
+      await deleteDocumentAPI(doc.id)
+      
+      // 从选中列表中移除
+      const selectedIndex = selectedDocuments.value.findIndex(item => item.id === doc.id)
+      if (selectedIndex > -1) {
+        selectedDocuments.value.splice(selectedIndex, 1)
+      }
+      
       ElMessage.success('删除成功')
+      // 重新加载文档列表
+      await loadDocuments()
+    } catch (error) {
+      console.error('删除文档失败:', error)
+      ElMessage.error('删除失败')
     }
   }).catch(() => {})
 }
@@ -525,6 +546,16 @@ const beforeUpload = (file) => {
 const handleUploadSuccess = (response, file) => {
   ElMessage.success(`${file.name} 上传成功`)
   loadDocuments()
+  
+  // 检查是否所有文件都已上传完成
+  const remainingFiles = fileList.value.filter(f => f.status !== 'success')
+  if (remainingFiles.length === 0) {
+    // 所有文件上传完成，关闭对话框
+    setTimeout(() => {
+      showUploadDialog.value = false
+      resetUploadForm()
+    }, 1000) // 延迟1秒关闭，让用户看到成功消息
+  }
 }
 
 const handleUploadError = (error, file) => {
@@ -558,13 +589,21 @@ const formatFileSize = (bytes) => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 
-const formatTime = (timeStr) => {
-  return new Date(timeStr).toLocaleString()
+const formatTime = (timeString) => {
+  if (!timeString) return ''
+  const date = new Date(timeString)
+  return date.toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
 }
 
 // 生命周期
 onMounted(() => {
-  // 初始化数据
+  loadKnowledgeBases()
 })
 </script>
 

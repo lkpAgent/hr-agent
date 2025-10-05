@@ -3,7 +3,7 @@ Main API router for v1 endpoints
 """
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import auth, users, conversations, documents, knowledge_base, chat
+from app.api.v1.endpoints import auth, users, conversations, documents, knowledge_base, chat, knowledge_assistant
 
 api_router = APIRouter()
 
@@ -14,6 +14,7 @@ api_router.include_router(conversations.router, prefix="/conversations", tags=["
 api_router.include_router(documents.router, prefix="/documents", tags=["documents"])
 api_router.include_router(knowledge_base.router, prefix="/knowledge-base", tags=["knowledge-base"])
 api_router.include_router(chat.router, prefix="/chat", tags=["chat"])
+api_router.include_router(knowledge_assistant.router, prefix="/knowledge-assistant", tags=["knowledge-assistant"])
 
 
 @api_router.get("/health")

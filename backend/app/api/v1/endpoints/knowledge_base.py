@@ -36,11 +36,11 @@ async def get_knowledge_bases(
 @router.post("/", response_model=KnowledgeBaseSchema)
 async def create_knowledge_base(
     kb_data: KnowledgeBaseCreate,
-    current_user: UserSchema = Depends(get_current_superuser),
+    current_user: UserSchema = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ) -> Any:
     """
-    Create a new knowledge base (admin only)
+    Create a new knowledge base
     """
     kb_service = KnowledgeBaseService(db)
     knowledge_base = await kb_service.create(kb_data)

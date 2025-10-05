@@ -361,7 +361,11 @@ class DocumentService:
                     embedding=chunk_embedding,
                     meta_data={
                         "start_char": start,
-                        "end_char": end
+                        "end_char": end,
+                        "knowledge_base_id": str(document.knowledge_base_id) if document.knowledge_base_id else None,
+                        "filename": document.filename,
+                        "document_id": str(document.id),
+                        "chunk_id": f"{document.id}_{chunk_index}"
                     }
                 )
                 

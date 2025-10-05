@@ -20,10 +20,11 @@ class Document(BaseModel):
     original_filename = Column(String(255), nullable=False)
     file_path = Column(String(500), nullable=False)
     file_size = Column(Integer, nullable=False)
+    file_hash = Column(String(64), nullable=False)  # SHA256 hash
     mime_type = Column(String(100), nullable=False)
     
     # Content and metadata
-    content = Column(Text, nullable=True)  # Extracted text content
+    extracted_content = Column(Text, nullable=True)  # Extracted text content
     summary = Column(Text, nullable=True)  # AI-generated summary
     meta_data = Column(JSON, nullable=True)  # Additional metadata
     
@@ -35,14 +36,14 @@ class Document(BaseModel):
     tags = Column(JSON, nullable=True)  # List of tags
     
     # Relationships
-    uploaded_by_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     uploaded_by = relationship("User", back_populates="documents")
     
     knowledge_base_id = Column(UUID(as_uuid=True), ForeignKey("knowledge_bases.id"), nullable=True)
     knowledge_base = relationship("KnowledgeBase", back_populates="documents")
     
     def __repr__(self):
-        return f"<Document(filename='{self.filename}', category='{self.category}')>"
+        return f"<Document at {hex(id(self))}>"
 
 
 class DocumentChunk(BaseModel):

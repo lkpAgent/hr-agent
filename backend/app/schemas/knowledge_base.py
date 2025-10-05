@@ -15,7 +15,7 @@ class KnowledgeBaseBase(BaseModel):
     is_searchable: bool = True
     category: Optional[str] = Field(None, max_length=100)
     tags: Optional[List[str]] = None
-    metadata: Optional[Dict[str, Any]] = None
+    meta_data: Optional[Dict[str, Any]] = None
 
 
 class KnowledgeBaseCreate(KnowledgeBaseBase):
@@ -31,7 +31,7 @@ class KnowledgeBaseUpdate(BaseModel):
     is_searchable: Optional[bool] = None
     category: Optional[str] = Field(None, max_length=100)
     tags: Optional[List[str]] = None
-    metadata: Optional[Dict[str, Any]] = None
+    meta_data: Optional[Dict[str, Any]] = None
 
 
 class KnowledgeBaseInDB(KnowledgeBaseBase):

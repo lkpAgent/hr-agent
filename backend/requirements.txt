@@ -15,10 +15,14 @@ passlib[bcrypt]==1.7.4
 # AI and LLM
 langchain==0.0.350
 langchain-openai==0.0.2
+langchain-community==0.0.10
+langchain-text-splitters==0.0.1
 openai>=1.6.1
 
 # Vector database (optional, for pgvector)
 pgvector==0.2.4
+psycopg2-binary==2.9.9
+langchain-postgres==0.0.6
 
 # Data validation
 pydantic==2.5.0
@@ -35,6 +39,8 @@ structlog==23.2.0
 PyPDF2==3.0.1
 python-docx==1.1.0
 openpyxl==3.1.2
+unstructured==0.11.6
+tiktoken==0.5.2
 
 # HTTP client
 httpx==0.25.2

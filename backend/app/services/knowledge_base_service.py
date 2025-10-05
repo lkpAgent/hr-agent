@@ -33,7 +33,7 @@ class KnowledgeBaseService:
                 is_searchable=kb_data.is_searchable,
                 category=kb_data.category,
                 tags=kb_data.tags or [],
-                meta_data=kb_data.metadata or {}
+                meta_data=kb_data.meta_data or {}
             )
             
             self.db.add(knowledge_base)
@@ -84,6 +84,48 @@ class KnowledgeBaseService:
         except Exception as e:
             logger.error(f"Error getting knowledge bases: {e}")
             raise
+    
+    async def get_accessible_knowledge_bases(
+        self,
+        user_id: UUID,
+        skip: int = 0,
+        limit: int = 20
+    ) -> List[KnowledgeBase]:
+        """Get knowledge bases accessible to a user"""
+        try:
+            # For now, return all public knowledge bases
+            # In the future, this could include user-specific access control
+            query = select(KnowledgeBase).where(
+                KnowledgeBase.is_public == True
+            ).order_by(desc(KnowledgeBase.created_at)).offset(skip).limit(limit)
+            
+            result = await self.db.execute(query)
+            return result.scalars().all()
+            
+        except Exception as e:
+            logger.error(f"Error getting accessible knowledge bases for user {user_id}: {e}")
+            raise
+    
+    async def create(self, kb_data: KnowledgeBaseCreate) -> KnowledgeBase:
+        """Create a new knowledge base (alias for create_knowledge_base)"""
+        return await self.create_knowledge_base(kb_data)
+    
+    async def get_by_id(self, kb_id: str) -> Optional[KnowledgeBase]:
+        """Get a knowledge base by ID (alias for get_knowledge_base)"""
+        try:
+            kb_uuid = UUID(kb_id)
+            return await self.get_knowledge_base(kb_uuid)
+        except ValueError:
+            logger.error(f"Invalid UUID format: {kb_id}")
+            return None
+    
+    async def update(self, knowledge_base: KnowledgeBase, kb_update: KnowledgeBaseUpdate) -> KnowledgeBase:
+        """Update a knowledge base"""
+        return await self.update_knowledge_base(knowledge_base.id, kb_update)
+    
+    async def delete(self, knowledge_base: KnowledgeBase) -> bool:
+        """Delete a knowledge base"""
+        return await self.delete_knowledge_base(knowledge_base.id)
     
     async def update_knowledge_base(
         self,

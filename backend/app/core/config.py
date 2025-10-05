@@ -55,12 +55,22 @@ class Settings(BaseSettings):
         return self.DATABASE_NAME
     
     # Vector database settings
-    VECTOR_DIMENSION: int = 1536  # OpenAI embedding dimension
+    VECTOR_DIMENSION: int = 2048  # 智谱AI embedding-3 dimension
     
     # LLM settings
     OPENAI_API_KEY: Optional[str] = None
     OPENAI_MODEL: str = "gpt-3.5-turbo"
     OPENAI_EMBEDDING_MODEL: str = "text-embedding-ada-002"
+    
+    # Custom LLM settings (for non-OpenAI providers)
+    LLM_API_KEY: Optional[str] = None
+    LLM_BASE_URL: Optional[str] = None
+    LLM_MODEL: str = "doubao-1-5-pro-32k-250115"
+    
+    # Custom Embedding settings
+    EMBEDDING_API_KEY: Optional[str] = None
+    EMBEDDING_BASE_URL: Optional[str] = None
+    EMBEDDING_MODEL: str = "embedding-3"
     
     # LangChain settings
     LANGCHAIN_TRACING_V2: bool = False
@@ -78,7 +88,7 @@ class Settings(BaseSettings):
     LOG_FORMAT: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     
     model_config = {
-        "env_file": Path(__file__).parent.parent.parent / ".env", #使用绝对路径，以免会导致找不到.env的问题
+        "env_file": Path(__file__).parent.parent.parent / ".env", #正确的.env文件路径
         "case_sensitive": True,
         "extra": "ignore"
     }

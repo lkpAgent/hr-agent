@@ -4,7 +4,8 @@ Document-related Pydantic schemas
 from datetime import datetime
 from typing import Optional, Dict, Any, List
 from uuid import UUID
-from pydantic import BaseModel, Field
+import numpy as np
+from pydantic import BaseModel, Field, field_validator
 
 
 class DocumentBase(BaseModel):
@@ -12,7 +13,7 @@ class DocumentBase(BaseModel):
     filename: str = Field(..., min_length=1, max_length=255)
     category: Optional[str] = Field(None, max_length=100)
     tags: Optional[List[str]] = None
-    metadata: Optional[Dict[str, Any]] = None
+    meta_data: Optional[Dict[str, Any]] = None
 
 
 class DocumentCreate(DocumentBase):
@@ -26,7 +27,7 @@ class DocumentUpdate(BaseModel):
     category: Optional[str] = Field(None, max_length=100)
     tags: Optional[List[str]] = None
     knowledge_base_id: Optional[UUID] = None
-    metadata: Optional[Dict[str, Any]] = None
+    meta_data: Optional[Dict[str, Any]] = None
 
 
 class DocumentInDB(DocumentBase):
@@ -40,8 +41,19 @@ class DocumentInDB(DocumentBase):
     mime_type: str
     extracted_content: Optional[str]
     summary: Optional[str]
+    embedding: Optional[List[float]] = None
     created_at: datetime
     updated_at: datetime
+
+    @field_validator('embedding', mode='before')
+    @classmethod
+    def convert_embedding(cls, v):
+        """Convert numpy array to list for JSON serialization"""
+        if v is None:
+            return None
+        if isinstance(v, np.ndarray):
+            return v.tolist()
+        return v
 
     class Config:
         from_attributes = True
@@ -84,15 +96,26 @@ class DocumentChunkBase(BaseModel):
     content: str
     chunk_index: int
     chunk_size: int
-    metadata: Optional[Dict[str, Any]] = None
+    meta_data: Optional[Dict[str, Any]] = None
 
 
 class DocumentChunkInDB(DocumentChunkBase):
     """Schema for document chunk in database"""
     id: UUID
     document_id: UUID
+    embedding: Optional[List[float]] = None
     created_at: datetime
     updated_at: datetime
+
+    @field_validator('embedding', mode='before')
+    @classmethod
+    def convert_embedding(cls, v):
+        """Convert numpy array to list for JSON serialization"""
+        if v is None:
+            return None
+        if isinstance(v, np.ndarray):
+            return v.tolist()
+        return v
 
     class Config:
         from_attributes = True
