@@ -76,6 +76,11 @@ class Settings(BaseSettings):
     LANGCHAIN_TRACING_V2: bool = False
     LANGCHAIN_API_KEY: Optional[str] = None
     
+    # Dify Workflow settings
+    DIFY_BASE_URL: str = "http://218.78.133.209:85"
+    DIFY_API_KEY: Optional[str] = None
+    DIFY_USER_ID: str = "hr-agent-user"
+    
     # Redis settings (for caching and session)
     REDIS_URL: str = "redis://localhost:6379/0"
     

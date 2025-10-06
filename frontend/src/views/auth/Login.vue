@@ -69,7 +69,7 @@
         <div class="login-footer">
           <p class="demo-info">
             <el-icon><InfoFilled /></el-icon>
-            演示账号：admin / admin123
+            演示账号：testuser / test123
           </p>
         </div>
       </div>
@@ -120,8 +120,8 @@ const loading = ref(false)
 const rememberMe = ref(false)
 
 const loginForm = reactive({
-  username: 'admin',
-  password: 'admin123'
+  username: 'testuser',
+  password: 'test123'
 })
 
 const loginRules = {

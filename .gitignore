@@ -193,3 +193,6 @@ chroma/
 .env.local
 .env.production
 secrets/
+
+**/__pycache__/**
+.idea/*

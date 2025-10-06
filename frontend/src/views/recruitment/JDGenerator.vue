@@ -1,279 +1,383 @@
 <template>
   <div class="jd-generator">
     <div class="page-container">
-      <!-- 简化的页面头部 -->
+      <!-- 页面头部 -->
       <div class="page-header">
         <div class="header-left">
           <h1 class="page-title">
             <el-icon><Document /></el-icon>
-            智能JD生成
+            智能JD管理
           </h1>
+          <p class="page-description">创建和管理职位描述，使用AI智能生成专业的JD内容</p>
         </div>
         <div class="header-actions">
-          <el-button @click="resetForm">
-            <el-icon><Refresh /></el-icon>
-            重置
-          </el-button>
-          <el-button type="primary" @click="generateJD" :loading="generating">
-            <el-icon><Magic /></el-icon>
-            {{ generating ? '生成中...' : '生成JD' }}
+          <el-button @click="createNewJD" type="primary" size="large">
+            <el-icon><Plus /></el-icon>
+            新建JD
           </el-button>
         </div>
       </div>
 
-      <!-- 左右布局的主要内容 -->
+      <!-- 主要内容区域 -->
       <div class="main-content">
-        <!-- 左侧配置面板 -->
-        <div class="config-panel">
-          <el-card class="config-card">
+        <!-- 左侧JD列表 -->
+        <div class="jd-list-panel">
+          <el-card class="list-card">
             <template #header>
-              <div class="card-header">
-                <el-icon><Setting /></el-icon>
-                <span>职位配置</span>
+              <div class="list-header">
+                <span class="list-title">
+                  <el-icon><List /></el-icon>
+                  JD列表 ({{ pagination.total }})
+                </span>
+                <div class="list-actions">
+                  <el-input
+                    v-model="searchKeyword"
+                    placeholder="搜索职位..."
+                    clearable
+                    size="small"
+                    style="width: 200px"
+                    @input="handleSearch"
+                  >
+                    <template #prefix>
+                      <el-icon><Search /></el-icon>
+                    </template>
+                  </el-input>
+                </div>
               </div>
             </template>
 
-            <el-form 
-              ref="formRef" 
-              :model="form" 
-              :rules="rules" 
-              label-width="100px"
-              label-position="top"
-            >
-              <!-- 第一行：职位名称和工作地点 -->
-              <div class="form-row">
-                <el-form-item label="职位名称" prop="jobTitle">
-                  <el-input 
-                    v-model="form.jobTitle" 
-                    placeholder="请输入职位名称，如：前端开发工程师"
-                    clearable
-                  />
-                </el-form-item>
-
-                <el-form-item label="工作地点" prop="location">
-                  <el-select 
-                    v-model="form.location" 
-                    placeholder="请选择工作地点"
-                    filterable
-                    clearable
-                    style="width: 100%"
-                  >
-                    <el-option 
-                      v-for="city in cities" 
-                      :key="city" 
-                      :label="city" 
-                      :value="city" 
-                    />
-                  </el-select>
-                </el-form-item>
+            <!-- JD列表内容 -->
+            <div class="jd-list-content">
+              <div v-if="jdListLoading" class="loading-container">
+                <el-skeleton :rows="5" animated />
+              </div>
+              
+              <div v-else-if="jdList.length === 0" class="empty-container">
+                <el-empty description="暂无JD数据" :image-size="120">
+                  <el-button type="primary" @click="createNewJD">
+                    <el-icon><Plus /></el-icon>
+                    创建第一个JD
+                  </el-button>
+                </el-empty>
               </div>
 
-              <!-- 第二行：工作经验和学历要求 -->
-              <div class="form-row">
-                <el-form-item label="工作经验" prop="experience">
-                  <el-select 
-                    v-model="form.experience" 
-                    placeholder="请选择工作经验要求"
-                    style="width: 100%"
-                  >
-                    <el-option label="不限" value="不限" />
-                    <el-option label="1年以下" value="1年以下" />
-                    <el-option label="1-3年" value="1-3年" />
-                    <el-option label="3-5年" value="3-5年" />
-                    <el-option label="5-10年" value="5-10年" />
-                    <el-option label="10年以上" value="10年以上" />
-                  </el-select>
-                </el-form-item>
-
-                <el-form-item label="学历要求" prop="education">
-                  <el-select 
-                    v-model="form.education" 
-                    placeholder="请选择学历要求"
-                    style="width: 100%"
-                  >
-                    <el-option label="不限" value="不限" />
-                    <el-option label="大专" value="大专" />
-                    <el-option label="本科" value="本科" />
-                    <el-option label="硕士" value="硕士" />
-                    <el-option label="博士" value="博士" />
-                  </el-select>
-                </el-form-item>
-              </div>
-
-              <!-- 第三行：薪资范围和工作类型 -->
-              <div class="form-row">
-                <el-form-item label="薪资范围" prop="salary">
-                  <el-input 
-                    v-model="form.salary" 
-                    placeholder="如：10K-20K"
-                    clearable
-                  />
-                </el-form-item>
-
-                <el-form-item label="工作类型" prop="jobType">
-                  <el-radio-group v-model="form.jobType">
-                    <el-radio label="全职">全职</el-radio>
-                    <el-radio label="兼职">兼职</el-radio>
-                    <el-radio label="实习">实习</el-radio>
-                    <el-radio label="外包">外包</el-radio>
-                  </el-radio-group>
-                </el-form-item>
-              </div>
-
-              <!-- 技能要求 -->
-              <el-form-item label="技能要求" prop="skills">
-                <el-select
-                  v-model="form.skills"
-                  multiple
-                  filterable
-                  allow-create
-                  default-first-option
-                  placeholder="请选择或输入技能要求"
-                  style="width: 100%"
+              <div v-else class="jd-items">
+                <div
+                  v-for="jd in jdList"
+                  :key="jd.id"
+                  :class="['jd-item', { active: selectedJD?.id === jd.id }]"
+                  @click="selectJD(jd)"
                 >
-                  <el-option
-                    v-for="skill in commonSkills"
-                    :key="skill"
-                    :label="skill"
-                    :value="skill"
-                  />
-                </el-select>
-              </el-form-item>
+                  <div class="jd-item-header">
+                    <h4 class="jd-title">{{ jd.title || '未命名职位' }}</h4>
+                    <div class="jd-actions">
+                      <el-dropdown trigger="click" @command="handleJDAction">
+                        <el-button text size="small">
+                          <el-icon><MoreFilled /></el-icon>
+                        </el-button>
+                        <template #dropdown>
+                          <el-dropdown-menu>
+                            <el-dropdown-item :command="{ action: 'edit', jd }">
+                              <el-icon><Edit /></el-icon>
+                              编辑
+                            </el-dropdown-item>
+                            <el-dropdown-item :command="{ action: 'duplicate', jd }">
+                              <el-icon><CopyDocument /></el-icon>
+                              复制
+                            </el-dropdown-item>
+                            <el-dropdown-item :command="{ action: 'download', jd }">
+                              <el-icon><Download /></el-icon>
+                              下载
+                            </el-dropdown-item>
+                            <el-dropdown-item :command="{ action: 'delete', jd }" divided>
+                              <el-icon><Delete /></el-icon>
+                              删除
+                            </el-dropdown-item>
+                          </el-dropdown-menu>
+                        </template>
+                      </el-dropdown>
+                    </div>
+                  </div>
+                  
+                  <div class="jd-item-content">
+                    <div class="jd-meta">
+                      <span class="meta-item">
+                        <el-icon><Location /></el-icon>
+                        {{ (jd.meta_data && jd.meta_data.location) || jd.location || '未设置' }}
+                      </span>
+                      <span class="meta-item">
+                        <el-icon><Money /></el-icon>
+                        {{ (jd.meta_data && jd.meta_data.salary) || jd.salary_range || '面议' }}
+                      </span>
+                    </div>
 
-              <!-- 公司福利 -->
-              <el-form-item label="公司福利">
-                <el-checkbox-group v-model="form.benefits">
-                  <el-checkbox label="五险一金">五险一金</el-checkbox>
-                  <el-checkbox label="年终奖">年终奖</el-checkbox>
-                  <el-checkbox label="带薪年假">带薪年假</el-checkbox>
-                  <el-checkbox label="弹性工作">弹性工作</el-checkbox>
-                  <el-checkbox label="远程办公">远程办公</el-checkbox>
-                  <el-checkbox label="股票期权">股票期权</el-checkbox>
-                  <el-checkbox label="培训机会">培训机会</el-checkbox>
-                  <el-checkbox label="健身房">健身房</el-checkbox>
-                </el-checkbox-group>
-              </el-form-item>
+                    <div class="jd-time">
+                      {{ formatDate(jd.updated_at) }}
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-              <!-- 其他要求 -->
-              <el-form-item label="其他要求">
-                <el-input
-                  v-model="form.additionalRequirements"
-                  type="textarea"
-                  :rows="3"
-                  placeholder="请输入其他特殊要求或补充说明"
+              <!-- 分页 -->
+              <div v-if="jdList.length > 0" class="pagination-container">
+                <el-pagination
+                  v-model:current-page="pagination.page"
+                  v-model:page-size="pagination.size"
+                  :total="pagination.total"
+                  :page-sizes="[10, 20, 50]"
+                  layout="total, sizes, prev, pager, next"
+                  small
+                  @size-change="handleSizeChange"
+                  @current-change="handlePageChange"
                 />
-              </el-form-item>
-            </el-form>
-          </el-card>
-        </div>
-
-        <!-- 右侧预览面板 -->
-        <div class="preview-panel">
-          <el-card class="preview-card">
-            <template #header>
-              <div class="card-header">
-                <el-icon><View /></el-icon>
-                <span>JD预览</span>
-                <div class="header-actions" v-if="generatedJD">
-                  <el-button size="small" @click="copyJD">
-                    <el-icon><CopyDocument /></el-icon>
-                    复制
-                  </el-button>
-                  <el-button size="small" type="primary" @click="saveJD">
-                    <el-icon><Download /></el-icon>
-                    保存
-                  </el-button>
-                </div>
-              </div>
-            </template>
-
-            <div class="preview-content">
-              <div v-if="!generatedJD && !generating" class="empty-state">
-                <el-icon class="empty-icon"><Document /></el-icon>
-                <p>请填写左侧职位信息，然后点击"生成JD"按钮</p>
-              </div>
-
-              <div v-if="generating" class="loading-state">
-                <el-icon class="loading-icon"><Loading /></el-icon>
-                <p>AI正在为您生成专业的职位描述...</p>
-                <div class="loading-tips">
-                  <p>💡 正在分析职位要求</p>
-                  <p>🎯 匹配行业标准</p>
-                  <p>✨ 优化语言表达</p>
-                </div>
-              </div>
-
-              <div v-if="generatedJD" class="jd-content">
-                <div class="jd-section">
-                  <h3>职位信息</h3>
-                  <div class="job-info-grid">
-                    <div class="info-item">
-                      <span class="label">职位名称：</span>
-                      <span class="value">{{ form.jobTitle }}</span>
-                    </div>
-                    <div class="info-item">
-                      <span class="label">工作地点：</span>
-                      <span class="value">{{ form.location }}</span>
-                    </div>
-                    <div class="info-item">
-                      <span class="label">工作经验：</span>
-                      <span class="value">{{ form.experience }}</span>
-                    </div>
-                    <div class="info-item">
-                      <span class="label">学历要求：</span>
-                      <span class="value">{{ form.education }}</span>
-                    </div>
-                    <div class="info-item">
-                      <span class="label">薪资范围：</span>
-                      <span class="value">{{ form.salary }}</span>
-                    </div>
-                    <div class="info-item">
-                      <span class="label">工作类型：</span>
-                      <span class="value">{{ form.jobType }}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="jd-section">
-                  <h3>职位描述</h3>
-                  <div class="jd-text" v-html="generatedJD.description"></div>
-                </div>
-
-                <div class="jd-section">
-                  <h3>任职要求</h3>
-                  <div class="jd-text" v-html="generatedJD.requirements"></div>
-                </div>
-
-                <div class="jd-section" v-if="form.benefits.length > 0">
-                  <h3>福利待遇</h3>
-                  <div class="benefits-list">
-                    <el-tag 
-                      v-for="benefit in form.benefits" 
-                      :key="benefit" 
-                      class="benefit-tag"
-                      type="success"
-                    >
-                      {{ benefit }}
-                    </el-tag>
-                  </div>
-                </div>
-
-                <div class="jd-section" v-if="form.skills.length > 0">
-                  <h3>技能要求</h3>
-                  <div class="skills-list">
-                    <el-tag 
-                      v-for="skill in form.skills" 
-                      :key="skill" 
-                      class="skill-tag"
-                      type="primary"
-                    >
-                      {{ skill }}
-                    </el-tag>
-                  </div>
-                </div>
               </div>
             </div>
           </el-card>
+        </div>
+
+        <!-- 右侧编辑区域 -->
+        <div class="jd-editor-panel">
+          <!-- 欢迎页面 -->
+          <div v-if="!selectedJD && !isCreatingNew" class="welcome-container">
+            <el-card class="welcome-card">
+              <div class="welcome-content">
+                <div class="welcome-icon">
+                  <el-icon size="80"><Document /></el-icon>
+                </div>
+                <h2>欢迎使用智能JD管理</h2>
+                <p>选择左侧的JD进行编辑，或创建新的职位描述</p>
+                <div class="welcome-actions">
+                  <el-button type="primary" @click="createNewJD" size="large">
+                    <el-icon><Plus /></el-icon>
+                    创建新JD
+                  </el-button>
+                </div>
+              </div>
+            </el-card>
+          </div>
+
+          <!-- JD编辑/生成区域 -->
+          <div v-else class="jd-editor-content">
+            <!-- 编辑器头部 -->
+            <div class="editor-header">
+              <div class="editor-title">
+                <h3>{{ isCreatingNew ? '创建新JD' : `编辑: ${selectedJD?.title}` }}</h3>
+                <el-tag v-if="!isCreatingNew" :type="getStatusType(selectedJD?.status)" size="small">
+                  {{ getStatusText(selectedJD?.status) }}
+                </el-tag>
+              </div>
+              <div class="editor-actions">
+                <el-button @click="resetForm" :disabled="generating">
+                  <el-icon><Refresh /></el-icon>
+                  重置
+                </el-button>
+                <el-button @click="saveJD" :loading="saving" :disabled="generating">
+                  <el-icon><Check /></el-icon>
+                  保存
+                </el-button>
+                <el-button type="primary" @click="generateJD" :loading="generating">
+                  <el-icon><Star /></el-icon>
+                  {{ generating ? '生成中...' : 'AI生成' }}
+                </el-button>
+              </div>
+            </div>
+
+            <!-- 编辑器主要内容 -->
+            <div class="editor-main">
+              <!-- 左侧配置面板 -->
+              <div class="config-panel">
+                <el-card class="config-card">
+                  <template #header>
+                    <div class="card-header">
+                      <el-icon><Setting /></el-icon>
+                      <span>职位配置</span>
+                    </div>
+                  </template>
+
+                  <el-form
+                    ref="formRef"
+                    :model="form"
+                    :rules="rules"
+                    label-width="100px"
+                    label-position="top"
+                    class="jd-form"
+                  >
+                    <div class="form-section">
+                      <h4 class="section-title">基本信息</h4>
+                      <el-row :gutter="16">
+                        <el-col :span="12">
+                          <el-form-item label="职位名称" prop="jobTitle">
+                      <el-input v-model="form.jobTitle" placeholder="如：高级前端工程师" />
+                          </el-form-item>
+                        </el-col>
+                        <el-col :span="12">
+                          <el-form-item label="工作地点" prop="location">
+                            <el-select v-model="form.location" placeholder="选择工作地点" style="width: 100%">
+                              <el-option
+                                v-for="city in cities"
+                                :key="city"
+                                :label="city"
+                                :value="city"
+                              />
+                            </el-select>
+                          </el-form-item>
+                        </el-col>
+                      </el-row>
+
+                      <el-row :gutter="16">
+                        <el-col :span="12">
+                          <el-form-item label="薪资范围" prop="salary">
+                <el-input v-model="form.salary" placeholder="如：15K-25K" clearable />
+                          </el-form-item>
+                        </el-col>
+                        <el-col :span="12">
+                          <el-form-item label="工作经验" prop="experience">
+                            <el-select v-model="form.experience" placeholder="选择工作经验" style="width: 100%">
+                              <el-option label="不限" value="不限" />
+                              <el-option label="1年以下" value="1年以下" />
+                              <el-option label="1-3年" value="1-3年" />
+                              <el-option label="3-5年" value="3-5年" />
+                              <el-option label="5-10年" value="5-10年" />
+                              <el-option label="10年以上" value="10年以上" />
+                            </el-select>
+                          </el-form-item>
+                        </el-col>
+                      </el-row>
+
+                      <el-row :gutter="16">
+                        <el-col :span="12">
+                          <el-form-item label="学历要求" prop="education">
+                            <el-select v-model="form.education" placeholder="选择学历要求" style="width: 100%">
+                              <el-option label="不限" value="不限" />
+                              <el-option label="大专" value="大专" />
+                              <el-option label="本科" value="本科" />
+                              <el-option label="硕士" value="硕士" />
+                              <el-option label="博士" value="博士" />
+                            </el-select>
+                          </el-form-item>
+                        </el-col>
+                        <el-col :span="12">
+                          <el-form-item label="工作性质" prop="jobType">
+                <el-select v-model="form.jobType" placeholder="选择工作性质" style="width: 100%">
+                              <el-option label="全职" value="全职" />
+                              <el-option label="兼职" value="兼职" />
+                              <el-option label="实习" value="实习" />
+                              <el-option label="远程" value="远程" />
+                            </el-select>
+                          </el-form-item>
+                        </el-col>
+                      </el-row>
+                    </div>
+
+                    <div class="form-section">
+                      <h4 class="section-title">技能要求</h4>
+                      <el-form-item label="技能标签" prop="skills">
+                        <el-select
+                          v-model="form.skills"
+                          multiple
+                          filterable
+                          allow-create
+                          placeholder="选择或输入技能标签"
+                          style="width: 100%"
+                        >
+                          <el-option
+                            v-for="skill in skillOptions"
+                            :key="skill"
+                            :label="skill"
+                            :value="skill"
+                          />
+                        </el-select>
+                      </el-form-item>
+                    </div>
+
+                    <div class="form-section">
+                      <div class="ai-notice">
+                        <el-icon class="notice-icon"><InfoFilled /></el-icon>
+                        <span>职位描述（工作职责、任职要求、福利待遇）将由AI智能生成</span>
+                      </div>
+                    </div>
+                  </el-form>
+                </el-card>
+              </div>
+
+              <!-- 右侧预览面板 -->
+              <div class="preview-panel">
+                <el-card class="preview-card">
+                  <template #header>
+                    <div class="card-header">
+                      <el-icon><View /></el-icon>
+                      <span>JD预览</span>
+                      <div class="preview-actions">
+                        <el-button
+                          v-if="generatedJD"
+                          @click="toggleEditMode"
+                          :type="isEditing ? 'primary' : 'default'"
+                          size="small"
+                        >
+                          <el-icon><Edit /></el-icon>
+                          {{ isEditing ? '预览' : '编辑' }}
+                        </el-button>
+                        <el-button
+                          v-if="generatedJD"
+                          @click="copyJD"
+                          size="small"
+                        >
+                          <el-icon><CopyDocument /></el-icon>
+                          复制
+                        </el-button>
+                      </div>
+                    </div>
+                  </template>
+
+                  <div class="preview-content">
+                    <!-- 生成中状态 -->
+                    <div v-if="generating && !displayedContent" class="generating-container">
+                      <el-skeleton :rows="8" animated />
+                      <div class="generating-text">
+                        <el-icon class="is-loading"><Loading /></el-icon>
+                        AI正在生成JD内容...
+                      </div>
+                    </div>
+
+                    <!-- 打字机效果显示 -->
+                    <div v-else-if="generating && displayedContent" class="typewriter-container">
+                      <div class="typewriter-header">
+                        <el-icon class="is-loading"><Loading /></el-icon>
+                        <span>AI正在生成中...</span>
+                      </div>
+                      <div class="typewriter-content">
+                        <div class="markdown-content" v-html="renderedDisplayedContent"></div>
+                        <span class="typewriter-cursor">|</span>
+                      </div>
+                    </div>
+
+                    <!-- 编辑模式 -->
+                    <div v-else-if="isEditing" class="edit-container">
+                      <el-input
+                        v-model="editContent"
+                        type="textarea"
+                        :rows="20"
+                        placeholder="在此编辑JD内容..."
+                        class="edit-textarea"
+                      />
+                    </div>
+
+                    <!-- 预览模式 -->
+                    <div v-else-if="generatedJD || streamContent" class="preview-container">
+                      <div class="markdown-content" v-html="renderedJD"></div>
+                    </div>
+
+                    <!-- 空状态 -->
+                    <div v-else class="empty-preview">
+                      <el-empty description="暂无内容" :image-size="100">
+                        <p>填写左侧表单信息，然后点击"AI生成"按钮</p>
+                      </el-empty>
+                    </div>
+                  </div>
+                </el-card>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -281,21 +385,81 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import {
+  Document,
+  Plus,
+  List,
+  Search,
+  MoreFilled,
+  Edit,
+  CopyDocument,
+  Delete,
+  Location,
+  Money,
+  Refresh,
+  Star,
+  Download,
+  Check,
+  Close,
+  Setting,
+  View,
+  Loading
+} from '@element-plus/icons-vue'
+import { marked } from 'marked'
+import hljs from 'highlight.js'
+import 'highlight.js/styles/github.css'
+import { hrWorkflowsApi } from '@/api/hrWorkflows'
+
+// 配置marked
+marked.setOptions({
+  highlight: function(code, lang) {
+    const language = hljs.getLanguage(lang) ? lang : 'plaintext'
+    return hljs.highlight(code, { language }).value
+  },
+  langPrefix: 'hljs language-',
+  breaks: true
+})
 
 // 响应式数据
 const formRef = ref()
 const generating = ref(false)
-const generatedJD = ref(null)
+const generatedJD = ref('')
+const streamContent = ref('')
+const saving = ref(false)
+
+// 打字机效果相关
+const fullStreamContent = ref('') // 存储完整的流式内容
+const displayedContent = ref('') // 当前显示的内容（打字机效果）
+const typewriterTimer = ref(null)
+
+// 编辑模式相关状态
+const isEditing = ref(false)
+const editContent = ref('')
+const savedJDId = ref(null)
+
+// JD列表相关状态
+const jdList = ref([])
+const jdListLoading = ref(false)
+const selectedJD = ref(null)
+const isCreatingNew = ref(false)
+const searchKeyword = ref('')
+
+// 分页数据
+const pagination = reactive({
+  page: 1,
+  size: 10,
+  total: 0
+})
 
 // 表单数据
 const form = reactive({
   jobTitle: '',
   location: '',
+  salary: '',
   experience: '',
   education: '',
-  salary: '',
   jobType: '全职',
   skills: [],
   benefits: [],
@@ -318,57 +482,262 @@ const rules = {
   ]
 }
 
-// 城市列表
+// 城市选项
 const cities = [
-  '北京', '上海', '广州', '深圳', '杭州', '南京', '苏州', '成都', 
-  '武汉', '西安', '重庆', '天津', '青岛', '大连', '厦门', '宁波'
+  '北京', '上海', '广州', '深圳', '杭州', '南京', '苏州', '成都', '武汉', '西安',
+  '重庆', '天津', '青岛', '大连', '厦门', '宁波', '无锡', '长沙', '郑州', '济南'
 ]
 
-// 常用技能
-const commonSkills = [
+// 技能选项
+const skillOptions = [
   'JavaScript', 'TypeScript', 'Vue.js', 'React', 'Angular', 'Node.js',
-  'Python', 'Java', 'Go', 'PHP', 'C++', 'C#', 'Swift', 'Kotlin',
-  'HTML', 'CSS', 'SCSS', 'Less', 'Webpack', 'Vite', 'Docker', 'Kubernetes',
-  'MySQL', 'PostgreSQL', 'MongoDB', 'Redis', 'Git', 'Linux', 'AWS', 'Azure'
+  'Python', 'Java', 'Go', 'PHP', 'C++', 'C#', '.NET',
+  'HTML', 'CSS', 'SCSS', 'Less', 'Webpack', 'Vite',
+  'MySQL', 'PostgreSQL', 'MongoDB', 'Redis', 'Docker', 'Kubernetes',
+  'AWS', 'Azure', 'Git', 'Linux', 'Nginx', 'Jenkins'
 ]
 
-// 生成JD
+// 计算属性
+const renderedJD = computed(() => {
+  if (!generatedJD.value && !streamContent.value) return ''
+  const content = isEditing.value ? editContent.value : (generatedJD.value || streamContent.value)
+  
+  // 确保content是字符串类型
+  if (typeof content !== 'string') {
+    console.warn('renderedJD: content不是字符串类型:', typeof content, content)
+    return ''
+  }
+  
+  return marked(content)
+})
+
+// 打字机效果显示内容的计算属性
+const renderedDisplayedContent = computed(() => {
+  if (!displayedContent.value) return ''
+  
+  // 确保displayedContent.value是字符串类型
+  if (typeof displayedContent.value !== 'string') {
+    console.warn('renderedDisplayedContent: displayedContent不是字符串类型:', typeof displayedContent.value, displayedContent.value)
+    return ''
+  }
+  
+  return marked(displayedContent.value)
+})
+
+// 方法
+const createNewJD = () => {
+  isCreatingNew.value = true
+  selectedJD.value = null
+  resetForm()
+}
+
+const selectJD = async (jd) => {
+  selectedJD.value = jd
+  isCreatingNew.value = false
+  
+  // 加载JD详情到表单
+  try {
+    const response = await hrWorkflowsApi.getJD(jd.id)
+    const jdData = response
+    
+    // 填充表单数据
+    form.jobTitle = jdData.title || ''
+    form.location = jdData.location || ''
+    form.experience = jdData.experience_level || ''
+    form.education = jdData.education || ''
+    form.salary = jdData.salary_range || ''
+    form.jobType = jdData.job_type || '全职'
+    form.skills = jdData.skills ? (Array.isArray(jdData.skills) ? jdData.skills : jdData.skills.split(',')) : []
+    form.benefits = jdData.benefits ? jdData.benefits.split(',') : []
+    form.additionalRequirements = jdData.requirements || ''
+    
+    // 设置生成的内容
+    streamContent.value = jdData.content || ''
+    generatedJD.value = jdData.content || ''
+    editContent.value = jdData.content || ''
+    savedJDId.value = jd.id
+    
+  } catch (error) {
+    console.error('获取JD详情失败:', error)
+    ElMessage.error('获取JD详情失败')
+  }
+}
+
+
+
+const resetForm = () => {
+  Object.keys(form).forEach(key => {
+    if (Array.isArray(form[key])) {
+      form[key] = []
+    } else {
+      form[key] = ''
+    }
+  })
+  form.jobType = '全职'
+  generatedJD.value = ''
+  editContent.value = ''
+  streamContent.value = ''
+  isEditing.value = false
+}
+
+// 打字机效果函数
+const startTypewriter = (content) => {
+  // 清除之前的定时器
+  if (typewriterTimer.value) {
+    clearInterval(typewriterTimer.value)
+  }
+  
+  displayedContent.value = ''
+  let currentIndex = 0
+  
+  typewriterTimer.value = setInterval(() => {
+    if (currentIndex < content.length) {
+      displayedContent.value += content[currentIndex]
+      currentIndex++
+    } else {
+      clearInterval(typewriterTimer.value)
+      typewriterTimer.value = null
+    }
+  }, 30) // 每30毫秒显示一个字符
+}
+
+// 停止打字机效果
+const stopTypewriter = () => {
+  if (typewriterTimer.value) {
+    clearInterval(typewriterTimer.value)
+    typewriterTimer.value = null
+  }
+}
+
+// 处理流式响应
+const handleStreamResponse = async (response) => {
+  const reader = response.body.getReader()
+  const decoder = new TextDecoder()
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) {
+        console.log('流式响应读取完成')
+        break
+      }
+
+      const chunk = decoder.decode(value)
+      console.log('接收到数据块:', chunk)
+      const lines = chunk.split('\n')
+
+      for (const line of lines) {
+        if (line.trim() === '') continue // 跳过空行
+        
+        if (line.startsWith('data: ')) {
+          const data = line.slice(6).trim()
+          console.log('解析数据行:', data)
+          
+          if (data === '[DONE]') {
+            console.log('收到结束标记，开始打字机效果')
+            // 流式响应结束，开始打字机效果
+            if (fullStreamContent.value) {
+              console.log('完整内容:', fullStreamContent.value)
+              startTypewriter(fullStreamContent.value)
+              streamContent.value = fullStreamContent.value
+            } else {
+              console.log('没有接收到任何内容')
+            }
+            return
+          }
+          
+          try {
+            const parsed = JSON.parse(data)
+            console.log('解析的JSON数据:', parsed)
+            
+            // 检查不同可能的字段
+            if (parsed.answer) {
+              console.log('找到answer字段:', parsed.answer)
+              fullStreamContent.value += parsed.answer
+              // 实时显示内容（不等待完成）
+              displayedContent.value = fullStreamContent.value
+            } else if (parsed.content) {
+              console.log('找到content字段:', parsed.content)
+              fullStreamContent.value += parsed.content
+              displayedContent.value = fullStreamContent.value
+            } else if (parsed.text) {
+              console.log('找到text字段:', parsed.text)
+              fullStreamContent.value += parsed.text
+              displayedContent.value = fullStreamContent.value
+            } else {
+              console.log('未找到内容字段，完整数据:', parsed)
+            }
+          } catch (e) {
+            console.log('JSON解析失败，原始数据:', data, '错误:', e)
+            // 如果不是JSON，直接添加到结果中
+            if (data && data !== '[DONE]') {
+              fullStreamContent.value += data
+              displayedContent.value = fullStreamContent.value
+            }
+          }
+        }
+      }
+    }
+  } finally {
+    reader.releaseLock()
+  }
+}
+
 const generateJD = async () => {
   try {
     await formRef.value.validate()
     
     generating.value = true
+    streamContent.value = '' // 清空之前的内容
+    fullStreamContent.value = '' // 清空完整流式内容
+    displayedContent.value = '' // 清空显示内容
+    stopTypewriter() // 停止之前的打字机效果
+    generatedJD.value = '' // 清空之前的JD，确保是字符串类型
     
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 3000))
+    // 只有在创建新JD时才重置ID，编辑现有JD时保留ID以确保更新操作
+    if (isCreatingNew.value) {
+      savedJDId.value = null // 重置JD ID，确保新生成的JD是新增而不是更新
+    }
+    // 如果是编辑现有JD（savedJDId.value存在），保留ID以便后续更新
     
-    // 模拟生成的JD内容
-    generatedJD.value = {
-      description: `
-        <p>我们正在寻找一位优秀的${form.jobTitle}加入我们的团队。您将负责参与产品的设计、开发和维护工作，与团队成员协作完成高质量的项目交付。</p>
-        <p>这是一个充满挑战和成长机会的职位，您将有机会接触到最新的技术栈，参与创新项目的开发，并在一个开放、包容的工作环境中发挥您的专业技能。</p>
-      `,
-      responsibilities: [
-        '负责前端页面的设计与开发，确保用户体验的优质性',
-        '与产品经理、设计师密切合作，将设计稿转化为高质量的前端代码',
-        '优化前端性能，提升页面加载速度和用户交互体验',
-        '参与技术方案的讨论和制定，推动创新的技术',
-        '维护和改进现有代码，确保代码质量和可维护性',
-        '跟进前端技术发展趋势，持续学习和应用新技术'
-      ],
-      requirements: [
-        `${form.education}及以上学历，计算机相关专业优先`,
-        `${form.experience}相关工作经验`,
-        '熟练掌握HTML、CSS、JavaScript等前端基础技术',
-        '熟悉Vue.js、React等主流前端框架',
-        '了解前端工程化工具，如Webpack、Vite等',
-        '具备良好的代码规范意识，团队协作能力',
-        '有responsibility，能够承受一定的工作压力',
-        '具备良好的学习能力和问题解决能力'
-      ]
+    // 验证必填字段
+    if (!form.jobTitle.trim()) {
+      ElMessage.warning('请输入职位名称')
+      return
     }
     
-    ElMessage.success('JD生成成功！')
+    // 构建职位要求描述
+    const requirements = `职位：${form.jobTitle}
+工作地点：${form.location}
+工作经验：${form.experience}
+学历要求：${form.education}
+薪资范围：${form.salary}
+工作类型：${form.jobType}
+技能要求：${form.skills.join('、')}
+福利待遇：${form.benefits.join('、')}
+其他要求：${form.additionalRequirements}`
+
+    // 调用后端API
+    const response = await hrWorkflowsApi.generateJD({
+      requirements: requirements,
+      position_title: form.jobTitle,
+      department: '技术部', // 可以后续添加到表单中
+      experience_level: form.experience,
+      stream: true
+    })
+    
+    // 处理流式响应
+    await handleStreamResponse(response)
+    
+    // 流式响应完成后，解析内容并设置generatedJD
+    if (streamContent.value) {
+      // 确保generatedJD.value是字符串类型
+      generatedJD.value = streamContent.value
+      editContent.value = streamContent.value
+      ElMessage.success('JD生成成功！')
+    } else {
+      ElMessage.warning('未收到JD内容，请重试')
+    }
   } catch (error) {
     console.error('生成JD失败:', error)
     ElMessage.error('生成JD失败，请重试')
@@ -377,517 +746,971 @@ const generateJD = async () => {
   }
 }
 
-// 重置表单
-const resetForm = () => {
-  formRef.value?.resetFields()
-  generatedJD.value = null
-  Object.assign(form, {
-    jobTitle: '',
-    location: '',
-    experience: '',
-    education: '',
-    salary: '',
-    jobType: '全职',
-    skills: [],
-    benefits: [],
-    additionalRequirements: ''
-  })
+const saveJD = async () => {
+  if (!editContent.value.trim()) {
+    ElMessage.warning('JD内容不能为空')
+    return
+  }
+
+  try {
+    saving.value = true
+    
+    console.log('保存前的编辑内容:', editContent.value)
+    console.log('保存前的显示内容:', streamContent.value)
+    console.log('当前JD ID:', savedJDId.value)
+    console.log('表单数据:', {
+      jobTitle: form.jobTitle,
+      location: form.location,
+      salary: form.salary,
+      experience: form.experience,
+      education: form.education,
+      jobType: form.jobType,
+      skills: form.skills,
+      benefits: form.benefits
+    })
+    
+    const jdData = {
+      title: form.jobTitle || '未命名岗位',
+      department: form.department || null,
+      location: form.location || null,
+      salary_range: form.salary || null,
+      experience_level: form.experience || null,
+      education: form.education || null,
+      job_type: form.jobType || null,
+      skills: form.skills || null,
+      content: editContent.value,
+      requirements: form.additionalRequirements || null,
+      status: 'draft',
+      meta_data: {
+        benefits: form.benefits
+      }
+    }
+
+    console.log('发送到后端的数据:', jdData)
+    
+    let response
+    if (savedJDId.value) {
+      // 如果已有ID，执行更新操作
+      console.log('执行更新操作，JD ID:', savedJDId.value)
+      response = await hrWorkflowsApi.updateJD(savedJDId.value, jdData)
+      ElMessage.success('JD更新成功')
+    } else {
+      // 如果没有ID，执行新增操作
+      console.log('执行新增操作')
+      response = await hrWorkflowsApi.saveJD(jdData)
+      console.log('新增操作完整响应:', response)
+      if (response && response.id) {
+        savedJDId.value = response.id
+        console.log('新增成功，获得JD ID:', savedJDId.value)
+      } else {
+        console.log('响应中没有ID字段，响应结构:', response)
+      }
+      ElMessage.success('JD保存成功')
+    }
+    
+    console.log('后端返回的响应:', response)
+    
+    // 更新显示内容
+    streamContent.value = editContent.value
+    isEditing.value = false
+    
+    // 刷新JD列表
+    await fetchJDList()
+    
+    console.log('保存后的显示内容:', streamContent.value)
+    
+  } catch (error) {
+    console.error('保存JD失败:', error)
+    ElMessage.error('保存JD失败，请重试')
+  } finally {
+    saving.value = false
+  }
 }
 
-// 复制JD
+const toggleEditMode = () => {
+  if (isEditing.value) {
+    generatedJD.value = editContent.value
+  }
+  isEditing.value = !isEditing.value
+}
+
 const copyJD = async () => {
   try {
-    const jdText = generateJDText()
-    await navigator.clipboard.writeText(jdText)
+    const content = isEditing.value ? editContent.value : generatedJD.value
+    await navigator.clipboard.writeText(content)
     ElMessage.success('JD内容已复制到剪贴板')
   } catch (error) {
-    ElMessage.error('复制失败，请手动复制')
+    ElMessage.error('复制失败')
   }
 }
 
-// 保存JD
-const saveJD = () => {
-  const jdText = generateJDText()
-  const blob = new Blob([jdText], { type: 'text/plain;charset=utf-8' })
+const handleJDAction = async ({ action, jd }) => {
+  switch (action) {
+    case 'edit':
+      selectJD(jd)
+      break
+    case 'duplicate':
+      await duplicateJD(jd)
+      break
+    case 'download':
+      downloadJD(jd)
+      break
+    case 'delete':
+      await deleteJD(jd)
+      break
+  }
+}
+
+const duplicateJD = async (jd) => {
+  try {
+    // 获取JD详情
+    const response = await hrWorkflowsApi.getJD(jd.id)
+    const jdData = response
+    
+    // 创建副本数据
+    const newJDData = {
+      title: (jdData.title || '') + ' (副本)',
+      department: jdData.department || null,
+      location: jdData.location || null,
+      salary_range: jdData.salary_range || null,
+      experience_level: jdData.experience_level || null,
+      education: jdData.education || null,
+      job_type: jdData.job_type || null,
+      skills: jdData.skills || null,
+      content: jdData.content || '',
+      requirements: jdData.requirements || null,
+      status: 'draft',
+      meta_data: {
+        benefits: jdData.benefits
+      }
+    }
+    
+    await hrWorkflowsApi.saveJD(newJDData)
+    ElMessage.success('JD复制成功')
+    await fetchJDList()
+  } catch (error) {
+    console.error('复制JD失败:', error)
+    ElMessage.error('复制JD失败')
+  }
+}
+
+const downloadJD = (jd) => {
+  const content = jd.content || ''
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
   const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = `${form.jobTitle}_JD.txt`
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `${jd.title || 'JD'}.txt`
+  a.click()
   URL.revokeObjectURL(url)
-  ElMessage.success('JD已保存到本地')
 }
 
-// 生成JD文本
-const generateJDText = () => {
-  if (!generatedJD.value) return ''
-  
-  let text = `${form.jobTitle}\n\n`
-  text += `工作地点：${form.location}\n`
-  text += `工作经验：${form.experience}\n`
-  text += `学历要求：${form.education}\n`
-  text += `薪资范围：${form.salary}\n`
-  text += `工作类型：${form.jobType}\n\n`
-  
-  text += `职位描述：\n${generatedJD.value.description.replace(/<[^>]*>/g, '')}\n\n`
-  
-  text += `岗位职责：\n`
-  generatedJD.value.responsibilities.forEach((item, index) => {
-    text += `${index + 1}. ${item}\n`
-  })
-  text += '\n'
-  
-  text += `任职要求：\n`
-  generatedJD.value.requirements.forEach((item, index) => {
-    text += `${index + 1}. ${item}\n`
-  })
-  
-  if (form.benefits.length > 0) {
-    text += `\n福利待遇：\n${form.benefits.join('、')}\n`
+const deleteJD = async (jd) => {
+  try {
+    await ElMessageBox.confirm(
+      `确定要删除职位"${jd.title || '未命名职位'}"吗？`,
+      '确认删除',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+    
+    await hrWorkflowsApi.deleteJD(jd.id)
+    ElMessage.success('JD删除成功')
+    
+    if (selectedJD.value?.id === jd.id) {
+      selectedJD.value = null
+      isCreatingNew.value = false
+    }
+    
+    await fetchJDList()
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('删除JD失败:', error)
+      ElMessage.error('删除JD失败')
+    }
   }
-  
-  return text
 }
+
+const fetchJDList = async () => {
+  try {
+    jdListLoading.value = true
+    const params = {
+      page: pagination.page,
+      size: pagination.size
+    }
+    
+    if (searchKeyword.value) {
+      params.search = searchKeyword.value
+    }
+    
+    const response = await hrWorkflowsApi.getJDList(params)
+    jdList.value = response.items || []
+    pagination.total = response.total || 0
+  } catch (error) {
+    console.error('获取JD列表失败:', error)
+    ElMessage.error('获取JD列表失败')
+  } finally {
+    jdListLoading.value = false
+  }
+}
+
+const handleSearch = () => {
+  pagination.page = 1
+  fetchJDList()
+}
+
+const handleSizeChange = (size) => {
+  pagination.size = size
+  pagination.page = 1
+  fetchJDList()
+}
+
+const handlePageChange = (page) => {
+  pagination.page = page
+  fetchJDList()
+}
+
+const getStatusType = (status) => {
+  const statusMap = {
+    'draft': 'info',
+    'published': 'success',
+    'archived': 'warning'
+  }
+  return statusMap[status] || 'info'
+}
+
+const getStatusText = (status) => {
+  const statusMap = {
+    'draft': '草稿',
+    'published': '已发布',
+    'archived': '已归档'
+  }
+  return statusMap[status] || '草稿'
+}
+
+const formatDate = (dateString) => {
+  if (!dateString) return ''
+  const date = new Date(dateString)
+  return date.toLocaleDateString('zh-CN')
+}
+
+// 生命周期
+onMounted(() => {
+  fetchJDList()
+})
+
+onUnmounted(() => {
+  // 清理打字机定时器
+  stopTypewriter()
+})
 </script>
 
 <style lang="scss" scoped>
 .jd-generator {
-  min-height: 100vh;
+  height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 24px;
+  position: relative;
+  overflow: hidden;
   
-  .page-container {
-    max-width: 1400px;
-    margin: 0 auto;
+  // 添加背景装饰
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+    background-size: 50px 50px;
+    animation: float 20s linear infinite;
+    pointer-events: none;
   }
   
-  // 简化的页面头部
+  .page-container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    position: relative;
+    z-index: 1;
+  }
+
   .page-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
-    padding: 16px 24px;
-    background: rgba(255, 255, 255, 0.1);
+    align-items: flex-start;
+    margin-bottom: 20px;
+    background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
-    border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.2);
-    
+    padding: 24px;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+
     .header-left {
       .page-title {
-        font-size: 24px;
-        font-weight: 600;
-        color: #ffffff;
-        margin: 0;
+        margin: 0 0 8px 0;
+        font-size: 28px;
+        font-weight: 700;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
         display: flex;
         align-items: center;
-        gap: 8px;
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        gap: 12px;
         
         .el-icon {
-          font-size: 20px;
+          font-size: 32px;
+          color: #667eea;
         }
       }
+
+      .page-description {
+        margin: 0;
+        color: #64748b;
+        font-size: 16px;
+      }
     }
-    
+
     .header-actions {
       display: flex;
       gap: 12px;
       
       .el-button {
-        border-radius: 8px;
-        font-weight: 500;
+        border-radius: 12px;
+        font-weight: 600;
+        padding: 12px 24px;
         transition: all 0.3s ease;
         
-        &:not(.el-button--primary) {
-          background: rgba(255, 255, 255, 0.2);
-          border: 1px solid rgba(255, 255, 255, 0.3);
-          color: #ffffff;
-          
-          &:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: translateY(-2px);
-          }
-        }
-        
         &.el-button--primary {
-          background: linear-gradient(45deg, #56ab2f, #a8e6cf);
+          background: linear-gradient(135deg, #667eea, #764ba2);
           border: none;
+          color: white;
           
           &:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(86, 171, 47, 0.4);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
           }
         }
       }
     }
   }
-  
-  // 左右布局的主要内容
+
   .main-content {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
-    align-items: start;
-    
-    @media (max-width: 1200px) {
-      grid-template-columns: 1fr;
-      gap: 16px;
-    }
+    flex: 1;
+    display: flex;
+    gap: 20px;
+    min-height: 0;
+    position: relative;
+    z-index: 1;
   }
-  
-  .config-panel, .preview-panel {
-    .config-card, .preview-card {
+
+  .jd-list-panel {
+    width: 350px;
+    flex-shrink: 0;
+
+    .list-card {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
       background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
       border-radius: 16px;
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      transition: all 0.3s ease;
-      height: 100%;
-      
-      &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
-      }
-      
+
       :deep(.el-card__header) {
-        background: linear-gradient(45deg, #667eea, #764ba2);
-        color: white;
+        background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+        border-bottom: 1px solid rgba(226, 232, 240, 0.5);
         border-radius: 16px 16px 0 0;
-        
-        .card-header {
+      }
+
+      :deep(.el-card__body) {
+        padding: 20px;
+        height: calc(100% - 60px);
+        overflow: hidden;
+      }
+
+      .list-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        .list-title {
+          font-weight: 600;
+          color: #303133;
           display: flex;
           align-items: center;
-          justify-content: space-between;
-          font-weight: 600;
-          
-          > span {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-          }
-          
-          .header-actions {
-            display: flex;
-            gap: 8px;
-            
-            .el-button {
-              background: rgba(255, 255, 255, 0.2);
-              border: 1px solid rgba(255, 255, 255, 0.3);
-              color: white;
-              
-              &:hover {
-                background: rgba(255, 255, 255, 0.3);
+          gap: 6px;
+        }
+      }
+
+      .jd-list-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+
+        .loading-container,
+        .empty-container {
+          flex: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .jd-items {
+          flex: 1;
+          overflow-y: auto;
+          margin: -12px;
+          padding: 12px;
+
+          .jd-item {
+            padding: 16px;
+            border: 1px solid rgba(226, 232, 240, 0.5);
+            border-radius: 12px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.9));
+            backdrop-filter: blur(5px);
+
+            &:hover {
+              border-color: rgba(102, 126, 234, 0.3);
+              box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+              transform: translateY(-2px);
+            }
+
+            &.active {
+              border-color: #667eea;
+              background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+              box-shadow: 0 8px 25px rgba(102, 126, 234, 0.2);
+            }
+
+            .jd-item-header {
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-start;
+              margin-bottom: 12px;
+
+              .jd-title {
+                margin: 0;
+                font-size: 16px;
+                font-weight: 600;
+                color: #303133;
+                flex: 1;
+                line-height: 1.4;
               }
-              
-              &.el-button--primary {
-                background: rgba(255, 255, 255, 0.9);
+
+              .jd-actions {
+                margin-left: 8px;
+              }
+            }
+
+            .jd-item-content {
+              .jd-meta {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 12px;
+                margin-bottom: 8px;
+
+                .meta-item {
+                  display: flex;
+                  align-items: center;
+                  gap: 4px;
+                  font-size: 12px;
+                  color: #606266;
+                }
+              }
+
+              .jd-status {
+                margin-bottom: 8px;
+              }
+
+              .jd-time {
+                font-size: 12px;
+                color: #909399;
+              }
+            }
+          }
+        }
+
+        .pagination-container {
+          margin-top: 16px;
+          display: flex;
+          justify-content: center;
+        }
+      }
+    }
+  }
+
+  .jd-editor-panel {
+    flex: 1;
+    min-width: 0;
+
+    .welcome-container {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      .welcome-card {
+        width: 100%;
+        max-width: 500px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 16px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+
+        .welcome-content {
+          text-align: center;
+          padding: 40px 20px;
+
+          .welcome-icon {
+            margin-bottom: 24px;
+            color: #409eff;
+          }
+
+          h2 {
+            margin: 0 0 16px 0;
+            color: #303133;
+            font-size: 24px;
+          }
+
+          p {
+            margin: 0 0 32px 0;
+            color: #606266;
+            font-size: 16px;
+          }
+
+          .welcome-actions {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+          }
+        }
+      }
+    }
+
+    .jd-editor-content {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+
+      .editor-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 20px 24px;
+        border-radius: 16px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+
+        .editor-title {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+
+          h3 {
+            margin: 0;
+            color: #303133;
+            font-size: 18px;
+            font-weight: 600;
+          }
+        }
+
+        .editor-actions {
+          display: flex;
+          gap: 12px;
+
+          .el-button {
+            border-radius: 12px;
+            font-weight: 600;
+            padding: 12px 24px;
+            transition: all 0.3s ease;
+
+            &.el-button--primary {
+              background: linear-gradient(135deg, #667eea, #764ba2);
+              border: none;
+              color: white;
+
+              &:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+              }
+            }
+
+            &.el-button--success {
+              background: linear-gradient(135deg, #10b981, #059669);
+              border: none;
+              color: white;
+
+              &:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+              }
+            }
+
+            &:not(.el-button--primary):not(.el-button--success) {
+              background: rgba(255, 255, 255, 0.8);
+              border: 1px solid rgba(226, 232, 240, 0.8);
+              color: #64748b;
+
+              &:hover {
+                background: rgba(248, 250, 252, 0.9);
+                border-color: rgba(102, 126, 234, 0.3);
                 color: #667eea;
-                
-                &:hover {
-                  background: white;
+                transform: translateY(-2px);
+              }
+            }
+          }
+        }
+      }
+
+      .editor-main {
+        flex: 1;
+        display: flex;
+        gap: 20px;
+        min-height: 0;
+
+        .config-panel {
+          width: 400px;
+          flex-shrink: 0;
+
+          .config-card {
+            height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+
+            :deep(.el-card__header) {
+              background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+              border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+              border-radius: 16px 16px 0 0;
+            }
+
+            :deep(.el-card__body) {
+              padding: 20px;
+              height: calc(100% - 60px);
+              overflow: hidden;
+            }
+
+            .card-header {
+              display: flex;
+              align-items: center;
+              gap: 8px;
+              font-weight: 600;
+              color: #303133;
+            }
+
+            .jd-form {
+              height: calc(100vh - 300px);
+              overflow-y: auto;
+              padding-right: 8px;
+
+              .form-section {
+                margin-bottom: 24px;
+
+                .section-title {
+                  margin: 0 0 16px 0;
+                  font-size: 14px;
+                  font-weight: 600;
+                  color: #303133;
+                  padding-bottom: 8px;
+                  border-bottom: 1px solid #e4e7ed;
+                }
+
+                .ai-notice {
+                  display: flex;
+                  align-items: center;
+                  gap: 8px;
+                  padding: 16px;
+                  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+                  border: 1px solid rgba(102, 126, 234, 0.2);
+                  border-radius: 12px;
+                  color: #667eea;
+                  font-size: 14px;
+                  font-weight: 500;
+
+                  .notice-icon {
+                    font-size: 18px;
+                    color: #667eea;
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        .preview-panel {
+          flex: 1;
+          min-width: 0;
+
+          .preview-card {
+            height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+
+            :deep(.el-card__header) {
+              background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+              border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+              border-radius: 16px 16px 0 0;
+            }
+
+            :deep(.el-card__body) {
+              padding: 20px;
+              height: calc(100% - 60px);
+              overflow: hidden;
+            }
+
+            .card-header {
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+
+              > div:first-child {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-weight: 600;
+                color: #303133;
+              }
+
+              .preview-actions {
+                display: flex;
+                gap: 8px;
+              }
+            }
+
+            .preview-content {
+              height: calc(100vh - 300px);
+              overflow-y: auto;
+
+              .generating-container {
+                .generating-text {
+                  text-align: center;
+                  margin-top: 16px;
+                  color: #409eff;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  gap: 8px;
+                }
+              }
+
+              .edit-container {
+                height: 100%;
+
+                .edit-textarea {
+                  height: 100%;
+
+                  :deep(.el-textarea__inner) {
+                    height: 100% !important;
+                    resize: none;
+                    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+                    font-size: 14px;
+                    line-height: 1.6;
+                  }
+                }
+              }
+
+              .preview-container {
+                .markdown-content {
+                  line-height: 1.8;
+                  color: #303133;
+
+                  :deep(h1), :deep(h2), :deep(h3), :deep(h4), :deep(h5), :deep(h6) {
+                    margin: 24px 0 16px 0;
+                    font-weight: 600;
+                    color: #303133;
+                  }
+
+                  :deep(h1) { font-size: 24px; }
+                  :deep(h2) { font-size: 20px; }
+                  :deep(h3) { font-size: 18px; }
+                  :deep(h4) { font-size: 16px; }
+
+                  :deep(p) {
+                    margin: 16px 0;
+                    line-height: 1.8;
+                  }
+
+                  :deep(ul), :deep(ol) {
+                    margin: 16px 0;
+                    padding-left: 24px;
+
+                    li {
+                      margin: 8px 0;
+                      line-height: 1.6;
+                    }
+                  }
+
+                  :deep(blockquote) {
+                    margin: 16px 0;
+                    padding: 16px;
+                    background: #f8f9fa;
+                    border-left: 4px solid #409eff;
+                    border-radius: 4px;
+                  }
+
+                  :deep(code) {
+                    background: #f1f2f3;
+                    padding: 2px 6px;
+                    border-radius: 4px;
+                    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+                    font-size: 13px;
+                  }
+
+                  :deep(pre) {
+                    background: #f8f9fa;
+                    padding: 16px;
+                    border-radius: 8px;
+                    overflow-x: auto;
+                    margin: 16px 0;
+
+                    code {
+                      background: none;
+                      padding: 0;
+                    }
+                  }
+                }
+              }
+
+              .empty-preview {
+                height: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-direction: column;
+
+                p {
+                  margin-top: 16px;
+                  color: #909399;
+                  font-size: 14px;
                 }
               }
             }
           }
         }
       }
-      
-      :deep(.el-card__body) {
-        padding: 24px;
-        height: calc(100% - 60px);
-        overflow-y: auto;
-      }
     }
   }
-  
-  // 预览面板特殊样式
-  .preview-panel {
-    .preview-card {
-      min-height: 600px;
-      
-      :deep(.el-card__body) {
-        display: flex;
-        flex-direction: column;
-      }
-    }
-    
-    .preview-content {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      
-      .empty-state, .loading-state {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-      }
-      
-      .jd-content {
-        flex: 1;
-      }
-    }
+}
+
+// 背景动画
+@keyframes float {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
   }
-  
-  // 表单样式
-  .form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    margin-bottom: 16px;
-    
-    @media (max-width: 768px) {
-      grid-template-columns: 1fr;
-      gap: 12px;
-    }
+  33% {
+    transform: translate(30px, -30px) rotate(120deg);
   }
-  
-  :deep(.el-form-item__label) {
-    font-weight: 600;
-    color: #2c3e50;
-    margin-bottom: 8px;
+  66% {
+    transform: translate(-20px, 20px) rotate(240deg);
   }
-  
-  :deep(.el-input__wrapper) {
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-    
-    &:hover {
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-    
-    &.is-focus {
-      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-    }
-  }
-  
-  :deep(.el-select) {
-    .el-input__wrapper {
-      border-radius: 8px;
-    }
-  }
-  
-  :deep(.el-textarea__inner) {
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-    
-    &:hover {
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-    
-    &:focus {
-      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-    }
-  }
-  
-  :deep(.el-radio-group) {
-    .el-radio {
-      margin-right: 16px;
-      
-      .el-radio__label {
-        color: #2c3e50;
-        font-weight: 500;
-      }
-    }
-  }
-  
-  :deep(.el-checkbox-group) {
-    .el-checkbox {
-      margin-right: 16px;
-      margin-bottom: 8px;
-      
-      .el-checkbox__label {
-        color: #2c3e50;
-        font-weight: 500;
-      }
-    }
-  }
-  
-  // 预览内容样式
-  .preview-content {
-    .empty-state {
-      text-align: center;
-      padding: 60px 20px;
-      color: #95a5a6;
-      
-      .empty-icon {
-        font-size: 64px;
-        margin-bottom: 16px;
-        opacity: 0.5;
-      }
-      
-      p {
-        font-size: 16px;
-        margin: 0;
-      }
-    }
-    
-    .loading-state {
-      text-align: center;
-      padding: 60px 20px;
-      color: #667eea;
-      
-      .loading-icon {
-        font-size: 48px;
-        margin-bottom: 16px;
-        animation: spin 2s linear infinite;
-      }
-      
-      p {
-        font-size: 16px;
-        font-weight: 600;
-        margin-bottom: 20px;
-      }
-      
-      .loading-tips {
-        p {
-          font-size: 14px;
-          margin: 8px 0;
-          opacity: 0.8;
-        }
-      }
-    }
-    
-    .jd-content {
-      .jd-section {
-        margin-bottom: 24px;
-        
-        h3 {
-          font-size: 18px;
-          font-weight: 600;
-          color: #2c3e50;
-          margin-bottom: 12px;
-          padding-bottom: 8px;
-          border-bottom: 2px solid #ecf0f1;
-          position: relative;
-          
-          &::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 0;
-            width: 40px;
-            height: 2px;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-          }
-        }
-        
-        .job-info-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-          gap: 12px;
-          
-          .info-item {
-            display: flex;
-            align-items: center;
-            padding: 8px 12px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            border-left: 4px solid #667eea;
-            
-            .label {
-              font-weight: 600;
-              color: #34495e;
-              margin-right: 8px;
-            }
-            
-            .value {
-              color: #2c3e50;
-              font-weight: 500;
-            }
-          }
-        }
-        
-        .jd-text {
-          color: #5a6c7d;
-          line-height: 1.6;
-          
-          p {
-            margin-bottom: 12px;
-          }
-        }
-        
-        .benefits-list, .skills-list {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-          
-          .benefit-tag, .skill-tag {
-            border-radius: 6px;
-            font-weight: 500;
-          }
-        }
-      }
-    }
+  100% {
+    transform: translate(0, 0) rotate(360deg);
   }
 }
 
 // 响应式设计
-@media (max-width: 768px) {
+@media (max-width: 1400px) {
   .jd-generator {
-    padding: 16px;
-    
-    .page-header {
-      flex-direction: column;
-      gap: 16px;
-      text-align: center;
-      
-      .header-actions {
-        justify-content: center;
-      }
-    }
-    
     .main-content {
-      grid-template-columns: 1fr;
-    }
-    
-    .config-panel, .preview-panel {
-      .config-card, .preview-card {
-        :deep(.el-card__body) {
-          padding: 16px;
+      .jd-list-panel {
+        width: 320px;
+      }
+
+      .jd-editor-panel {
+        .jd-editor-content {
+          .editor-main {
+            .config-panel {
+              width: 350px;
+            }
+          }
         }
       }
     }
   }
 }
 
-// 动画效果
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
+@media (max-width: 1200px) {
+  .jd-generator {
+    .main-content {
+      flex-direction: column;
+
+      .jd-list-panel {
+        width: 100%;
+        height: 300px;
+      }
+
+      .jd-editor-panel {
+        .jd-editor-content {
+          .editor-main {
+            flex-direction: column;
+
+            .config-panel {
+              width: 100%;
+              height: 400px;
+            }
+
+            .preview-panel {
+              height: 500px;
+            }
+          }
+        }
+      }
+    }
   }
 }
 
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
+// 打字机效果样式
+.typewriter-container {
+  .typewriter-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    color: #409eff;
+    font-size: 14px;
+    
+    .el-icon {
+      font-size: 16px;
+    }
   }
-  to {
+  
+  .typewriter-content {
+    position: relative;
+    
+    .typewriter-cursor {
+      display: inline-block;
+      background-color: #409eff;
+      width: 2px;
+      height: 1.2em;
+      margin-left: 2px;
+      animation: blink 1s infinite;
+    }
+  }
+}
+
+@keyframes blink {
+  0%, 50% {
     opacity: 1;
-    transform: translateY(0);
   }
-}
-
-.config-panel, .preview-panel {
-  animation: fadeInUp 0.6s ease-out;
-}
-
-.config-panel {
-  animation-delay: 0.1s;
-}
-
-.preview-panel {
-  animation-delay: 0.2s;
+  51%, 100% {
+    opacity: 0;
+  }
 }
 </style>

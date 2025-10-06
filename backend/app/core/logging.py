@@ -108,3 +108,7 @@ def setup_logging() -> None:
     logging.config.dictConfig(logging_config)
     logger = logging.getLogger(__name__)
     logger.info("Logging configuration setup complete")
+
+
+# Create a global logger instance
+logger = logging.getLogger(__name__)

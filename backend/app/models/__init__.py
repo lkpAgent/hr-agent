@@ -8,6 +8,7 @@ from app.models.user import User
 from app.models.document import Document, DocumentChunk
 from app.models.knowledge_base import KnowledgeBase, FAQ
 from app.models.conversation import Conversation, Message
+from app.models.job_description import JobDescription
 
 # Export all models
 __all__ = [
@@ -18,5 +19,6 @@ __all__ = [
     "KnowledgeBase",
     "FAQ",
     "Conversation",
-    "Message"
+    "Message",
+    "JobDescription"
 ]

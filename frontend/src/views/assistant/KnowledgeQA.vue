@@ -1000,6 +1000,9 @@ onMounted(() => {
   cursor: pointer;
   transition: all 0.3s;
   background: white;
+  height: 200px;
+  display: flex;
+  flex-direction: column;
 }
 
 .document-item:hover {
@@ -1044,6 +1047,9 @@ onMounted(() => {
   font-size: 14px;
   line-height: 1.5;
   margin-bottom: 12px;
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
 .doc-footer {
@@ -1139,6 +1145,25 @@ onMounted(() => {
 .documents-container::-webkit-scrollbar-thumb:hover,
 .doc-preview::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
+}
+
+/* 文档摘要滚动条样式 */
+.doc-summary::-webkit-scrollbar {
+  width: 4px;
+}
+
+.doc-summary::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 2px;
+}
+
+.doc-summary::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
+}
+
+.doc-summary::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
 }
 
 /* 响应式设计 */

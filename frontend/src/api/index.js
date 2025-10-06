@@ -10,6 +10,16 @@ const api = axios.create({
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json'
+  },
+  // 修复参数序列化问题
+  paramsSerializer: (params) => {
+    const searchParams = new URLSearchParams()
+    Object.keys(params).forEach(key => {
+      if (params[key] !== null && params[key] !== undefined) {
+        searchParams.append(key, params[key])
+      }
+    })
+    return searchParams.toString()
   }
 })
 
