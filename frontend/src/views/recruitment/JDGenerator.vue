@@ -306,10 +306,19 @@
                   <template #header>
                     <div class="card-header">
                       <el-icon><View /></el-icon>
-                      <span>JD预览</span>
+                      <span>{{ showScoringCriteria ? '评分标准' : 'JD预览' }}</span>
                       <div class="preview-actions">
                         <el-button
                           v-if="generatedJD"
+                          @click="toggleScoringCriteria"
+                          :type="showScoringCriteria ? 'primary' : 'default'"
+                          size="small"
+                        >
+                          <el-icon><DataAnalysis /></el-icon>
+                          {{ showScoringCriteria ? 'JD预览' : '简历评分' }}
+                        </el-button>
+                        <el-button
+                          v-if="generatedJD && !showScoringCriteria"
                           @click="toggleEditMode"
                           :type="isEditing ? 'primary' : 'default'"
                           size="small"
@@ -318,7 +327,7 @@
                           {{ isEditing ? '预览' : '编辑' }}
                         </el-button>
                         <el-button
-                          v-if="generatedJD"
+                          v-if="generatedJD && !showScoringCriteria"
                           @click="copyJD"
                           size="small"
                         >
@@ -330,48 +339,130 @@
                   </template>
 
                   <div class="preview-content">
-                    <!-- 生成中状态 -->
-                    <div v-if="generating && !displayedContent" class="generating-container">
-                      <el-skeleton :rows="8" animated />
-                      <div class="generating-text">
-                        <el-icon class="is-loading"><Loading /></el-icon>
-                        AI正在生成JD内容...
+                    <!-- 简历评分标准界面 -->
+                    <div v-if="showScoringCriteria" class="scoring-criteria-container">
+                      <!-- 评分标准操作栏 -->
+                      <div class="scoring-actions">
+                        <el-button 
+                          type="primary" 
+                          @click="generateScoringCriteria" 
+                          :loading="scoringGenerating"
+                          :disabled="!generatedJD"
+                        >
+                          <el-icon><Star /></el-icon>
+                          {{ scoringGenerating ? '生成中...' : 'AI生成评分标准' }}
+                        </el-button>
+                        <el-button 
+                          v-if="scoringCriteria || scoringStreamContent"
+                          @click="toggleScoringEditMode"
+                          :type="isScoringEditing ? 'primary' : 'default'"
+                        >
+                          <el-icon><Edit /></el-icon>
+                          {{ isScoringEditing ? '预览' : '编辑' }}
+                        </el-button>
+                        <el-button 
+                          v-if="scoringCriteria || scoringStreamContent"
+                          @click="saveScoringCriteria"
+                          :loading="scoringSaving"
+                        >
+                          <el-icon><Check /></el-icon>
+                          保存评分标准
+                        </el-button>
+                      </div>
+
+                      <!-- 评分标准内容 -->
+                      <div class="scoring-content">
+                        <!-- 生成中状态 - 无内容时显示骨架屏 -->
+                        <div v-if="scoringGenerating && !scoringDisplayedContent" class="generating-container">
+                          <el-skeleton :rows="8" animated />
+                          <div class="generating-text">
+                            <el-icon class="is-loading"><Loading /></el-icon>
+                            AI正在生成评分标准...
+                          </div>
+                        </div>
+
+                        <!-- 流式生成显示 - 有内容时实时显示 -->
+                        <div v-else-if="scoringGenerating && scoringDisplayedContent" class="typewriter-container">
+                          <div class="typewriter-header">
+                            <el-icon class="is-loading"><Loading /></el-icon>
+                            <span>AI正在生成评分标准...</span>
+                          </div>
+                          <div class="typewriter-content">
+                            <div class="markdown-content" v-html="renderedScoringCriteria"></div>
+                            <span class="typewriter-cursor">|</span>
+                          </div>
+                        </div>
+
+                        <!-- 编辑模式 -->
+                        <div v-else-if="isScoringEditing && (scoringCriteria || scoringStreamContent)" class="edit-container">
+                          <el-input
+                            v-model="scoringEditContent"
+                            type="textarea"
+                            :rows="20"
+                            placeholder="在此编辑评分标准..."
+                            class="edit-textarea"
+                          />
+                        </div>
+
+                        <!-- 预览模式 -->
+                        <div v-else-if="scoringCriteria || scoringStreamContent" class="preview-container">
+                          <div class="markdown-content" v-html="renderedScoringCriteria"></div>
+                        </div>
+
+                        <!-- 空状态 -->
+                        <div v-else class="empty-preview">
+                          <el-empty description="暂无评分标准" :image-size="100">
+                            <p>基于当前JD内容生成简历评分标准</p>
+                          </el-empty>
+                        </div>
                       </div>
                     </div>
 
-                    <!-- 打字机效果显示 -->
-                    <div v-else-if="generating && displayedContent" class="typewriter-container">
-                      <div class="typewriter-header">
-                        <el-icon class="is-loading"><Loading /></el-icon>
-                        <span>AI正在生成中...</span>
+                    <!-- JD预览界面（原有内容） -->
+                    <div v-else>
+                      <!-- 生成中状态 -->
+                      <div v-if="generating && !displayedContent" class="generating-container">
+                        <el-skeleton :rows="8" animated />
+                        <div class="generating-text">
+                          <el-icon class="is-loading"><Loading /></el-icon>
+                          AI正在生成JD内容...
+                        </div>
                       </div>
-                      <div class="typewriter-content">
-                        <div class="markdown-content" v-html="renderedDisplayedContent"></div>
-                        <span class="typewriter-cursor">|</span>
+
+                      <!-- 打字机效果显示 -->
+                      <div v-else-if="generating && displayedContent" class="typewriter-container">
+                        <div class="typewriter-header">
+                          <el-icon class="is-loading"><Loading /></el-icon>
+                          <span>AI正在生成中...</span>
+                        </div>
+                        <div class="typewriter-content">
+                          <div class="markdown-content" v-html="renderedDisplayedContent"></div>
+                          <span class="typewriter-cursor">|</span>
+                        </div>
                       </div>
-                    </div>
 
-                    <!-- 编辑模式 -->
-                    <div v-else-if="isEditing" class="edit-container">
-                      <el-input
-                        v-model="editContent"
-                        type="textarea"
-                        :rows="20"
-                        placeholder="在此编辑JD内容..."
-                        class="edit-textarea"
-                      />
-                    </div>
+                      <!-- 编辑模式 -->
+                      <div v-else-if="isEditing" class="edit-container">
+                        <el-input
+                          v-model="editContent"
+                          type="textarea"
+                          :rows="20"
+                          placeholder="在此编辑JD内容..."
+                          class="edit-textarea"
+                        />
+                      </div>
 
-                    <!-- 预览模式 -->
-                    <div v-else-if="generatedJD || streamContent" class="preview-container">
-                      <div class="markdown-content" v-html="renderedJD"></div>
-                    </div>
+                      <!-- 预览模式 -->
+                      <div v-else-if="generatedJD || streamContent" class="preview-container">
+                        <div class="markdown-content" v-html="renderedJD"></div>
+                      </div>
 
-                    <!-- 空状态 -->
-                    <div v-else class="empty-preview">
-                      <el-empty description="暂无内容" :image-size="100">
-                        <p>填写左侧表单信息，然后点击"AI生成"按钮</p>
-                      </el-empty>
+                      <!-- 空状态 -->
+                      <div v-else class="empty-preview">
+                        <el-empty description="暂无内容" :image-size="100">
+                          <p>填写左侧表单信息，然后点击"AI生成"按钮</p>
+                        </el-empty>
+                      </div>
                     </div>
                   </div>
                 </el-card>
@@ -405,7 +496,9 @@ import {
   Close,
   Setting,
   View,
-  Loading
+  Loading,
+  DataAnalysis,
+  Rank
 } from '@element-plus/icons-vue'
 import { marked } from 'marked'
 import hljs from 'highlight.js'
@@ -438,6 +531,19 @@ const typewriterTimer = ref(null)
 const isEditing = ref(false)
 const editContent = ref('')
 const savedJDId = ref(null)
+
+// 简历评分相关状态
+const showScoringCriteria = ref(false)
+const scoringCriteria = ref('')
+const scoringStreamContent = ref('')
+const scoringDisplayedContent = ref('')
+const scoringFullStreamContent = ref('')
+const scoringTypewriterTimer = ref(null)
+const isScoringEditing = ref(false)
+const scoringEditContent = ref('')
+const scoringGenerating = ref(false)
+const scoringSaving = ref(false)
+const savedScoringId = ref(null)
 
 // JD列表相关状态
 const jdList = ref([])
@@ -524,6 +630,22 @@ const renderedDisplayedContent = computed(() => {
   return marked(displayedContent.value)
 })
 
+// 评分标准显示内容的计算属性
+const renderedScoringCriteria = computed(() => {
+  // 优先显示流式显示内容，然后是完整内容
+  const content = scoringDisplayedContent.value || scoringCriteria.value || scoringStreamContent.value
+  
+  if (!content) return ''
+  
+  // 确保content是字符串类型
+  if (typeof content !== 'string') {
+    console.warn('renderedScoringCriteria: content不是字符串类型:', typeof content, content)
+    return ''
+  }
+  
+  return marked(content)
+})
+
 // 方法
 const createNewJD = () => {
   isCreatingNew.value = true
@@ -557,6 +679,9 @@ const selectJD = async (jd) => {
     editContent.value = jdData.content || ''
     savedJDId.value = jd.id
     
+    // 加载对应的评分标准
+    await loadScoringCriteria(jd.id)
+    
   } catch (error) {
     console.error('获取JD详情失败:', error)
     ElMessage.error('获取JD详情失败')
@@ -578,6 +703,16 @@ const resetForm = () => {
   editContent.value = ''
   streamContent.value = ''
   isEditing.value = false
+  
+  // 清空评分标准相关数据
+  scoringCriteria.value = ''
+  scoringStreamContent.value = ''
+  scoringDisplayedContent.value = ''
+  scoringFullStreamContent.value = ''
+  savedScoringId.value = null
+  isScoringEditing.value = false
+  scoringEditContent.value = ''
+  showScoringCriteria.value = false
 }
 
 // 打字机效果函数
@@ -997,6 +1132,271 @@ const formatDate = (dateString) => {
   return date.toLocaleDateString('zh-CN')
 }
 
+// 简历评分相关方法
+const toggleScoringCriteria = () => {
+  showScoringCriteria.value = !showScoringCriteria.value
+  if (showScoringCriteria.value && !scoringCriteria.value && !scoringStreamContent.value) {
+    // 如果切换到评分标准页面且没有内容，可以提示用户生成
+  }
+}
+
+const startScoringTypewriter = (content) => {
+  scoringFullStreamContent.value = content
+  scoringDisplayedContent.value = ''
+  
+  let index = 0
+  const speed = 20 // 打字速度（毫秒）
+  
+  scoringTypewriterTimer.value = setInterval(() => {
+    if (index < content.length) {
+      scoringDisplayedContent.value += content[index]
+      index++
+    } else {
+      clearInterval(scoringTypewriterTimer.value)
+      scoringTypewriterTimer.value = null
+    }
+  }, speed)
+}
+
+const stopScoringTypewriter = () => {
+  if (scoringTypewriterTimer.value) {
+    clearInterval(scoringTypewriterTimer.value)
+    scoringTypewriterTimer.value = null
+    // 立即显示完整内容
+    scoringDisplayedContent.value = scoringFullStreamContent.value
+  }
+}
+
+// 实时添加内容的打字机效果
+
+const generateScoringCriteria = async () => {
+  if (!generatedJD.value && !streamContent.value) {
+    ElMessage.warning('请先生成JD内容')
+    return
+  }
+
+  try {
+    scoringGenerating.value = true
+    scoringStreamContent.value = ''
+    scoringDisplayedContent.value = ''
+    scoringFullStreamContent.value = ''
+    
+    // 停止之前的打字机效果
+    stopScoringTypewriter()
+    
+    // 重新检查当前JD的评分标准状态
+    // 如果是新JD或者当前JD没有评分标准，则生成新的评分标准
+    if (isCreatingNew.value) {
+      savedScoringId.value = null
+      console.log('新JD，清除评分ID')
+    } else if (savedJDId.value) {
+      // 对于已存在的JD，重新加载评分标准状态以确保ID正确
+      await loadScoringCriteria(savedJDId.value)
+      console.log('重新加载评分标准，当前ID:', savedScoringId.value)
+    }
+
+    const jdContent = generatedJD.value || streamContent.value
+    
+    const response = await hrWorkflowsApi.generateScoringCriteria({
+      jd_content: jdContent,
+      job_title: form.jobTitle,
+      requirements: {
+        experience: form.experience,
+        education: form.education,
+        skills: form.skills,
+        location: form.location
+      },
+      stream: true
+    })
+
+    if (response.body) {
+      await handleScoringStreamResponse(response)
+    } else {
+      scoringCriteria.value = response.criteria || response
+      scoringStreamContent.value = scoringCriteria.value
+      startScoringTypewriter(scoringCriteria.value)
+    }
+  } catch (error) {
+    console.error('生成评分标准失败:', error)
+    ElMessage.error('生成评分标准失败，请重试')
+  } finally {
+    scoringGenerating.value = false
+  }
+}
+
+const handleScoringStreamResponse = async (response) => {
+  const reader = response.body.getReader()
+  const decoder = new TextDecoder()
+  
+  // 初始化显示状态
+  scoringStreamContent.value = ''
+  scoringDisplayedContent.value = ''
+  scoringFullStreamContent.value = ''
+  
+  console.log('开始处理评分标准流式响应')
+  
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
+      
+      if (done) break
+      
+      const chunk = decoder.decode(value)
+      const lines = chunk.split('\n')
+      
+      for (const line of lines) {
+        if (line.trim() === '') continue // 跳过空行
+        
+        // 跳过event类型的行（如 "event: ping"）
+        if (line.startsWith('event:')) {
+          console.log('跳过event行:', line)
+          continue
+        }
+        
+        if (line.startsWith('data: ')) {
+          try {
+            const data = line.slice(6).trim()
+            
+            if (data === '[DONE]') {
+              // 流式传输完成，设置最终内容
+              console.log('评分标准流式传输完成，最终内容长度:', scoringStreamContent.value.length)
+              scoringCriteria.value = scoringStreamContent.value
+              scoringFullStreamContent.value = scoringStreamContent.value
+              return
+            }
+            
+            // 跳过空数据
+            if (!data) continue
+            
+            // 尝试解析JSON数据
+            const parsed = JSON.parse(data)
+            // 处理Dify返回的原始格式，优先使用answer字段，其次是content字段
+            let newContent = ''
+            if (parsed.answer) {
+              newContent = parsed.answer
+            } else if (parsed.content) {
+              newContent = parsed.content
+            }
+            
+            if (newContent) {
+              console.log('接收到新内容:', newContent)
+              // 累加到总内容（参考JD生成的方式）
+              scoringStreamContent.value += newContent
+              // 实时显示内容，直接更新显示内容
+              scoringDisplayedContent.value = scoringStreamContent.value
+              console.log('当前显示内容长度:', scoringDisplayedContent.value.length)
+            }
+          } catch (e) {
+            console.warn('解析流式数据失败，跳过该行:', line, '错误:', e.message)
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.error('处理流式响应失败:', error)
+    throw error
+  }
+}
+
+const toggleScoringEditMode = () => {
+  if (isScoringEditing.value) {
+    // 取消编辑
+    isScoringEditing.value = false
+    scoringEditContent.value = ''
+  } else {
+    // 开始编辑，优先使用已保存的内容，然后是流式内容，最后是显示的内容
+    isScoringEditing.value = true
+    scoringEditContent.value = scoringCriteria.value || scoringStreamContent.value || scoringDisplayedContent.value || ''
+    console.log('进入编辑模式，编辑内容:', scoringEditContent.value.substring(0, 100) + '...')
+  }
+}
+
+const saveScoringCriteria = async () => {
+  const content = isScoringEditing.value ? scoringEditContent.value : (scoringCriteria.value || scoringStreamContent.value)
+  
+  if (!content.trim()) {
+    ElMessage.warning('评分标准内容不能为空')
+    return
+  }
+
+  try {
+    scoringSaving.value = true
+    
+    const scoringData = {
+      title: `${form.jobTitle || '职位'}评分标准`,
+      job_title: form.jobTitle,
+      content: content,
+      job_description_id: savedJDId.value,
+      status: 'active',
+      meta_data: {
+        generated_from_jd: true,
+        jd_requirements: {
+          experience: form.experience,
+          education: form.education,
+          skills: form.skills,
+          location: form.location
+        }
+      }
+    }
+
+    let response
+    if (savedScoringId.value) {
+      // 更新现有评分标准
+      response = await hrWorkflowsApi.updateScoringCriteria(savedScoringId.value, scoringData)
+      ElMessage.success('评分标准更新成功')
+    } else {
+      // 创建新的评分标准
+      response = await hrWorkflowsApi.createScoringCriteria(scoringData)
+      savedScoringId.value = response.id
+      ElMessage.success('评分标准保存成功')
+    }
+    
+    // 更新本地内容
+    scoringCriteria.value = content
+    if (isScoringEditing.value) {
+      isScoringEditing.value = false
+      scoringEditContent.value = ''
+    }
+    
+  } catch (error) {
+    console.error('保存评分标准失败:', error)
+    ElMessage.error('保存评分标准失败，请重试')
+  } finally {
+    scoringSaving.value = false
+  }
+}
+
+// 加载评分标准
+const loadScoringCriteria = async (jdId) => {
+  try {
+    console.log('正在加载评分标准，JD ID:', jdId)
+    const response = await hrWorkflowsApi.getScoringCriteriaByJD(jdId)
+    console.log('评分标准API响应:', response)
+    
+    if (response.items && response.items.length > 0) {
+      // 取最新的评分标准
+      const latestCriteria = response.items[0]
+      scoringCriteria.value = latestCriteria.content
+      scoringStreamContent.value = latestCriteria.content
+      scoringDisplayedContent.value = latestCriteria.content
+      savedScoringId.value = latestCriteria.id
+    } else {
+      // 清空评分标准相关数据
+      scoringCriteria.value = ''
+      scoringStreamContent.value = ''
+      scoringDisplayedContent.value = ''
+      savedScoringId.value = null
+    }
+  } catch (error) {
+    console.error('加载评分标准失败:', error)
+    // 不显示错误消息，因为可能是没有评分标准
+    scoringCriteria.value = ''
+    scoringStreamContent.value = ''
+    scoringDisplayedContent.value = ''
+    savedScoringId.value = null
+  }
+}
+
 // 生命周期
 onMounted(() => {
   fetchJDList()
@@ -1005,6 +1405,7 @@ onMounted(() => {
 onUnmounted(() => {
   // 清理打字机定时器
   stopTypewriter()
+  stopScoringTypewriter()
 })
 </script>
 

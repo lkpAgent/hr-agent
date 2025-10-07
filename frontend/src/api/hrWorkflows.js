@@ -107,5 +107,50 @@ export const hrWorkflowsApi = {
   // 删除JD
   deleteJD(id) {
     return request.delete(`/hr-workflows/jd/${id}`)
+  },
+
+  // 生成评分标准
+  generateScoringCriteria(data) {
+    if (data.stream) {
+      const token = Cookies.get('token')
+      return fetch(`/api/v1/hr-workflows/generate-scoring-criteria`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(data)
+      })
+    }
+    
+    return request.post('/hr-workflows/generate-scoring-criteria', data)
+  },
+
+  // 保存评分标准
+  createScoringCriteria(data) {
+    return request.post('/hr-workflows/scoring-criteria/save', data)
+  },
+
+  // 更新评分标准
+  updateScoringCriteria(id, data) {
+    return request.put(`/hr-workflows/scoring-criteria/${id}`, data)
+  },
+
+  // 获取评分标准详情
+  getScoringCriteria(id) {
+    return request.get(`/hr-workflows/scoring-criteria/${id}`)
+  },
+
+  // 获取评分标准列表
+  getScoringCriteriaList(params) {
+    return request.get('/hr-workflows/scoring-criteria', { params })
+  },
+
+  // 根据JD ID获取评分标准
+  getScoringCriteriaByJD(jdId) {
+    console.log('API调用 getScoringCriteriaByJD，参数:', { job_description_id: jdId })
+    return request.get('/hr-workflows/scoring-criteria', { 
+      params: { job_description_id: jdId } 
+    })
   }
 }

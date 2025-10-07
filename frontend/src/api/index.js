@@ -108,7 +108,7 @@ api.interceptors.response.use(
 
 // 通用请求方法
 export const request = {
-  get: (url, params = {}) => api.get(url, { params }),
+  get: (url, config = {}) => api.get(url, config),
   post: (url, data = {}) => api.post(url, data),
   put: (url, data = {}) => api.put(url, data),
   delete: (url) => api.delete(url),
