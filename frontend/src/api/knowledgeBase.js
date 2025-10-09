@@ -3,9 +3,11 @@ import { request } from './index'
 // 获取知识库列表
 export function getKnowledgeBases(params = {}) {
   return request.get('/knowledge-base/', {
-    skip: params.skip || 0,
-    limit: params.limit || 100,
-    ...params
+    params: {
+      skip: params.skip || 0,
+      limit: params.limit || 100,
+      ...params
+    }
   })
 }
 
@@ -40,10 +42,12 @@ export function searchKnowledgeBase(id, query, limit = 10) {
 // 获取知识库文档列表
 export function getKnowledgeBaseDocuments(knowledgeBaseId, params = {}) {
   return request.get('/knowledge-assistant/documents', {
-    knowledge_base_id: knowledgeBaseId,
-    skip: params.skip || 0,
-    limit: params.limit || 20,
-    ...params
+    params: {
+      knowledge_base_id: knowledgeBaseId,
+      skip: params.skip || 0,
+      limit: params.limit || 20,
+      ...params
+    }
   })
 }
 

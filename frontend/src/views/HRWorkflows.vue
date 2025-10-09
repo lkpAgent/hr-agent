@@ -1,10 +1,6 @@
 <template>
   <div class="hr-workflows">
-    <div class="header">
-      <h1>HR智能工作流</h1>
-      <p>基于Dify工作流的HR自动化功能</p>
-    </div>
-
+     
     <div class="workflow-tabs">
       <el-tabs v-model="activeTab" @tab-click="handleTabClick">
         <el-tab-pane label="生成JD" name="jd">

@@ -129,7 +129,7 @@ const routes = [
           {
             path: 'qa',
             name: 'KnowledgeQA',
-            component: () => import('@/views/assistant/KnowledgeQA.vue'),
+            component: () => import('@/views/assistant/KnowledgeAssistant.vue'),
             meta: { 
               title: '知识问答',
               requiresAuth: true
@@ -138,7 +138,7 @@ const routes = [
           {
             path: 'management',
             name: 'KnowledgeManagement',
-            component: () => import('@/views/assistant/KnowledgeManagement.vue'),
+            component: () => import('@/views/assistant/KnowledgeBase.vue'),
             meta: { 
               title: '知识库管理',
               requiresAuth: true
@@ -146,16 +146,7 @@ const routes = [
           }
         ]
       },
-      {
-        path: 'hr-workflows',
-        name: 'HRWorkflows',
-        component: () => import('@/views/HRWorkflows.vue'),
-        meta: { 
-          title: 'HR智能工作流',
-          icon: 'Operation',
-          requiresAuth: true
-        }
-      },
+     
       {
         path: 'profile',
         name: 'Profile',
