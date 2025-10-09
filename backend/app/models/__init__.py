@@ -10,6 +10,7 @@ from app.models.knowledge_base import KnowledgeBase, FAQ
 from app.models.conversation import Conversation, Message
 from app.models.job_description import JobDescription
 from app.models.scoring_criteria import ScoringCriteria
+from app.models.resume_evaluation import ResumeEvaluation
 
 # Export all models
 __all__ = [
@@ -22,5 +23,6 @@ __all__ = [
     "Conversation",
     "Message",
     "JobDescription",
-    "ScoringCriteria"
+    "ScoringCriteria",
+    "ResumeEvaluation"
 ]

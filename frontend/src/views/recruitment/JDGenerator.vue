@@ -1412,6 +1412,8 @@ onUnmounted(() => {
 <style lang="scss" scoped>
 .jd-generator {
   height: 100vh;
+  display: flex;
+  flex-direction: column;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   position: relative;
   overflow: hidden;
@@ -1431,10 +1433,13 @@ onUnmounted(() => {
   }
   
   .page-container {
-    height: 100%;
+    flex: 1;
     display: flex;
     flex-direction: column;
     padding: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
     position: relative;
     z-index: 1;
   }
@@ -1505,12 +1510,18 @@ onUnmounted(() => {
     display: flex;
     gap: 20px;
     min-height: 0;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    padding: 20px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     position: relative;
     z-index: 1;
   }
 
   .jd-list-panel {
-    width: 350px;
+    width: 400px;
+    height: 600px;
     flex-shrink: 0;
 
     .list-card {
@@ -1530,15 +1541,18 @@ onUnmounted(() => {
       }
 
       :deep(.el-card__body) {
-        padding: 20px;
-        height: calc(100% - 60px);
-        overflow: hidden;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 0;
       }
 
       .list-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
+        padding: 16px;
+        border-bottom: 1px solid #ebeef5;
 
         .list-title {
           font-weight: 600;
@@ -1554,6 +1568,7 @@ onUnmounted(() => {
         display: flex;
         flex-direction: column;
         min-height: 0;
+        max-height: 500px;
 
         .loading-container,
         .empty-container {
@@ -1565,30 +1580,50 @@ onUnmounted(() => {
 
         .jd-items {
           flex: 1;
-          overflow-y: auto;
-          margin: -12px;
-          padding: 12px;
+          max-height: 500px;
+          overflow-y: scroll;
+          padding: 0;
+          
+          // 自定义滚动条样式
+          &::-webkit-scrollbar {
+            width: 8px;
+          }
+          
+          &::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+          }
+          
+          &::-webkit-scrollbar-thumb {
+            background: rgba(102, 126, 234, 0.6);
+            border-radius: 4px;
+            
+            &:hover {
+              background: rgba(102, 126, 234, 0.8);
+            }
+          }
 
           .jd-item {
             padding: 16px;
-            border: 1px solid rgba(226, 232, 240, 0.5);
-            border-radius: 12px;
-            margin-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
             cursor: pointer;
-            transition: all 0.3s ease;
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.9));
-            backdrop-filter: blur(5px);
+            transition: all 0.3s;
+            border-radius: 12px;
+            margin: 0 16px 8px 16px;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
 
             &:hover {
-              border-color: rgba(102, 126, 234, 0.3);
-              box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+              background: rgba(255, 255, 255, 0.9);
+              box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
               transform: translateY(-2px);
+              border-color: #667eea;
             }
 
             &.active {
-              border-color: #667eea;
-              background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
-              box-shadow: 0 8px 25px rgba(102, 126, 234, 0.2);
+              background: rgba(102, 126, 234, 0.1);
+              border-left: 3px solid #667eea;
+              box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
             }
 
             .jd-item-header {
