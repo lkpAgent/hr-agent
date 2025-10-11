@@ -46,6 +46,7 @@ class User(BaseModel):
     # Relationships
     conversations = relationship("Conversation", back_populates="user", cascade="all, delete-orphan")
     documents = relationship("Document", back_populates="uploaded_by", cascade="all, delete-orphan")
+    interview_plans = relationship("InterviewPlan", back_populates="user", cascade="all, delete-orphan")
     
     def __repr__(self):
         return f"<User(username='{self.username}', email='{self.email}')>"

@@ -1,12 +1,19 @@
 """
 Resume Evaluation model for storing resume information and evaluation results
 """
-from sqlalchemy import Column, String, Text, JSON, ForeignKey, Integer, Float
+from sqlalchemy import Column, String, Text, JSON, ForeignKey, Integer, Float, Enum
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 import enum
 
 from app.models.base import BaseModel
+
+
+class ResumeStatus(enum.Enum):
+    """简历状态枚举"""
+    PENDING = "pending"  # 待处理
+    REJECTED = "rejected"  # 不通过
+    INTERVIEW = "interview"  # 面试
 
 
 class ResumeEvaluation(BaseModel):
@@ -35,6 +42,9 @@ class ResumeEvaluation(BaseModel):
     # 评价结果
     total_score = Column(Float, nullable=True)  # 总分
     evaluation_metrics = Column(JSON, nullable=True)  # 详细评价指标
+    
+    # 简历状态
+    status = Column(Enum(ResumeStatus), nullable=False, default=ResumeStatus.PENDING)  # 简历状态
     """
     evaluation_metrics 格式示例:
     [
@@ -67,6 +77,9 @@ class ResumeEvaluation(BaseModel):
     scoring_criteria = relationship("ScoringCriteria")
     created_by_user = relationship("User")
     
+    # 关联关系
+    interview_plans = relationship("InterviewPlan", back_populates="resume_evaluation")
+    
     def __repr__(self):
         return f"<ResumeEvaluation(id={self.id}, candidate_name={self.candidate_name}, total_score={self.total_score})>"
     
@@ -85,5 +98,6 @@ class ResumeEvaluation(BaseModel):
             "school": self.school,
             "resume_content": self.resume_content,
             "original_filename": self.original_filename,
+            "status": self.status.value if self.status else "pending",
             "created_at": self.created_at.isoformat() if self.created_at else None
         }

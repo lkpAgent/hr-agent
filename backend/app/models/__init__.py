@@ -11,6 +11,7 @@ from app.models.conversation import Conversation, Message
 from app.models.job_description import JobDescription
 from app.models.scoring_criteria import ScoringCriteria
 from app.models.resume_evaluation import ResumeEvaluation
+from app.models.interview_plan import InterviewPlan
 
 # Export all models
 __all__ = [
@@ -24,5 +25,6 @@ __all__ = [
     "Message",
     "JobDescription",
     "ScoringCriteria",
-    "ResumeEvaluation"
+    "ResumeEvaluation",
+    "InterviewPlan"
 ]

@@ -25,6 +25,7 @@ from app.schemas.scoring_criteria import (
 )
 from app.models.job_description import JobDescription
 from app.models.scoring_criteria import ScoringCriteria
+from app.models.resume_evaluation import ResumeEvaluation
 from app.services.dify_service import DifyService
 from app.api.deps import get_current_user
 from app.core.logging import logger
@@ -892,4 +893,99 @@ async def delete_scoring_criteria(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"删除评分标准失败: {str(e)}"
+        )
+
+
+@router.post("/generate-interview-plan-by-resume")
+async def generate_interview_plan_by_resume(
+    resume_id: str = Form(..., description="简历ID"),
+    conversation_id: str = Form(None, description="对话ID"),
+    stream: bool = Form(True, description="是否流式返回"),
+    current_user: UserSchema = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+) -> Any:
+    """
+    根据简历ID生成面试方案
+    工作流类型: type=4
+    """
+    try:
+        # 查询简历评价记录
+        result = await db.execute(
+            select(ResumeEvaluation).where(
+                ResumeEvaluation.id == resume_id,
+                ResumeEvaluation.user_id == current_user.id
+            )
+        )
+        resume_evaluation = result.scalar_one_or_none()
+        
+        if not resume_evaluation:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="简历记录未找到"
+            )
+        
+        # 查询关联的JD
+        jd_result = await db.execute(
+            select(JobDescription).where(
+                JobDescription.id == resume_evaluation.job_description_id,
+                JobDescription.user_id == current_user.id
+            )
+        )
+        job_description = jd_result.scalar_one_or_none()
+        
+        if not job_description:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="关联的职位描述未找到"
+            )
+        
+
+        # 构建简历内容
+        jianli_content = resume_evaluation.resume_content
+        
+        dify_service = DifyService()
+        
+        # 构建查询内容
+        query = f"请根据简历和JD要求生成面试方案。"
+        
+        # 额外输入参数
+        additional_inputs = {
+            "jianli": jianli_content,
+            "jd": job_description.content
+        }
+        
+        if stream:
+            # 流式响应
+            async def generate_stream():
+                async for chunk in dify_service.call_workflow_stream(
+                    workflow_type=4,
+                    query=query,
+                    conversation_id=conversation_id,
+                    additional_inputs=additional_inputs
+                ):
+                    yield f"data: {chunk}\n\n"
+                yield "data: [DONE]\n\n"
+            
+            return StreamingResponse(
+                generate_stream(),
+                media_type="text/plain",
+                headers={"Cache-Control": "no-cache", "Connection": "keep-alive"}
+            )
+        else:
+            # 同步响应
+            result = await dify_service.call_workflow_sync(
+                workflow_type=4,
+                query=query,
+                conversation_id=conversation_id,
+                additional_inputs=additional_inputs
+            )
+            return result
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error generating interview plan by resume: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"生成面试方案失败: {str(e)}"
         )

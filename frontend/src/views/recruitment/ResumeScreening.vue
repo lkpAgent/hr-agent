@@ -368,9 +368,11 @@ import { resumeApi } from '@/api/resume'
 import { jdApi } from '@/api/jd'
 import { marked } from 'marked'
 import { useAuthStore } from '@/stores/auth'
+import { useRouter } from 'vue-router'
 
 // 用户存储
 const authStore = useAuthStore()
+const router = useRouter()
 
 // 响应式数据
 const loading = ref(false)
@@ -510,7 +512,7 @@ const fetchJDList = async () => {
     const response = await jdApi.getJDList({
       page: 1,
       size: 100, // 获取所有可用的JD
-      status_filter: 'published' // 只获取已发布的JD
+      // status_filter: 'published' // 只获取已发布的JD
     })
     
     if (response && Array.isArray(response.items)) {
@@ -595,7 +597,8 @@ const handleReject = async () => {
       }
     )
     
-    // 这里可以调用API更新简历状态
+    // 调用API更新简历状态
+    await resumeApi.updateResumeStatus(selectedResume.value.id, 'rejected')
     ElMessage.success('已标记为不通过')
     
     // 刷新列表
@@ -622,11 +625,15 @@ const handleInterview = async () => {
       }
     )
     
-    // 这里可以调用API更新简历状态或创建面试安排
+    // 调用API更新简历状态
+    await resumeApi.updateResumeStatus(selectedResume.value.id, 'interview')
     ElMessage.success('已安排面试')
     
     // 刷新列表
     await fetchResumeList()
+    
+    // 跳转到智能面试页面
+    await router.push('/recruitment/smart-interview')
   } catch (error) {
     if (error !== 'cancel') {
       console.error('操作失败:', error)

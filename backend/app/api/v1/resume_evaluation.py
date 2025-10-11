@@ -16,6 +16,7 @@ from app.schemas.resume_evaluation import (
     ResumeEvaluationListResponse,
     ResumeEvaluationResult
 )
+from app.models.resume_evaluation import ResumeStatus
 
 logger = logging.getLogger(__name__)
 
@@ -83,6 +84,7 @@ async def evaluate_resume(
 async def get_evaluation_history(
     skip: int = 0,
     limit: int = 20,
+    status: Optional[str] = None,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
@@ -91,16 +93,26 @@ async def get_evaluation_history(
     
     - **skip**: 跳过的记录数
     - **limit**: 返回的记录数限制
+    - **status**: 状态过滤 (pending, rejected, interview)
     """
     try:
         if limit > 100:
             limit = 100
         
+        # 验证状态参数
+        status_filter = None
+        if status:
+            try:
+                status_filter = ResumeStatus(status)
+            except ValueError:
+                raise HTTPException(status_code=400, detail="无效的状态值，支持的状态: pending, rejected, interview")
+        
         evaluation_service = ResumeEvaluationService(db)
         evaluations = await evaluation_service.get_evaluation_history(
             user_id=current_user.id,
             skip=skip,
-            limit=limit
+            limit=limit,
+            status=status_filter
         )
         
         # 转换为响应格式
@@ -266,3 +278,56 @@ async def delete_evaluation(
         logger.error(f"删除评价记录失败: {e}")
         await db.rollback()
         raise HTTPException(status_code=500, detail="删除评价记录失败")
+
+
+@router.put("/{evaluation_id}/status")
+async def update_resume_status(
+    evaluation_id: str,
+    status: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    更新简历状态
+    
+    - **evaluation_id**: 评价记录ID
+    - **status**: 新状态 (pending, rejected, interview)
+    """
+    try:
+        # 验证evaluation_id格式
+        try:
+            eval_uuid = UUID(evaluation_id)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="无效的评价ID格式")
+        
+        # 验证状态值
+        try:
+            new_status = ResumeStatus(status)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="无效的状态值，支持的状态: pending, rejected, interview")
+        
+        evaluation_service = ResumeEvaluationService(db)
+        evaluation = await evaluation_service.get_evaluation_by_id(
+            evaluation_id=eval_uuid,
+            user_id=current_user.id
+        )
+        
+        if not evaluation:
+            raise HTTPException(status_code=404, detail="评价记录不存在")
+        
+        # 更新状态
+        evaluation.status = new_status
+        await db.commit()
+        
+        return {
+            "message": "状态更新成功",
+            "evaluation_id": str(evaluation.id),
+            "status": new_status.value
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"更新简历状态失败: {e}")
+        await db.rollback()
+        raise HTTPException(status_code=500, detail="更新简历状态失败")

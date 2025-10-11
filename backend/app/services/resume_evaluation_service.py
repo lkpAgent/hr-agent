@@ -8,7 +8,7 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from app.models.resume_evaluation import ResumeEvaluation
+from app.models.resume_evaluation import ResumeEvaluation, ResumeStatus
 from app.models.job_description import JobDescription
 from app.models.scoring_criteria import ScoringCriteria
 from app.schemas.resume_evaluation import (
@@ -375,17 +375,20 @@ class ResumeEvaluationService:
         self,
         user_id: UUID,
         skip: int = 0,
-        limit: int = 20
+        limit: int = 20,
+        status: Optional['ResumeStatus'] = None
     ) -> List[ResumeEvaluation]:
         """获取评价历史"""
         try:
-            result = await self.db.execute(
-                select(ResumeEvaluation)
-                .where(ResumeEvaluation.user_id == user_id)
-                .order_by(ResumeEvaluation.created_at.desc())
-                .offset(skip)
-                .limit(limit)
-            )
+            query = select(ResumeEvaluation).where(ResumeEvaluation.user_id == user_id)
+            
+            # 添加状态过滤
+            if status:
+                query = query.where(ResumeEvaluation.status == status)
+            
+            query = query.order_by(ResumeEvaluation.created_at.desc()).offset(skip).limit(limit)
+            
+            result = await self.db.execute(query)
             return result.scalars().all()
             
         except Exception as e:
