@@ -13,15 +13,16 @@ python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 
 # AI and LLM
-langchain==0.0.350
-langchain-openai==0.0.2
-langchain-community==0.0.10
+langchain==0.1.20
+langchain-openai==0.0.5
+langchain-community==0.0.38
 langchain-text-splitters==0.0.1
-openai>=1.6.1
+openai==1.109.1
 
 # Vector database (optional, for pgvector)
-pgvector==0.2.4
+pgvector==0.2.5
 psycopg2-binary==2.9.9
+psycopg_binary==3.2.10
 langchain-postgres==0.0.6
 
 # Data validation
