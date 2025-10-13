@@ -108,29 +108,7 @@
               <div class="score-items">
                 <div class="score-row">
                   <div class="score-item">
-                    <span class="score-label">技能匹配</span>
-                    <el-rate 
-                      v-model="candidate.scores.skillMatch" 
-                      :max="5" 
-                      size="small" 
-                      disabled
-                      show-score
-                    />
-                  </div>
-                  <div class="score-item">
-                    <span class="score-label">工作经验</span>
-                    <el-rate 
-                      v-model="candidate.scores.experience" 
-                      :max="5" 
-                      size="small" 
-                      disabled
-                      show-score
-                    />
-                  </div>
-                </div>
-                <div class="score-row">
-                  <div class="score-item">
-                    <span class="score-label">教育背景</span>
+                    <span class="score-label">学历</span>
                     <el-rate 
                       v-model="candidate.scores.education" 
                       :max="5" 
@@ -140,9 +118,43 @@
                     />
                   </div>
                   <div class="score-item">
-                    <span class="score-label">综合评价</span>
+                    <span class="score-label">工作经验</span>
                     <el-rate 
-                      v-model="candidate.scores.overall" 
+                      v-model="candidate.scores.workExperience" 
+                      :max="5" 
+                      size="small" 
+                      disabled
+                      show-score
+                    />
+                  </div>
+                </div>
+                <div class="score-row">
+                  <div class="score-item">
+                    <span class="score-label">技能</span>
+                    <el-rate 
+                      v-model="candidate.scores.skills" 
+                      :max="5" 
+                      size="small" 
+                      disabled
+                      show-score
+                    />
+                  </div>
+                  <div class="score-item">
+                    <span class="score-label">项目经验</span>
+                    <el-rate 
+                      v-model="candidate.scores.projectExperience" 
+                      :max="5" 
+                      size="small" 
+                      disabled
+                      show-score
+                    />
+                  </div>
+                </div>
+                <div class="score-row">
+                  <div class="score-item">
+                    <span class="score-label">综合素质</span>
+                    <el-rate 
+                      v-model="candidate.scores.overallQuality" 
                       :max="5" 
                       size="small" 
                       disabled
@@ -193,89 +205,95 @@
                 <div v-if="!selectedCandidate" class="empty-state">
                   <el-empty description="请选择一个候选人查看简历" />
                 </div>
-                <div v-else class="resume-content">
-                  <!-- 个人信息 -->
-                  <div class="resume-section">
-                    <h3 class="section-title">个人信息</h3>
-                    <div class="personal-info">
-                      <div class="info-row">
-                        <div class="info-item">
-                          <label>姓名：</label>
-                          <span>{{ selectedCandidate.resume.personalInfo.name }}</span>
-                        </div>
-                        <div class="info-item">
-                          <label>年龄：</label>
-                          <span>{{ selectedCandidate.resume.personalInfo.age }}岁</span>
-                        </div>
-                      </div>
-                      <div class="info-row">
-                        <div class="info-item">
-                          <label>电话：</label>
-                          <span>{{ selectedCandidate.resume.personalInfo.phone }}</span>
-                        </div>
-                        <div class="info-item">
-                          <label>邮箱：</label>
-                          <span>{{ selectedCandidate.resume.personalInfo.email }}</span>
-                        </div>
-                      </div>
-                      <div class="info-row">
-                        <div class="info-item">
-                          <label>地址：</label>
-                          <span>{{ selectedCandidate.resume.personalInfo.location }}</span>
+                <div v-else class="resume-detail-content">
+                  <!-- 详情头部 -->
+                  <div class="detail-header">
+                    <div class="candidate-profile">
+                      <el-avatar :size="60" :src="selectedCandidate.avatar">
+                        {{ selectedCandidate.name?.charAt(0) }}
+                      </el-avatar>
+                      <div class="profile-info">
+                        <h3>{{ selectedCandidate.name }}</h3>
+                        <p class="current-position">{{ selectedCandidate.position }}</p>
+                        <div class="profile-meta">
+                          <span class="meta-item">{{ selectedCandidate.experience }}</span>
+                          <span class="meta-divider">|</span>
+                          <span class="meta-item">{{ selectedCandidate.education }}</span>
+                          <span class="meta-divider">|</span>
+                          <span class="meta-item">{{ selectedCandidate.originalData?.candidate_age || '未知' }}岁</span>
                         </div>
                       </div>
                     </div>
-                  </div>
-
-                  <!-- 工作经验 -->
-                  <div class="resume-section">
-                    <h3 class="section-title">工作经验</h3>
-                    <div class="experience-list">
-                      <div 
-                        v-for="(exp, index) in selectedCandidate.resume.workExperience" 
-                        :key="index"
-                        class="experience-item"
-                      >
-                        <div class="exp-header">
-                          <h4>{{ exp.position }}</h4>
-                          <span class="duration">{{ exp.duration }}</span>
-                        </div>
-                        <p class="company">{{ exp.company }}</p>
-                        <p class="description">{{ exp.description }}</p>
+                    <div class="score-section">
+                      <div class="score-display">
+                        <el-progress
+                          type="circle"
+                          :percentage="selectedCandidate.totalScore"
+                          :color="getScoreColor(selectedCandidate.totalScore)"
+                          :width="80"
+                        >
+                          <template #default="{ percentage }">
+                            <span class="score-text">{{ percentage }}分</span>
+                          </template>
+                        </el-progress>
                       </div>
+                      <p class="score-label">匹配度</p>
                     </div>
                   </div>
 
-                  <!-- 教育背景 -->
-                  <div class="resume-section">
-                    <h3 class="section-title">教育背景</h3>
-                    <div class="education-list">
-                      <div 
-                        v-for="(edu, index) in selectedCandidate.resume.education" 
-                        :key="index"
-                        class="education-item"
-                      >
-                        <div class="edu-header">
-                          <h4>{{ edu.school }}</h4>
-                          <span class="duration">{{ edu.duration }}</span>
+                  <!-- 详情主要内容 - 两列布局 -->
+                  <div class="detail-main">
+                    <div class="two-column-layout">
+                      <!-- 左列：简历详情 -->
+                      <div class="left-column">
+                        <div class="column-header">
+                          <h4 class="column-title">
+                            <el-icon><Document /></el-icon>
+                            简历详情
+                          </h4>
                         </div>
-                        <p class="major">{{ edu.major }} - {{ edu.degree }}</p>
+                        <div class="column-content">
+                          <div class="resume-content-section">
+                            <div class="content-display" v-html="formattedResumeContent"></div>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
 
-                  <!-- 技能特长 -->
-                  <div class="resume-section">
-                    <h3 class="section-title">技能特长</h3>
-                    <div class="skills-list">
-                      <el-tag 
-                        v-for="skill in selectedCandidate.resume.skills" 
-                        :key="skill"
-                        class="skill-tag"
-                        type="primary"
-                      >
-                        {{ skill }}
-                      </el-tag>
+                      <!-- 右列：评价结果 -->
+                      <div class="right-column">
+                        <div class="column-header">
+                          <h4 class="column-title">
+                            <el-icon><Star /></el-icon>
+                            评价结果
+                          </h4>
+                        </div>
+                        <div class="column-content">
+                          <div class="evaluation-section">
+                            <div v-if="selectedCandidate.originalData?.evaluation_metrics && selectedCandidate.originalData.evaluation_metrics.length > 0" class="evaluation-content">
+                              <div
+                                v-for="metric in selectedCandidate.originalData.evaluation_metrics"
+                                :key="metric.name"
+                                class="evaluation-item"
+                              >
+                                <div class="metric-header">
+                                  <h4 class="metric-name">{{ metric.name }}</h4>
+                                  <div class="metric-score">
+                                    <el-tag :type="getMetricScoreType(metric.score, metric.max)">
+                                      {{ metric.score }}/{{ metric.max }}分
+                                    </el-tag>
+                                  </div>
+                                </div>
+                                <div class="metric-reason">
+                                  <p>{{ metric.reason }}</p>
+                                </div>
+                              </div>
+                            </div>
+                            <div v-else class="no-evaluation">
+                              <el-empty description="暂无评价数据" :image-size="100" />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -285,6 +303,8 @@
             <!-- 面试方案预览Tab -->
             <el-tab-pane label="面试方案" name="interview-plan">
               <div class="interview-plan-preview">
+                
+                
                 <div v-if="!selectedCandidate" class="empty-state">
                   <el-empty description="请选择一个候选人并生成面试方案" />
                 </div>
@@ -299,111 +319,79 @@
                       <p class="position">{{ interviewPlan.position }}</p>
                       <p class="generated-time">生成时间：{{ interviewPlan.generatedAt }}</p>
                     </div>
-                    <el-tag type="success" size="large">AI自动生成</el-tag>
-                  </div>
-
-                  <!-- 面试概览 -->
-                  <div class="plan-section">
-                    <h3 class="section-title">面试概览</h3>
-                    <div class="overview-grid">
-                      <div class="overview-item">
-                        <label>总时长：</label>
-                        <span>{{ interviewPlan.overview.totalTime }}</span>
-                      </div>
-                      <div class="overview-item">
-                        <label>难度等级：</label>
-                        <span>{{ interviewPlan.overview.difficulty }}</span>
-                      </div>
-                      <div class="overview-item full-width">
-                        <label>重点评估领域：</label>
-                        <div class="focus-areas">
-                          <el-tag 
-                            v-for="area in interviewPlan.overview.focusAreas" 
-                            :key="area"
-                            class="area-tag"
-                            type="info"
-                          >
-                            {{ area }}
-                          </el-tag>
-                        </div>
-                      </div>
+                    <div class="header-tags">
+                      <el-tag type="success" size="large">AI自动生成</el-tag>
+                      <el-tag v-if="interviewPlan.isGenerating" type="warning" size="large">
+                        <el-icon class="is-loading"><Loading /></el-icon>
+                        生成中...
+                      </el-tag>
+                      <el-tag v-if="isEditingPlan" type="info" size="large">编辑模式</el-tag>
                     </div>
                   </div>
 
-                  <!-- 面试环节 -->
-                  <div class="plan-section">
-                    <h3 class="section-title">面试环节</h3>
-                    <div class="sections-list">
-                      <div 
-                        v-for="(section, index) in interviewPlan.sections" 
-                        :key="index"
-                        class="section-item"
-                      >
-                        <div class="section-header">
-                          <h4>{{ section.title }}</h4>
-                          <span class="duration">{{ section.duration }}</span>
-                        </div>
-                        <div class="questions-list">
-                          <div 
-                            v-for="(question, qIndex) in section.questions" 
-                            :key="qIndex"
-                            class="question-item"
-                          >
-                            <span class="question-number">{{ qIndex + 1 }}.</span>
-                            <span class="question-text">{{ question }}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- 评估标准 -->
-                  <div class="plan-section">
-                    <h3 class="section-title">评估标准</h3>
-                    <div class="criteria-list">
-                      <div 
-                        v-for="(criteria, index) in interviewPlan.evaluationCriteria" 
-                        :key="index"
-                        class="criteria-item"
-                      >
-                        <div class="criteria-header">
-                          <h4>{{ criteria.category }}</h4>
-                          <el-tag type="warning" size="small">{{ criteria.weight }}</el-tag>
-                        </div>
-                        <p class="criteria-description">{{ criteria.description }}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- 面试建议 -->
-                  <div class="plan-section">
-                    <h3 class="section-title">面试建议</h3>
-                    <div class="tips-list">
-                      <div 
-                        v-for="(tip, index) in interviewPlan.tips" 
-                        :key="index"
-                        class="tip-item"
-                      >
-                        <el-icon class="tip-icon"><InfoFilled /></el-icon>
-                        <span>{{ tip }}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- 操作按钮 -->
+                  <!-- 操作按钮 - 移到内容上方 -->
                   <div class="plan-actions">
-                    <el-button type="primary" @click="startInterview">
-                      <el-icon><VideoCamera /></el-icon>
-                      开始面试
-                    </el-button>
-                    <el-button @click="exportPlan">
-                      <el-icon><Download /></el-icon>
-                      导出方案
-                    </el-button>
-                    <el-button @click="regeneratePlan" :loading="generatingPlan">
-                      <el-icon><Refresh /></el-icon>
-                      重新生成
-                    </el-button>
+                    <div class="action-group">
+                      <!-- 统一的保存方案按钮 -->
+                      <el-button 
+                        v-if="interviewPlan.content" 
+                        type="success" 
+                        @click="saveInterviewPlan" 
+                        :loading="savingPlan"
+                      >
+                        <el-icon><DocumentAdd /></el-icon>
+                        保存方案
+                      </el-button>
+                      
+                      <!-- 已保存状态提示 -->
+                      <el-tag 
+                        v-if="!isEditingPlan && interviewPlan.isSaved" 
+                        type="success" 
+                        size="large"
+                      >
+                        <el-icon><Check /></el-icon>
+                        已保存
+                      </el-tag>
+                      
+                      <el-button v-if="!isEditingPlan" type="primary" @click="toggleEditPlan">
+                        <el-icon><Edit /></el-icon>
+                        编辑方案
+                      </el-button>
+                      <el-button v-if="isEditingPlan" @click="cancelEditPlan">
+                        <el-icon><Close /></el-icon>
+                        取消编辑
+                      </el-button>
+                    </div>
+                    <div class="action-group">
+                      <el-button type="primary" @click="startInterview" :disabled="isEditingPlan">
+                        <el-icon><VideoCamera /></el-icon>
+                        开始面试
+                      </el-button>
+                      <el-button @click="exportPlan" :disabled="isEditingPlan">
+                        <el-icon><Download /></el-icon>
+                        导出方案
+                      </el-button>
+                      <el-button @click="regeneratePlan" :loading="generatingPlan" :disabled="isEditingPlan">
+                        <el-icon><Refresh /></el-icon>
+                        重新生成
+                      </el-button>
+                    </div>
+                  </div>
+
+                  <!-- 面试方案内容 -->
+                  <div class="plan-section">
+                    <!-- 编辑模式 -->
+                    <div v-if="isEditingPlan" class="edit-container">
+                      <el-input
+                        v-model="editPlanContent"
+                        type="textarea"
+                        :rows="20"
+                        placeholder="在此编辑面试方案内容..."
+                        class="edit-textarea"
+                      />
+                    </div>
+                    <!-- 预览模式 -->
+                    <div v-else class="plan-content markdown-content" v-html="formattedInterviewPlan"></div>
                   </div>
                 </div>
               </div>
@@ -481,8 +469,20 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, onMounted, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
+import { 
+  VideoCamera, 
+  Search, 
+  Edit, 
+  Check, 
+  Close, 
+  DocumentAdd,
+  Loading 
+} from '@element-plus/icons-vue'
+import { resumeApi } from '@/api/resume'
+import { hrWorkflowsApi } from '@/api/hrWorkflows'
+import { marked } from 'marked'
 
 // 响应式数据
 const activeTab = ref('resume')
@@ -490,138 +490,24 @@ const selectedCandidate = ref(null)
 const generatingPlan = ref(false)
 const interviewPlan = ref(null)
 
+// 编辑相关数据
+const isEditingPlan = ref(false)
+const editPlanContent = ref('')
+const savingPlan = ref(false)
+const originalPlanContent = ref('')
+
 // 筛选相关数据
 const filters = reactive({
   name: '',
-  position: ''
+  position: '',
+  status: 'interview' // 默认只显示面试状态的简历
 })
 
+// 加载状态
+const loading = ref(false)
+
 // 候选人数据
-const candidates = ref([
-  {
-    id: 1,
-    name: '张三',
-    position: '前端开发工程师',
-    experience: 3,
-    education: '本科',
-    location: '北京',
-    totalScore: 85,
-    scores: {
-      skillMatch: 4,
-      experience: 4,
-      education: 4,
-      overall: 4
-    },
-    resume: {
-      personalInfo: {
-        name: '张三',
-        age: 28,
-        phone: '138****1234',
-        email: 'zhangsan@example.com',
-        location: '北京市朝阳区'
-      },
-      workExperience: [
-        {
-          company: 'ABC科技有限公司',
-          position: '前端开发工程师',
-          duration: '2021.03 - 至今',
-          description: '负责公司主要产品的前端开发工作，使用React、Vue等技术栈'
-        }
-      ],
-      education: [
-        {
-          school: '北京理工大学',
-          major: '计算机科学与技术',
-          degree: '本科',
-          duration: '2017.09 - 2021.06'
-        }
-      ],
-      skills: ['JavaScript', 'React', 'Vue', 'TypeScript', 'Node.js']
-    }
-  },
-  {
-    id: 2,
-    name: '李四',
-    position: 'React开发工程师',
-    experience: 5,
-    education: '硕士',
-    location: '上海',
-    totalScore: 92,
-    scores: {
-      skillMatch: 5,
-      experience: 5,
-      education: 4,
-      overall: 5
-    },
-    resume: {
-      personalInfo: {
-        name: '李四',
-        age: 30,
-        phone: '139****5678',
-        email: 'lisi@example.com',
-        location: '上海市浦东新区'
-      },
-      workExperience: [
-        {
-          company: 'XYZ互联网公司',
-          position: '高级前端开发工程师',
-          duration: '2019.06 - 至今',
-          description: '负责大型React项目的架构设计和开发，团队技术负责人'
-        }
-      ],
-      education: [
-        {
-          school: '复旦大学',
-          major: '软件工程',
-          degree: '硕士',
-          duration: '2017.09 - 2019.06'
-        }
-      ],
-      skills: ['React', 'TypeScript', 'Redux', 'Webpack', 'Docker']
-    }
-  },
-  {
-    id: 3,
-    name: '王五',
-    position: 'Vue开发工程师',
-    experience: 2,
-    education: '本科',
-    location: '深圳',
-    totalScore: 78,
-    scores: {
-      skillMatch: 4,
-      experience: 3,
-      education: 4,
-      overall: 4
-    },
-    resume: {
-      personalInfo: {
-        name: '王五',
-        age: 25,
-        phone: '137****9012',
-        email: 'wangwu@example.com',
-        location: '深圳市南山区'
-      },
-      workExperience: [
-        {
-          company: 'DEF创业公司',
-          position: 'Vue开发工程师',
-          duration: '2022.07 - 至今',
-          description: '负责公司产品的前端开发，主要使用Vue3和TypeScript'
-        }
-      ],
-      education: [
-        {
-          school: '深圳大学',
-          major: '信息管理与信息系统',
-          degree: '本科',
-          duration: '2018.09 - 2022.06'
-        }
-      ],
-      skills: ['Vue', 'JavaScript', 'TypeScript', 'Element Plus', 'Vite']
-    }
-  }
-])
+const candidates = ref([])
 
 // 计算属性
 const availablePositions = computed(() => {
@@ -644,6 +530,18 @@ const filteredCandidates = computed(() => {
 const filteredCandidatesCount = computed(() => filteredCandidates.value.length)
 const totalCandidatesCount = computed(() => candidates.value.length)
 
+// 格式化简历内容
+const formattedResumeContent = computed(() => {
+  if (!selectedCandidate.value?.originalData?.resume_content) return ''
+  return marked(selectedCandidate.value.originalData.resume_content)
+})
+
+// 格式化面试方案内容
+const formattedInterviewPlan = computed(() => {
+  if (!interviewPlan.value?.content) return ''
+  return marked(interviewPlan.value.content)
+})
+
 // 方法
 const getScoreType = (score) => {
   if (score >= 90) return 'success'
@@ -659,17 +557,137 @@ const getScoreColor = (score) => {
   return '#f56c6c'
 }
 
-const selectCandidate = (candidate) => {
+const getMetricScoreType = (score, max) => {
+  const percentage = (score / max) * 100
+  if (percentage >= 80) return 'success'
+  if (percentage >= 60) return 'warning'
+  if (percentage >= 40) return 'info'
+  return 'danger'
+}
+
+// 获取简历数据
+const fetchCandidates = async () => {
+  try {
+    loading.value = true
+    const response = await resumeApi.getResumeHistory({
+      status: filters.status,
+      limit: 100 // 获取更多数据
+    })
+    
+    // 转换数据格式以适配现有的UI
+    candidates.value = response.items.map(resume => {
+      // 从evaluation_metrics中提取评分数据
+      const getMetricScore = (metricName) => {
+        if (!resume.evaluation_metrics || !Array.isArray(resume.evaluation_metrics)) {
+          return 0
+        }
+        const metric = resume.evaluation_metrics.find(m => m.name === metricName)
+        if (!metric) return 0
+        // 将分数转换为5分制（假设max为25分）
+        return Math.min(5, Math.max(0, Math.round((metric.score / metric.max) * 5)))
+      }
+      
+      return {
+        id: resume.id,
+        name: resume.candidate_name || '未知',
+        position: resume.candidate_position || '未知职位',
+        experience: resume.work_years || '未知',
+        education: resume.education_level || '未知',
+        location: '未知', // 简历数据中没有地址信息
+        totalScore: resume.total_score || 0,
+        status: resume.status,
+        scores: {
+          education: getMetricScore('学历'),
+          workExperience: getMetricScore('工作经验'),
+          skills: getMetricScore('技能'),
+          projectExperience: getMetricScore('项目经验'),
+          overallQuality: getMetricScore('综合素质')
+        },
+        resume: {
+          personalInfo: {
+            name: resume.candidate_name || '未知',
+            age: resume.candidate_age || '未知',
+            phone: '***',
+            email: '***',
+            location: '未知'
+          },
+          workExperience: [],
+          education: [],
+          skills: [],
+          content: resume.resume_content || ''
+        },
+        originalData: resume // 保存原始数据
+      }
+    })
+    
+  } catch (error) {
+    console.error('获取候选人数据失败:', error)
+    ElMessage.error('获取候选人数据失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+const selectCandidate = async (candidate) => {
+  // 如果选择的是同一个候选人，不需要重新加载
+  if (selectedCandidate.value?.id === candidate.id) {
+    console.log('选择了同一个候选人，不重新加载面试方案')
+    return
+  }
+  
   selectedCandidate.value = candidate
   activeTab.value = 'resume'
   // 清除之前的面试方案
   interviewPlan.value = null
-  ElMessage.success(`已选择候选人：${candidate.name}`)
+  
+  // 检查是否已有保存的面试方案
+  try {
+    console.log('开始获取面试方案，候选人ID:', candidate.id)
+    const response = await hrWorkflowsApi.getInterviewPlanList({
+      resume_evaluation_id: candidate.id,
+      limit: 1
+    })
+    
+    console.log('API响应:', response)
+    console.log('响应数据:', response)
+    
+    if (response && response.items && response.items.length > 0) {
+      const savedPlan = response.items[0]
+      console.log('找到已保存的面试方案:', savedPlan)
+      console.log('候选人信息:', candidate)
+      interviewPlan.value = {
+        id: savedPlan.id,
+        candidateId: candidate.id,
+        candidateName: savedPlan.candidate_name || candidate.name,
+        position: savedPlan.candidate_position || candidate.position,
+        title: savedPlan.title,
+        content: savedPlan.content,
+        status: savedPlan.status,
+        createdAt: savedPlan.created_at,
+        updatedAt: savedPlan.updated_at,
+        isGenerating: false,
+        isSaved: true
+      }
+      console.log('设置的面试方案对象:', interviewPlan.value)
+      console.log('当前activeTab:', activeTab.value)
+      // 切换到面试方案标签页
+      activeTab.value = 'interview-plan'
+      console.log('切换后activeTab:', activeTab.value)
+      ElMessage.success(`已选择候选人：${candidate.name}，发现已保存的面试方案`)
+    } else {
+      ElMessage.success(`已选择候选人：${candidate.name}`)
+    }
+  } catch (error) {
+    console.error('检查面试方案失败:', error)
+    console.error('错误详情:', error.message)
+    console.error('错误堆栈:', error.stack)
+    ElMessage.success(`已选择候选人：${candidate.name}`)
+  }
 }
 
-const refreshCandidates = () => {
+const refreshCandidates = async () => {
+  await fetchCandidates()
   ElMessage.success('候选人列表已刷新')
-  // 这里可以调用API刷新数据
 }
 
 const viewResume = (candidate) => {
@@ -683,91 +701,96 @@ const generateInterviewPlan = async (candidate) => {
     generatingPlan.value = true
     activeTab.value = 'interview-plan'
     
+    // 清空之前的面试方案
+    interviewPlan.value = null
+    
     ElMessage.info('正在生成面试方案，请稍候...')
     
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    
-    // 模拟生成的面试方案
+    // 调用新的API生成面试方案
+    const response = await hrWorkflowsApi.generateInterviewPlanByResume({
+      resume_id: candidate.id,
+      stream: true
+    })
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+
+    // 处理流式响应 - 参考JD生成页面的实现
+    const reader = response.body.getReader()
+    const decoder = new TextDecoder()
+    let planContent = ''
+
+    // 初始化面试方案对象
     interviewPlan.value = {
       candidateId: candidate.id,
       candidateName: candidate.name,
       position: candidate.position,
       generatedAt: new Date().toLocaleString(),
-      overview: {
-        totalTime: '60分钟',
-        difficulty: '中等',
-        focusAreas: ['技术能力', '项目经验', '团队协作', '学习能力']
-      },
-      sections: [
-        {
-          title: '开场介绍',
-          duration: '5分钟',
-          questions: [
-            '请简单介绍一下自己',
-            '为什么选择我们公司？'
-          ]
-        },
-        {
-          title: '技术能力评估',
-          duration: '30分钟',
-          questions: [
-            `请介绍一下你在${candidate.position}方面的经验`,
-            '描述一个你最有挑战性的项目',
-            '如何处理项目中的技术难题？',
-            '对于新技术的学习方法是什么？'
-          ]
-        },
-        {
-          title: '项目经验深入',
-          duration: '20分钟',
-          questions: [
-            '请详细介绍你最近的一个项目',
-            '在团队协作中遇到过什么困难？',
-            '如何保证代码质量？',
-            '对项目架构有什么思考？'
-          ]
-        },
-        {
-          title: '综合素质评估',
-          duration: '5分钟',
-          questions: [
-            '你的职业规划是什么？',
-            '还有什么问题想了解的吗？'
-          ]
+      content: '',
+      isGenerating: true
+    }
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        const chunk = decoder.decode(value)
+        const lines = chunk.split('\n')
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6)
+            if (data === '[DONE]') {
+              break
+            }
+            
+            try {
+              const parsed = JSON.parse(data)
+              // 根据后端返回的数据格式处理：{"event": "message", "answer": "#", ...}
+              if (parsed.answer) {
+                planContent += parsed.answer
+                // 实时更新显示内容
+                interviewPlan.value.content = planContent
+              }
+            } catch (e) {
+              // 如果不是JSON，直接添加到结果中
+              if (data && data !== '[DONE]') {
+                planContent += data
+                interviewPlan.value.content = planContent
+              }
+            }
+          }
         }
-      ],
-      evaluationCriteria: [
-        {
-          category: '技术能力',
-          weight: '40%',
-          description: '评估候选人的技术深度和广度'
-        },
-        {
-          category: '项目经验',
-          weight: '30%',
-          description: '评估候选人的实际项目经验和解决问题能力'
-        },
-        {
-          category: '沟通表达',
-          weight: '20%',
-          description: '评估候选人的沟通能力和表达清晰度'
-        },
-        {
-          category: '学习能力',
-          weight: '10%',
-          description: '评估候选人的学习意愿和适应能力'
+      }
+    } finally {
+      reader.releaseLock()
+    }
+
+    // 生成完成，更新状态
+    if (interviewPlan.value) {
+      interviewPlan.value.isGenerating = false
+      if (planContent) {
+        // 更新本地显示的面试方案内容，保留可能存在的ID
+        const existingId = interviewPlan.value.id
+        interviewPlan.value = {
+          ...interviewPlan.value,
+          id: existingId, // 保留现有的ID（如果有的话）
+          candidateId: candidate.id,
+          candidateName: candidate.name,
+          position: candidate.position,
+          generatedAt: new Date().toLocaleString(),
+          content: planContent,
+          isGenerating: false,
+          isSaved: false  // 标记为未保存
         }
-      ],
-      tips: [
-        '注意观察候选人的思考过程',
-        '鼓励候选人提出问题',
-        '关注候选人的团队协作意识',
-        '评估候选人的抗压能力'
-      ]
+        ElMessage.success('面试方案生成成功！请点击保存按钮保存到数据库')
+      } else {
+        ElMessage.warning('未收到面试方案内容，请重试')
+      }
     }
     
-    ElMessage.success('面试方案生成完成！')
   } catch (error) {
     console.error('生成面试方案失败:', error)
     ElMessage.error('生成面试方案失败，请重试')
@@ -802,6 +825,125 @@ const regeneratePlan = () => {
   generateInterviewPlan(selectedCandidate.value)
 }
 
+// 编辑面试方案相关方法
+const toggleEditPlan = () => {
+  console.log('toggleEditPlan 被调用')
+  console.log('当前 interviewPlan:', interviewPlan.value)
+  console.log('interviewPlan.value?.id:', interviewPlan.value?.id)
+  
+  if (!interviewPlan.value?.content) {
+    ElMessage.warning('暂无面试方案内容可编辑')
+    return
+  }
+  
+  isEditingPlan.value = true
+  originalPlanContent.value = interviewPlan.value.content
+  editPlanContent.value = interviewPlan.value.content
+  
+  console.log('编辑模式开启后，interviewPlan.value?.id:', interviewPlan.value?.id)
+}
+
+const cancelEditPlan = () => {
+  isEditingPlan.value = false
+  editPlanContent.value = ''
+  originalPlanContent.value = ''
+}
+
+
+
+// 统一的保存面试方案方法
+const saveInterviewPlan = async () => {
+  // 获取要保存的内容
+  const contentToSave = isEditingPlan.value ? editPlanContent.value : interviewPlan.value?.content
+  
+  if (!contentToSave?.trim()) {
+    ElMessage.warning('面试方案内容不能为空')
+    return
+  }
+  
+  if (!selectedCandidate.value) {
+    ElMessage.warning('请先选择候选人')
+    return
+  }
+  
+  try {
+    savingPlan.value = true
+    
+    // 根据是否有ID决定是新建还是更新
+    const hasId = interviewPlan.value?.id
+    console.log('保存面试方案，hasId:', hasId, 'ID:', interviewPlan.value?.id)
+    
+    let response
+    
+    if (hasId) {
+      // 更新现有方案
+      console.log('更新现有面试方案，ID:', interviewPlan.value.id)
+      response = await hrWorkflowsApi.updateInterviewPlan(interviewPlan.value.id, {
+        content: contentToSave,
+        candidate_name: interviewPlan.value.candidateName,
+        candidate_position: interviewPlan.value.position
+      })
+    } else {
+      // 创建新方案
+      console.log('创建新面试方案')
+      response = await hrWorkflowsApi.saveGeneratedInterviewPlan({
+        resume_evaluation_id: selectedCandidate.value.id,
+        candidate_name: selectedCandidate.value.name,
+        candidate_position: selectedCandidate.value.position,
+        content: contentToSave
+      })
+    }
+    
+    console.log('保存接口响应:', response)
+    console.log('响应数据:', response)
+    
+    if (response) {
+      // 更新本地数据
+      interviewPlan.value = {
+        id: response.id,
+        candidateId: selectedCandidate.value.id,
+        candidateName: selectedCandidate.value.name,
+        position: selectedCandidate.value.position,
+        content: response.content || contentToSave,
+        createdAt: response.created_at,
+        updatedAt: response.updated_at,
+        generatedAt: interviewPlan.value?.generatedAt || new Date().toLocaleString(),
+        isGenerating: false,
+        isSaved: true,
+        savedAt: new Date().toLocaleString()
+      }
+      
+      // 如果是编辑模式，退出编辑
+      if (isEditingPlan.value) {
+        isEditingPlan.value = false
+        editPlanContent.value = ''
+        originalPlanContent.value = ''
+      }
+      
+      console.log('面试方案保存成功，ID:', response.id)
+      console.log('更新后的 interviewPlan:', interviewPlan.value)
+      
+      // 强制切换到面试方案标签页以显示更新的内容
+      activeTab.value = 'interview-plan'
+      
+      // 使用 nextTick 确保 DOM 更新
+      await nextTick()
+      
+      ElMessage.success(hasId ? '面试方案更新成功' : '面试方案保存成功')
+    } else {
+      console.error('响应中没有数据:', response)
+    }
+  } catch (error) {
+    console.error('保存面试方案失败:', error)
+    ElMessage.error('保存面试方案失败，请重试')
+  } finally {
+    savingPlan.value = false
+  }
+}
+
+// 保持向后兼容的方法
+const saveGeneratedPlan = saveInterviewPlan
+
 // 筛选相关方法
 const handleFilterChange = () => {
   // 筛选变化时的处理逻辑
@@ -818,6 +960,11 @@ const clearFilters = () => {
   filters.position = ''
   ElMessage.success('筛选条件已重置')
 }
+
+// 组件挂载时获取数据
+onMounted(() => {
+  fetchCandidates()
+})
 </script>
 
 <style lang="scss" scoped>
@@ -1337,6 +1484,158 @@ const clearFilters = () => {
       }
     }
     
+    // Markdown内容样式优化
+    .markdown-content {
+      line-height: 1.6;
+      color: #374151;
+      
+      h1, h2, h3, h4, h5, h6 {
+        color: #1e293b;
+        font-weight: 600;
+        margin: 24px 0 16px 0;
+        
+        &:first-child {
+          margin-top: 0;
+        }
+      }
+      
+      h1 {
+        font-size: 24px;
+        border-bottom: 2px solid #e2e8f0;
+        padding-bottom: 8px;
+      }
+      
+      h2 {
+        font-size: 20px;
+        border-bottom: 1px solid #e2e8f0;
+        padding-bottom: 6px;
+      }
+      
+      h3 {
+        font-size: 18px;
+        color: #667eea;
+      }
+      
+      h4 {
+        font-size: 16px;
+      }
+      
+      p {
+        margin: 12px 0;
+        line-height: 1.7;
+      }
+      
+      ul, ol {
+        margin: 16px 0;
+        padding-left: 24px;
+        
+        li {
+          margin: 8px 0;
+          line-height: 1.6;
+          
+          &::marker {
+            color: #667eea;
+          }
+        }
+      }
+      
+      ul {
+        li {
+          position: relative;
+          
+          &::before {
+            content: '•';
+            color: #667eea;
+            font-weight: bold;
+            position: absolute;
+            left: -16px;
+          }
+        }
+      }
+      
+      blockquote {
+        margin: 16px 0;
+        padding: 16px 20px;
+        background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+        border-left: 4px solid #667eea;
+        border-radius: 0 8px 8px 0;
+        
+        p {
+          margin: 0;
+          color: #1e40af;
+          font-style: italic;
+        }
+      }
+      
+      code {
+        background: #f1f5f9;
+        color: #e11d48;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        font-size: 0.9em;
+      }
+      
+      pre {
+        background: #1e293b;
+        color: #e2e8f0;
+        padding: 16px;
+        border-radius: 8px;
+        overflow-x: auto;
+        margin: 16px 0;
+        
+        code {
+          background: none;
+          color: inherit;
+          padding: 0;
+        }
+      }
+      
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 16px 0;
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        
+        th, td {
+          padding: 12px 16px;
+          text-align: left;
+          border-bottom: 1px solid #e2e8f0;
+        }
+        
+        th {
+          background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+          font-weight: 600;
+          color: #1e293b;
+        }
+        
+        tr:hover {
+          background: #f8fafc;
+        }
+      }
+      
+      strong {
+        color: #1e293b;
+        font-weight: 600;
+      }
+      
+      em {
+        color: #667eea;
+        font-style: italic;
+      }
+      
+      hr {
+        border: none;
+        height: 2px;
+        background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
+        margin: 24px 0;
+        border-radius: 1px;
+      }
+    }
+    
     .plan-section {
       margin-bottom: 24px;
       
@@ -1503,12 +1802,20 @@ const clearFilters = () => {
     }
     
     .plan-actions {
-      margin-top: 24px;
-      padding-top: 20px;
-      border-top: 1px solid #e2e8f0;
+      margin-bottom: 24px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #e2e8f0;
       display: flex;
-      gap: 12px;
-      justify-content: center;
+      gap: 16px;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      
+      .action-group {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
       
       .el-button {
         border-radius: 8px;
@@ -1517,6 +1824,37 @@ const clearFilters = () => {
         &.el-button--primary {
           background: linear-gradient(135deg, #667eea, #764ba2);
           border: none;
+        }
+        
+        &.el-button--success {
+          background: linear-gradient(135deg, #10b981, #059669);
+          border: none;
+        }
+        
+        &:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+      }
+    }
+    
+    .edit-container {
+      margin-top: 16px;
+      
+      .edit-textarea {
+        :deep(.el-textarea__inner) {
+          border-radius: 8px;
+          border: 2px solid #e2e8f0;
+          font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+          font-size: 14px;
+          line-height: 1.6;
+          padding: 16px;
+          transition: all 0.3s ease;
+          
+          &:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+          }
         }
       }
     }
@@ -1808,6 +2146,208 @@ const clearFilters = () => {
     .el-button {
       width: 100%;
     }
+  }
+}
+
+// 简历预览样式
+.resume-detail-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  
+  .detail-header {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 24px;
+    border-radius: 16px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    
+    .candidate-profile {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      
+      .profile-info {
+        h3 {
+          margin: 0 0 4px 0;
+          color: #303133;
+          font-size: 20px;
+        }
+        
+        .current-position {
+          color: #606266;
+          margin: 0 0 8px 0;
+          font-size: 14px;
+        }
+        
+        .profile-meta {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 12px;
+          color: #909399;
+          
+          .meta-divider {
+            color: #dcdfe6;
+          }
+        }
+      }
+    }
+    
+    .score-section {
+      text-align: center;
+      
+      .score-display {
+        margin-bottom: 8px;
+        
+        .score-text {
+          font-size: 14px;
+          font-weight: 600;
+        }
+      }
+      
+      .score-label {
+        margin: 0;
+        font-size: 12px;
+        color: #909399;
+      }
+    }
+  }
+  
+  .detail-main {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    min-height: 0;
+    padding: 20px;
+    
+    .two-column-layout {
+      display: flex;
+      gap: 20px;
+      height: 100%;
+      
+      .left-column,
+      .right-column {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: rgba(255, 255, 255, 0.8);
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        overflow: hidden;
+      }
+      
+      .column-header {
+        background: rgba(102, 126, 234, 0.1);
+        padding: 16px 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        
+        .column-title {
+          margin: 0;
+          font-size: 16px;
+          font-weight: 600;
+          color: #667eea;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          
+          .el-icon {
+            font-size: 18px;
+          }
+        }
+      }
+      
+      .column-content {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+        
+        &::-webkit-scrollbar {
+          width: 6px;
+        }
+        
+        &::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 3px;
+        }
+        
+        &::-webkit-scrollbar-thumb {
+          background: rgba(102, 126, 234, 0.3);
+          border-radius: 3px;
+          
+          &:hover {
+            background: rgba(102, 126, 234, 0.5);
+          }
+        }
+      }
+    }
+  }
+}
+
+.resume-content-section {
+  .content-display {
+    line-height: 1.6;
+    color: #303133;
+    
+    :deep(h1), :deep(h2), :deep(h3), :deep(h4), :deep(h5), :deep(h6) {
+      color: #303133;
+      margin-top: 24px;
+      margin-bottom: 12px;
+    }
+    
+    :deep(p) {
+      margin-bottom: 12px;
+    }
+    
+    :deep(ul), :deep(ol) {
+      padding-left: 20px;
+      margin-bottom: 12px;
+    }
+  }
+}
+
+.evaluation-section {
+  .evaluation-content {
+    .evaluation-item {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+      
+      .metric-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+        
+        .metric-name {
+          margin: 0;
+          color: #303133;
+          font-size: 16px;
+        }
+      }
+      
+      .metric-reason {
+        p {
+          margin: 0;
+          color: #606266;
+          line-height: 1.6;
+        }
+      }
+    }
+  }
+  
+  .no-evaluation {
+    padding: 40px 20px;
+    text-align: center;
   }
 }
 </style>

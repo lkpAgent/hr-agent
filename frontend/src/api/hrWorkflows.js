@@ -58,6 +58,29 @@ export const hrWorkflowsApi = {
     return request.post('/hr-workflows/generate-interview-plan', data)
   },
 
+  // 根据简历ID生成面试方案
+  generateInterviewPlanByResume(data) {
+    if (data.stream) {
+      const token = Cookies.get('token')
+      const formData = new FormData()
+      formData.append('resume_id', data.resume_id)
+      if (data.conversation_id) {
+        formData.append('conversation_id', data.conversation_id)
+      }
+      formData.append('stream', data.stream)
+
+      return fetch(`/api/v1/hr-workflows/generate-interview-plan-by-resume`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      })
+    }
+    
+    return request.post('/hr-workflows/generate-interview-plan-by-resume', data)
+  },
+
   // 调用自定义工作流
   callCustomWorkflow(data) {
     if (data.stream) {
@@ -152,5 +175,41 @@ export const hrWorkflowsApi = {
     return request.get('/hr-workflows/scoring-criteria', { 
       params: { job_description_id: jdId } 
     })
+  },
+
+  // 面试方案相关API
+  // 保存面试方案内容
+  saveInterviewPlan(planId, data) {
+    return request.post(`/interview-plans/${planId}/save`, data)
+  },
+
+  // 创建面试方案
+  createInterviewPlan(data) {
+    return request.post('/interview-plans', data)
+  },
+
+  // 更新面试方案
+  updateInterviewPlan(planId, data) {
+    return request.put(`/interview-plans/${planId}`, data)
+  },
+
+  // 获取面试方案详情
+  getInterviewPlan(planId) {
+    return request.get(`/interview-plans/${planId}`)
+  },
+
+  // 获取面试方案列表
+  getInterviewPlanList(params) {
+    return request.get('/interview-plans/', { params })
+  },
+
+  // 保存生成的面试方案
+  saveGeneratedInterviewPlan(data) {
+    return request.post('/interview-plans/save-generated', data)
+  },
+
+  // 删除面试方案
+  deleteInterviewPlan(planId) {
+    return request.delete(`/interview-plans/${planId}`)
   }
 }

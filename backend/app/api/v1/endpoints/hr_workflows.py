@@ -3,6 +3,8 @@ HR Workflows API endpoints
 Handles various HR automation tasks through Dify workflows
 """
 from typing import Any, Optional, Dict, List
+from uuid import UUID
+
 from fastapi import APIRouter, Depends, HTTPException, status, Form, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -26,10 +28,12 @@ from app.schemas.scoring_criteria import (
 from app.models.job_description import JobDescription
 from app.models.scoring_criteria import ScoringCriteria
 from app.models.resume_evaluation import ResumeEvaluation
+from app.models.exam import Exam
+from app.models.exam_result import ExamResult
 from app.services.dify_service import DifyService
 from app.api.deps import get_current_user
 from app.core.logging import logger
-
+from sqlalchemy import or_
 router = APIRouter()
 
 
@@ -988,4 +992,992 @@ async def generate_interview_plan_by_resume(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"生成面试方案失败: {str(e)}"
+        )
+
+
+# ==================== 试卷管理相关API ====================
+
+# 知识库文件信息模型
+class KnowledgeFileInfo(BaseModel):
+    id: str
+    fileName: Optional[str] = None
+
+# 试卷生成请求模型
+class ExamGenerateRequest(BaseModel):
+    title: str
+    subject: str
+    description: Optional[str] = None
+    difficulty: str = "medium"
+    duration: int = 90
+    total_score: int = 100
+    question_types: List[str] = []
+    question_counts: Dict[str, int] = {}
+    knowledge_files: List[str] = []  # 文档ID列表
+    special_requirements: Optional[str] = None
+    conversation_id: Optional[str] = None
+    stream: bool = True
+
+# 试题数据模型
+class QuestionData(BaseModel):
+    id: str
+    number: int
+    text: str
+    type: str
+    score: int
+    correct_answers: str
+    explanation: str
+    options: List[Dict[str, str]] = []
+
+# 试卷数据模型
+class ExamCreateRequest(BaseModel):
+    title: str
+    subject: str
+    description: Optional[str] = None
+    difficulty: str = "medium"
+    duration: int = 90
+    total_score: int = 100
+    question_types: List[str] = []
+    question_counts: Dict[str, int] = {}
+    knowledge_files: List[KnowledgeFileInfo] = []
+    special_requirements: Optional[str] = None
+    content: Optional[str] = None  # 原始试卷内容
+    questions: List[QuestionData] = []  # 结构化试题数据
+
+class ExamResponse(BaseModel):
+    id: str
+    title: str
+    subject: str
+    description: Optional[str] = None
+    difficulty: str
+    duration: int
+    total_score: int
+    question_types: List[str]
+    question_counts: Dict[str, int]
+    knowledge_files: List[str]
+    special_requirements: Optional[str] = None
+    content: Optional[str] = None
+    created_at: str
+    updated_at: str
+
+# 生成试卷
+@router.post("/papers/generate")
+async def generate_exam(
+    request: ExamGenerateRequest,
+    current_user: UserSchema = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+) -> Any:
+    """
+    基于文档内容生成试卷
+    """
+    try:
+        from app.services.enhanced_document_service import EnhancedDocumentService
+        
+        # 初始化服务
+        dify_service = DifyService()
+        document_service = EnhancedDocumentService(db)
+        
+        # 读取文档内容
+        file_contents = []
+        if request.knowledge_files:
+            for file_id in request.knowledge_files:
+                try:
+                    # 获取文档信息
+                    document = await document_service.get_document_by_id(file_id, current_user.id)
+                    if document and document.extracted_content:
+                        file_contents.append({
+                            "filename": document.filename,
+                            "content": document.extracted_content
+                        })
+                except Exception as e:
+                    logger.warning(f"Failed to read document {file_id}: {e}")
+                    continue
+        
+        # 合并文档内容
+        combined_content = ""
+        if file_contents:
+            content_parts = []
+            for file_info in file_contents:
+                content_parts.append(f"=== {file_info['filename']} ===\n{file_info['content']}")
+            combined_content = "\n\n".join(content_parts)
+        
+        # 构建试卷生成查询
+        query_parts = [f"请基于以下文档内容生成一份{request.subject}试卷"]
+        
+        if request.title:
+            query_parts.append(f"试卷标题：{request.title}")
+        
+        if request.description:
+            query_parts.append(f"试卷描述：{request.description}")
+        
+        # if request.difficulty:
+        #     difficulty_map = {
+        #         'easy': '简单',
+        #         'medium': '中等',
+        #         'hard': '困难'
+        #     }
+        #     query_parts.append(f"难度等级：{difficulty_map.get(request.difficulty, request.difficulty)}")
+        #
+        # if request.duration:
+        #     query_parts.append(f"考试时长：{request.duration}分钟")
+        
+        if request.question_types:
+            types_str = "、".join(request.question_types)
+            query_parts.append(f"题目类型：{types_str}")
+        
+        if request.question_counts:
+            counts_parts = []
+            for q_type, count in request.question_counts.items():
+                if count > 0:
+                    counts_parts.append(f"{q_type}：{count}题")
+            if counts_parts:
+                query_parts.append(f"题目数量：{', '.join(counts_parts)}")
+        if request.total_score:
+            query_parts.append(f"试卷总分：{request.total_score}")
+        if request.special_requirements:
+            query_parts.append(f"特殊要求：{request.special_requirements}")
+        
+        query = "\n".join(query_parts)
+        
+        # 准备额外输入参数
+        additional_inputs = {
+            "fileContent": combined_content,
+        }
+        
+        if request.title:
+            additional_inputs["title"] = request.title
+        if request.description:
+            additional_inputs["description"] = request.description
+        if request.question_types:
+            additional_inputs["question_types"] = request.question_types
+        if request.question_counts:
+            additional_inputs["question_counts"] = request.question_counts
+        if request.special_requirements:
+            additional_inputs["special_requirements"] = request.special_requirements
+        
+        if request.stream:
+            # 流式响应
+            async def generate_stream():
+                async for chunk in dify_service.call_workflow_stream(
+                    workflow_type=5,  # 使用类型5进行试卷生成
+                    query=query,
+                    # conversation_id=request.conversation_id,
+                    additional_inputs=additional_inputs
+                ):
+                    yield f"data: {chunk}\n\n"
+                yield "data: [DONE]\n\n"
+            
+            return StreamingResponse(
+                generate_stream(),
+                media_type="text/plain",
+                headers={"Cache-Control": "no-cache", "Connection": "keep-alive"}
+            )
+        else:
+            # 同步响应
+            result = await dify_service.call_workflow_sync(
+                workflow_type=5,
+                query=query,
+                conversation_id=request.conversation_id,
+                additional_inputs=additional_inputs
+            )
+            return result
+            
+    except Exception as e:
+        logger.error(f"Error generating exam: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"生成试卷失败: {str(e)}"
+        )
+
+# 获取试卷列表
+@router.get("/papers")
+async def get_exam_list(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(20, ge=1, le=100),
+    search: Optional[str] = Query(None),
+    current_user: UserSchema = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    获取试卷列表
+    """
+    try:
+        from app.models.exam import Exam
+        from sqlalchemy import select, func, or_
+        
+        # 构建查询
+        query = select(Exam)
+        
+        # 应用搜索过滤
+        if search:
+            search_filter = or_(
+                Exam.title.ilike(f"%{search}%"),
+                Exam.subject.ilike(f"%{search}%"),
+                Exam.description.ilike(f"%{search}%")
+            )
+            query = query.where(search_filter)
+        
+        # 获取总数
+        count_query = select(func.count(Exam.id))
+        if search:
+            count_query = count_query.where(search_filter)
+        
+        total_result = await db.execute(count_query)
+        total = total_result.scalar()
+        
+        # 应用分页和排序
+        query = query.order_by(Exam.created_at.desc()).offset(skip).limit(limit)
+        
+        result = await db.execute(query)
+        exams = result.scalars().all()
+        
+        # 转换为响应格式
+        exam_list = []
+        for exam in exams:
+            exam_dict = {
+                "id": exam.id,
+                "title": exam.title,
+                "subject": exam.subject,
+                "description": exam.description,
+                "difficulty": exam.difficulty,
+                "duration": exam.duration,
+                "total_score": exam.total_score,
+                "question_types": exam.question_types or [],
+                "question_counts": exam.question_counts or {},
+                "knowledge_files": exam.knowledge_files or [],
+                "special_requirements": exam.special_requirements or "",
+                "created_at": exam.created_at.isoformat() if exam.created_at else None,
+                "updated_at": exam.updated_at.isoformat() if exam.updated_at else None
+            }
+            exam_list.append(exam_dict)
+        
+        return {
+            "items": exam_list,
+            "total": total,
+            "skip": skip,
+            "limit": limit
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting exam list: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"获取试卷列表失败: {str(e)}"
+        )
+
+# 保存试卷
+@router.post("/papers")
+async def save_exam(
+    exam_data: ExamCreateRequest,
+    current_user: UserSchema = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    保存试卷到数据库
+    """
+    try:
+        from app.models.exam import Exam, Question
+        
+        # 创建试卷实例
+        exam = Exam(
+            title=exam_data.title,
+            subject=exam_data.subject,
+            description=exam_data.description,
+            difficulty=exam_data.difficulty,
+            duration=exam_data.duration,
+            total_score=exam_data.total_score,
+            question_types=exam_data.question_types,
+            question_counts=exam_data.question_counts,
+            knowledge_files=[{"id": kf.id, "fileName": kf.fileName} for kf in exam_data.knowledge_files],
+            special_requirements=exam_data.special_requirements,
+            content=exam_data.content,  # 保存原始试卷内容
+            created_by=current_user.id,
+            updated_by=current_user.id
+        )
+        
+        # 保存到数据库
+        db.add(exam)
+        await db.commit()
+        await db.refresh(exam)
+        
+        # 保存结构化试题数据
+        if exam_data.questions:
+            for question_data in exam_data.questions:
+                question = Question(
+                    exam_id=exam.id,
+                    question_type=question_data.type,
+                    question_text=question_data.text,
+                    options=question_data.options,
+                    correct_answer=question_data.correct_answers,
+                    score=question_data.score,
+                    order_index=question_data.number,
+                    explanation=question_data.explanation,
+                    created_by=current_user.id,
+                    updated_by=current_user.id
+                )
+                db.add(question)
+            
+            await db.commit()
+        
+        # 返回保存的试卷信息
+        saved_exam = {
+            "id": str(exam.id),
+            "title": exam.title,
+            "subject": exam.subject,
+            "description": exam.description,
+            "difficulty": exam.difficulty,
+            "duration": exam.duration,
+            "total_score": exam.total_score,
+            "question_types": exam.question_types,
+            "question_counts": exam.question_counts,
+            "knowledge_files": exam.knowledge_files,
+            "special_requirements": exam.special_requirements,
+            "created_at": exam.created_at.isoformat() + "Z",
+            "updated_at": exam.updated_at.isoformat() + "Z",
+            "created_by": str(exam.created_by)
+        }
+        
+        logger.info(f"Exam saved successfully to database: {exam.id}")
+        return saved_exam
+        
+    except Exception as e:
+        await db.rollback()
+        logger.error(f"Error saving exam to database: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"保存试卷失败: {str(e)}"
+        )
+
+# 获取试卷详情
+@router.get("/papers/{paper_id}")
+async def get_exam_detail(
+    paper_id: str,
+    current_user: UserSchema = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    获取试卷详情
+    """
+    try:
+        from app.models.exam import Exam, Question
+        from sqlalchemy.orm import selectinload
+        
+        # 查询试卷及其关联的试题
+        result = await db.execute(
+            select(Exam)
+            .options(selectinload(Exam.questions))
+            .where(Exam.id == paper_id)
+        )
+        exam = result.scalar_one_or_none()
+        
+        if not exam:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="试卷不存在"
+            )
+        
+        # 构建试题数据
+        questions = []
+        for question in sorted(exam.questions, key=lambda x: x.order_index):
+            questions.append({
+                "id": f"q_{question.order_index}",
+                "number": question.order_index,
+                "text": question.question_text,
+                "type": question.question_type,
+                "score": question.score,
+                "correct_answers": question.correct_answer,
+                "explanation": question.explanation,
+                "options": question.options or []
+            })
+        
+        # 返回试卷详情
+        exam_detail = {
+            "id": str(exam.id),
+            "title": exam.title,
+            "subject": exam.subject,
+            "description": exam.description,
+            "difficulty": exam.difficulty,
+            "duration": exam.duration,
+            "total_score": exam.total_score,
+            "question_types": exam.question_types,
+            "question_counts": exam.question_counts,
+            "knowledge_files": exam.knowledge_files,
+            "special_requirements": exam.special_requirements,
+            "content": exam.content,
+            "questions": questions,
+            "created_at": exam.created_at.isoformat() + "Z",
+            "updated_at": exam.updated_at.isoformat() + "Z",
+            "created_by": str(exam.created_by)
+        }
+        
+        logger.info(f"Exam detail retrieved successfully: {exam.id}")
+        return exam_detail
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting exam detail: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"获取试卷详情失败: {str(e)}"
+        )
+
+# 更新试卷
+@router.put("/papers/{paper_id}")
+async def update_exam(
+    paper_id: str,
+    exam_data: ExamCreateRequest,
+    current_user: UserSchema = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    更新试卷
+    """
+    try:
+        # 这里暂时返回模拟数据
+        from datetime import datetime
+        
+        current_time = datetime.utcnow().isoformat() + "Z"
+        
+        updated_exam = {
+            "id": paper_id,
+            "title": exam_data.title,
+            "subject": exam_data.subject,
+            "description": exam_data.description,
+            "difficulty": exam_data.difficulty,
+            "duration": exam_data.duration,
+            "total_score": exam_data.total_score,
+            "question_types": exam_data.question_types,
+            "question_counts": exam_data.question_counts,
+            "knowledge_files": exam_data.knowledge_files,
+            "special_requirements": exam_data.special_requirements,
+            "created_at": "2024-01-01T10:00:00Z",  # 保持原创建时间
+            "updated_at": current_time
+        }
+        
+        logger.info(f"Exam updated successfully: {paper_id}")
+        return updated_exam
+        
+    except Exception as e:
+        logger.error(f"Error updating exam: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"更新试卷失败: {str(e)}"
+        )
+
+# 删除试卷
+@router.delete("/papers/{paper_id}")
+async def delete_exam(
+    paper_id: str,
+    current_user: UserSchema = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    删除试卷
+    """
+    try:
+        # 查找试卷
+        result = await db.execute(
+            select(Exam).where(Exam.id == paper_id)
+        )
+        exam = result.scalar_one_or_none()
+        
+        if not exam:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="试卷不存在"
+            )
+        
+        # 删除试卷
+        await db.delete(exam)
+        await db.commit()
+        
+        logger.info(f"Exam deleted successfully: {paper_id}")
+        return {"message": "试卷删除成功", "paper_id": paper_id}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        await db.rollback()
+        logger.error(f"Error deleting exam: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"删除试卷失败: {str(e)}"
+        )
+
+# 复制试卷
+@router.post("/papers/{paper_id}/duplicate")
+async def duplicate_exam(
+    paper_id: str,
+    current_user: UserSchema = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    复制试卷
+    """
+    try:
+        # 这里暂时返回模拟数据
+        import uuid
+        from datetime import datetime
+        
+        new_exam_id = str(uuid.uuid4())
+        current_time = datetime.utcnow().isoformat() + "Z"
+        
+        duplicated_exam = {
+            "id": new_exam_id,
+            "title": "Python基础知识测试 (副本)",
+            "subject": "Python编程",
+            "description": "测试Python基础语法和概念",
+            "difficulty": "medium",
+            "duration": 90,
+            "total_score": 100,
+            "question_types": ["单选题", "多选题", "编程题"],
+            "question_counts": {"single": 10, "multiple": 5, "coding": 2},
+            "knowledge_files": [],
+            "special_requirements": "",
+            "created_at": current_time,
+            "updated_at": current_time
+        }
+        
+        logger.info(f"Exam duplicated successfully: {paper_id} -> {new_exam_id}")
+        return duplicated_exam
+        
+    except Exception as e:
+        logger.error(f"Error duplicating exam: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"复制试卷失败: {str(e)}"
+        )
+
+# 预览试卷
+@router.get("/papers/{paper_id}/preview")
+async def preview_exam(
+    paper_id: str,
+    current_user: UserSchema = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    预览试卷
+    """
+    try:
+        # 这里暂时返回模拟数据
+        preview_content = {
+            "id": paper_id,
+            "title": "Python基础知识测试",
+            "subject": "Python编程",
+            "duration": 90,
+            "total_score": 100,
+            "questions": [
+                {
+                    "id": 1,
+                    "type": "single_choice",
+                    "question": "Python中哪个关键字用于定义函数？",
+                    "options": ["def", "function", "func", "define"],
+                    "correct_answer": "def",
+                    "score": 5
+                },
+                {
+                    "id": 2,
+                    "type": "multiple_choice", 
+                    "question": "以下哪些是Python的数据类型？",
+                    "options": ["int", "str", "list", "dict"],
+                    "correct_answers": ["int", "str", "list", "dict"],
+                    "score": 10
+                }
+            ]
+        }
+        
+        return preview_content
+        
+    except Exception as e:
+        logger.error(f"Error previewing exam: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"预览试卷失败: {str(e)}"
+        )
+
+# 获取单个试卷（用于分享页面）
+@router.get("/papers/{paper_id}/share")
+async def get_exam_for_share(
+    paper_id: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    获取单个试卷（用于分享页面，无需认证）
+    """
+    try:
+        from app.models.exam import Exam, Question
+        from sqlalchemy import select
+        from sqlalchemy.orm import selectinload
+        
+        # 查找试卷及其关联的试题
+        result = await db.execute(
+            select(Exam)
+            .options(selectinload(Exam.questions))
+            .where(Exam.id == paper_id)
+        )
+        exam = result.scalar_one_or_none()
+        
+        if not exam:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="试卷不存在"
+            )
+        
+        # 构建试题列表
+        questions = []
+        if exam.questions:
+            for question in exam.questions:
+                question_data = {
+                    "id": question.id,
+                    "question_text": question.question_text,
+                    "question_type": question.question_type,
+                    "score": question.score,
+                    "options": question.options if question.options else []
+                }
+                questions.append(question_data)
+        
+        # 返回试卷信息
+        return {
+            "id": exam.id,
+            "title": exam.title,
+            "subject": exam.subject,
+            "description": exam.description,
+            "difficulty": exam.difficulty,
+            "duration": exam.duration,
+            "total_score": exam.total_score,
+            "content": exam.content,
+            "questions": questions,
+            "created_at": exam.created_at.isoformat() if exam.created_at else None
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting exam: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"获取试卷失败: {str(e)}"
+        )
+
+# 考试提交请求模型
+class ExamSubmitRequest(BaseModel):
+    exam_id: str
+    student_name: str
+    department: str
+    answers: Dict[str, Any]  # 学生答案
+    exam_content: str  # 试卷内容
+
+# 提交考试答案
+@router.post("/papers/submit")
+async def submit_exam(
+    request: ExamSubmitRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    提交考试答案并调用Dify进行自动评分
+    """
+    try:
+        from app.models.exam import Exam, Question
+        from sqlalchemy.orm import selectinload
+        import json
+        
+        # 从exam_content中解析exam_id
+        exam_content = json.loads(request.exam_content)
+        exam_id = request.exam_id
+        
+        # 从数据库获取完整的试卷信息（包括标准答案和解析）
+        result = await db.execute(
+            select(Exam)
+            .options(selectinload(Exam.questions))
+            .where(Exam.id == exam_id)
+        )
+        exam = result.scalar_one_or_none()
+        
+        if not exam:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="试卷不存在"
+            )
+        
+        # 构建完整的试题信息（包含标准答案和解析）
+        questions_with_answers = []
+        student_answers = json.loads(request.answers) if isinstance(request.answers, str) else request.answers
+        
+        for question in sorted(exam.questions, key=lambda x: x.order_index):
+            # 使用题目的实际ID来匹配答案
+            question_id = str(question.id)
+            student_answer = student_answers.get(question_id, "未作答")
+            
+            question_info = {
+                "题目编号": question.order_index,
+                "题目类型": question.question_type,
+                "题目内容": question.question_text,
+                "选项": question.options or [],
+                "标准答案": question.correct_answer,
+                "解析": question.explanation,
+                "分值": question.score,
+                "考生答案": student_answer
+            }
+            questions_with_answers.append(question_info)
+        
+        # 构建提交给Dify的完整查询内容
+        query_parts = [
+            f"考生姓名：{request.student_name}",
+            f"部门：{request.department}",
+            f"试卷标题：{exam.title}",
+            f"试卷总分：{exam.total_score}",
+            "",
+            "详细题目信息（包含标准答案、解析和考生答案）：",
+        ]
+        
+        for i, q_info in enumerate(questions_with_answers, 1):
+            query_parts.extend([
+                f"第{i}题：",
+                f"  题目类型：{q_info['题目类型']}",
+                f"  题目内容：{q_info['题目内容']}",
+                f"  选项：{q_info['选项']}" if q_info['选项'] else "",
+                f"  标准答案：{q_info['标准答案']}",
+                f"  解析：{q_info['解析']}",
+                f"  分值：{q_info['分值']}分",
+                f"  考生答案：{q_info['考生答案']}",
+                ""
+            ])
+        
+        # query_parts.append("请根据以上信息对考生的答案进行评分，并给出详细的评分说明。")
+        query = "\n".join(filter(None, query_parts))  # 过滤空字符串
+        
+        # 调用Dify进行自动评分
+        dify_service = DifyService()
+        result = await dify_service.call_workflow_sync(
+            workflow_type=6,  # 使用类型6进行自动评分
+            query=query,
+            additional_inputs={"type": 6}
+        )
+        
+        # 解析Dify返回的得分并填充到每道题的数据结构中
+        questions_with_scores = []
+        scores = []
+        
+        # 从Dify结果中提取得分字符串
+        if result and "answer" in result:
+            score_string = result["answer"]
+            # 解析得分字符串，如 "2,2,0" -> [2, 2, 0]
+            try:
+                scores = [float(score.strip()) for score in score_string.split(",")]
+            except (ValueError, AttributeError):
+                # 如果解析失败，使用默认得分0
+                scores = [0.0] * len(questions_with_answers)
+        else:
+            # 如果没有得分信息，使用默认得分0
+            scores = [0.0] * len(questions_with_answers)
+        
+        # 确保得分数量与题目数量匹配
+        while len(scores) < len(questions_with_answers):
+            scores.append(0.0)
+        
+        # 将得分添加到每道题的信息中
+        for i, question_info in enumerate(questions_with_answers):
+            question_with_score = question_info.copy()
+            question_with_score["实际得分"] = scores[i] if i < len(scores) else 0.0
+            questions_with_scores.append(question_with_score)
+        
+        # 计算总得分
+        total_score = sum(scores)
+        
+        # 保存考试记录到数据库
+        from app.models.exam_result import ExamResult
+        from datetime import datetime
+        import uuid
+        
+        # 构建完整的考试数据JSON
+        exam_data = {
+            "exam_info": {
+                "exam_id": exam_id,
+                "title": exam.title,
+                "description": exam.description,
+                "total_score": exam.total_score,
+                "time_limit": exam.duration,
+                "instructions": exam.description or "请认真答题，注意时间限制。"
+            },
+            "questions": questions_with_scores,
+            "student_answers": student_answers,
+            "scoring_result": result,
+            "submit_time": datetime.utcnow().isoformat(),
+            "total_actual_score": total_score,
+            "score_percentage": round((total_score / exam.total_score) * 100, 2) if exam.total_score > 0 else 0
+        }
+        
+        # 创建考试结果记录（使用新的简化模型结构）
+        exam_result = ExamResult(
+            id=uuid.uuid4(),
+            exam_id=exam.id,  # 添加exam_id字段
+            exam_name=exam.title,
+            student_name=request.student_name,
+            department=request.department,
+            total_possible_score=exam.total_score,
+            total_actual_score=total_score,
+            exam_data=exam_data,  # 保存完整的考试数据JSON
+            submit_time=datetime.utcnow(),
+            status="completed"
+        )
+        
+        db.add(exam_result)
+        
+        # 提交数据库事务
+        await db.commit()
+        
+        logger.info(f"Exam submitted and saved successfully for student: {request.student_name}, exam_result_id: {exam_result.id}")
+        
+        return {
+            "message": "考试提交成功",
+            "exam_result_id": str(exam_result.id),
+            "student_name": request.student_name,
+            "department": request.department,
+            "exam_title": exam.title,
+            "total_possible_score": exam.total_score,
+            "total_actual_score": total_score,
+            "score_percentage": round((total_score / exam.total_score) * 100, 2) if exam.total_score > 0 else 0,
+            "questions": questions_with_scores,
+            "scoring_result": result
+        }
+        
+    except Exception as e:
+        logger.error(f"Error submitting exam: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"提交考试失败: {str(e)}"
+        )
+
+
+# 获取考试结果列表
+@router.get("/exam-results")
+async def get_exam_results(
+    page: int = Query(1, ge=1, description="页码"),
+    page_size: int = Query(20, ge=1, le=100, description="每页数量"),
+    search: str = Query(None, description="搜索关键词（学生姓名或考试名称）"),
+    exam_id: Optional[UUID] = Query(None, description="考试ID筛选"),  # 改为 UUID 类型
+    department: str = Query(None, description="部门筛选"),
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    获取考试结果列表，支持分页和筛选
+    """
+    try:
+        from app.models.exam_result import ExamResult
+        
+        # 构建查询条件
+        query = select(ExamResult)
+        
+        # 添加搜索条件
+        if search:
+            search_filter = or_(
+                ExamResult.student_name.ilike(f"%{search}%"),
+                ExamResult.exam_name.ilike(f"%{search}%")
+            )
+            query = query.where(search_filter)
+        
+        # 添加考试ID筛选
+        if exam_id:
+            query = query.where(ExamResult.exam_id == exam_id)
+        
+        # 添加部门筛选
+        if department:
+            query = query.where(ExamResult.department.ilike(f"%{department}%"))
+        
+        # 获取总数
+        count_query = select(func.count(ExamResult.id)).select_from(query.subquery())
+        total_result = await db.execute(count_query)
+        total = total_result.scalar()
+        
+        # 添加排序和分页
+        query = query.order_by(ExamResult.submit_time.desc())
+        query = query.offset((page - 1) * page_size).limit(page_size)
+        
+        # 执行查询
+        result = await db.execute(query)
+        exam_results = result.scalars().all()
+        
+        # 格式化返回数据
+        items = []
+        for exam_result in exam_results:
+            items.append({
+                "exam_result_id": str(exam_result.id),
+                "exam_id": str(exam_result.exam_id),
+                "exam_name": exam_result.exam_name,
+                "student_name": exam_result.student_name,
+                "department": exam_result.department,
+                "total_possible_score": exam_result.total_possible_score,
+                "total_actual_score": exam_result.total_actual_score,
+                "score_percentage": round((exam_result.total_actual_score / exam_result.total_possible_score) * 100, 2) if exam_result.total_possible_score > 0 else 0,
+                "submit_time": exam_result.submit_time.isoformat() if exam_result.submit_time else None,
+                "status": exam_result.status
+            })
+        
+        return {
+            "items": items,
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+            "total_pages": (total + page_size - 1) // page_size
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting exam results list: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"获取考试结果列表失败: {str(e)}"
+        )
+
+
+# 获取考试结果
+@router.get("/exam-results/{result_id}")
+async def get_exam_result(
+    result_id: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    根据exam_result_id获取考试结果详情
+    """
+    try:
+
+        
+        # 查询考试结果
+        result = await db.execute(
+            select(ExamResult).where(ExamResult.id == result_id)
+        )
+        exam_result = result.scalar_one_or_none()
+        
+        if not exam_result:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="考试结果不存在"
+            )
+        
+        # 解析exam_data中的完整数据
+        exam_data = exam_result.exam_data
+        
+        return {
+            "exam_result_id": str(exam_result.id),
+            "exam_id": str(exam_result.exam_id),
+            "exam_name": exam_result.exam_name,
+            "student_name": exam_result.student_name,
+            "department": exam_result.department,
+            "total_possible_score": exam_result.total_possible_score,
+            "total_actual_score": exam_result.total_actual_score,
+            "score_percentage": round((exam_result.total_actual_score / exam_result.total_possible_score) * 100, 2) if exam_result.total_possible_score > 0 else 0,
+            "submit_time": exam_result.submit_time.isoformat() if exam_result.submit_time else None,
+            "status": exam_result.status,
+            "exam_info": exam_data.get("exam_info", {}),
+            "questions": exam_data.get("questions", []),
+            "scoring_result": exam_data.get("scoring_result", {})
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting exam result: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"获取考试结果失败: {str(e)}"
         )

@@ -12,6 +12,8 @@ from app.models.job_description import JobDescription
 from app.models.scoring_criteria import ScoringCriteria
 from app.models.resume_evaluation import ResumeEvaluation
 from app.models.interview_plan import InterviewPlan
+from app.models.exam import Exam, Question
+from app.models.exam_result import ExamResult
 
 # Export all models
 __all__ = [
@@ -26,5 +28,8 @@ __all__ = [
     "JobDescription",
     "ScoringCriteria",
     "ResumeEvaluation",
-    "InterviewPlan"
+    "InterviewPlan",
+    "Exam",
+    "Question",
+    "ExamResult"
 ]

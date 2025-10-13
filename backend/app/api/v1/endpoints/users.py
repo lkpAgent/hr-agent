@@ -2,6 +2,7 @@
 User management endpoints
 """
 from typing import Any, List
+from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -38,7 +39,7 @@ async def get_user(
     Get user by ID
     """
     user_service = UserService(db)
-    user = await user_service.get_by_id(user_id)
+    user = await user_service.get_user(UUID(user_id))
     
     if not user:
         raise HTTPException(

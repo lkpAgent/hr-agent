@@ -528,3 +528,28 @@ class EnhancedDocumentService:
         except Exception as e:
             logger.error(f"Error extracting text from {file_path}: {e}")
             return ""
+
+    async def get_document_by_id(
+        self,
+        document_id: str,
+        user_id: UUID
+    ) -> Optional[Document]:
+        """Get a document by ID for a specific user"""
+        try:
+            # Convert string ID to UUID
+            doc_uuid = UUID(document_id)
+            
+            query = select(Document).where(
+                Document.id == doc_uuid,
+                Document.user_id == user_id
+            )
+            
+            result = await self.db.execute(query)
+            return result.scalar_one_or_none()
+            
+        except (ValueError, TypeError) as e:
+            logger.error(f"Invalid document ID format {document_id}: {e}")
+            return None
+        except Exception as e:
+            logger.error(f"Error getting document {document_id}: {e}")
+            return None
