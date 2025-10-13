@@ -194,5 +194,6 @@ chroma/
 .env.production
 secrets/
 
-**/__pycache__/*
+backend/__pycache__/**
 .idea/*
+**.pyc
