@@ -1,7 +1,8 @@
 <template>
   <div class="smart-interview">
-    <!-- 页面头部 -->
-    <div class="page-header">
+    <div class="page-container">
+      <!-- 页面头部 -->
+      <div class="page-header">
       <div class="header-content">
         <div class="header-left">
           <h1 class="page-title">
@@ -465,6 +466,7 @@
         <el-button type="primary" @click="createInterview">确定</el-button>
       </template>
     </el-dialog>
+    </div>
   </div>
 </template>
 
@@ -973,12 +975,12 @@ onMounted(() => {
   overflow-y: auto;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   min-height: 100vh;
-  padding: 20px;
 }
 
 .page-container {
-  max-width: 1200px;
+  max-width: 95%;
   margin: 0 auto;
+  padding: 20px;
 }
 
 .page-header {
@@ -1098,8 +1100,9 @@ onMounted(() => {
 }
 
 .left-panel {
-  width: 450px;
+  width: 400px;
   flex-shrink: 0;
+  max-width: 30%;
 }
 
 .right-panel {
@@ -2055,6 +2058,13 @@ onMounted(() => {
 }
 
 // 响应式设计
+@media (max-width: 1200px) {
+  .left-panel {
+    width: 350px;
+    max-width: 35%;
+  }
+}
+
 @media (max-width: 768px) {
   .smart-interview {
     padding: 12px;
