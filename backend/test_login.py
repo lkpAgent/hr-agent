@@ -1,89 +1,51 @@
 #!/usr/bin/env python3
 """
-Simple script to test login API
+测试登录脚本
 """
-import requests
+
+import asyncio
+import aiohttp
 import json
 
-def test_login():
-    """Test login endpoint"""
-    url = "http://localhost:8000/api/v1/auth/login"
-    
-    # Test data
-    data = {
-        "username": "admin",
-        "password": "admin123"
+# API配置
+BASE_URL = "http://localhost:8000"
+API_BASE = f"{BASE_URL}/api/v1"
+
+async def test_login():
+    """测试登录"""
+    async with aiohttp.ClientSession() as session:
+        login_data = {
+        "username": "test@example.com",  # 使用邮箱作为用户名
+        "password": "test123"
     }
-    
-    headers = {
-        "Content-Type": "application/x-www-form-urlencoded"
-    }
-    
-    try:
-        print("Testing login endpoint...")
-        print(f"URL: {url}")
-        print(f"Data: {data}")
         
-        response = requests.post(url, data=data, headers=headers)
-        
-        print(f"Status Code: {response.status_code}")
-        print(f"Response Headers: {dict(response.headers)}")
-        print(f"Response Content: {response.text}")
-        
-        if response.status_code == 200:
-            token_data = response.json()
-            print("✅ Login successful!")
-            print(f"Access Token: {token_data.get('access_token', 'N/A')[:50]}...")
-            print(f"Token Type: {token_data.get('token_type', 'N/A')}")
-            print(f"Expires In: {token_data.get('expires_in', 'N/A')} seconds")
-            return token_data.get('access_token')
-        else:
-            print("❌ Login failed!")
-            try:
-                error_data = response.json()
-                print(f"Error: {error_data}")
-            except:
-                print(f"Raw error: {response.text}")
-            return None
+        async with session.post(
+            f"{API_BASE}/auth/login",
+            data=login_data
+        ) as response:
+            print(f"登录状态码: {response.status}")
             
-    except Exception as e:
-        print(f"❌ Error during login test: {e}")
-        return None
+            if response.status == 200:
+                result = await response.json()
+                print(f"登录成功！")
+                print(f"Token: {result.get('access_token')[:50]}...")
+                print(f"Token类型: {result.get('token_type')}")
+                print(f"过期时间: {result.get('expires_in')}秒")
+                return result.get('access_token')
+            else:
+                text = await response.text()
+                print(f"登录失败: {text}")
+                return None
 
-def test_health():
-    """Test health endpoint"""
-    url = "http://localhost:8000/api/v1/health"
-    
-    try:
-        print("Testing health endpoint...")
-        response = requests.get(url)
-        print(f"Status Code: {response.status_code}")
-        print(f"Response: {response.text}")
-        return response.status_code == 200
-    except Exception as e:
-        print(f"❌ Error during health test: {e}")
-        return False
-
-if __name__ == "__main__":
-    print("🚀 Starting API tests...")
-    print("=" * 50)
-    
-    # Test health first
-    if test_health():
-        print("✅ Health check passed")
-    else:
-        print("❌ Health check failed")
-        exit(1)
-    
-    print("=" * 50)
-    
-    # Test login
-    token = test_login()
+async def main():
+    """主函数"""
+    print("测试登录...")
+    token = await test_login()
     
     if token:
-        print("=" * 50)
-        print("🎉 All tests passed!")
+        print("\n✅ 登录测试成功！")
     else:
-        print("=" * 50)
-        print("💥 Login test failed!")
-        exit(1)
+        print("\n❌ 登录测试失败！")
+
+if __name__ == "__main__":
+    asyncio.run(main())
