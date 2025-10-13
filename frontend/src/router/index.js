@@ -103,11 +103,11 @@ const routes = [
             }
           },
           {
-            path: 'auto-grading',
-            name: 'AutoGrading',
-            component: () => import('@/views/training/AutoGrading.vue'),
+            path: 'exam-management',
+            name: 'ExamManagement',
+            component: () => import('@/views/training/ExamManagement.vue'),
             meta: { 
-              title: '自动阅卷',
+              title: '考试管理',
               requiresAuth: true
             }
           } 
@@ -159,6 +159,26 @@ const routes = [
         }
       }
     ]
+  },
+  {
+    path: '/exam-share/:examId',
+    name: 'ExamShare',
+    component: () => import('@/views/exam/ExamShare.vue'),
+    meta: { 
+      title: '试卷分享',
+      requiresAuth: false,
+      hideInMenu: true
+    }
+  },
+  {
+    path: '/exam-result/:examResultId',
+    name: 'ExamResult',
+    component: () => import('@/views/exam/ExamResult.vue'),
+    meta: { 
+      title: '考试结果',
+      requiresAuth: false,
+      hideInMenu: true
+    }
   },
   {
     path: '/:pathMatch(.*)*',

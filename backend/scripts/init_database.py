@@ -122,6 +122,10 @@ class DatabaseInitializer:
                 
                 # Create admin user using ORM
                 hashed_password = get_password_hash(password)
+                
+                # Generate unique employee_id based on username
+                employee_id = f"ADMIN_{username.upper()}"
+                
                 admin_user = User(
                     username=username,
                     email=email,
@@ -132,7 +136,7 @@ class DatabaseInitializer:
                     is_verified=True,
                     department="IT",
                     position="System Administrator",
-                    employee_id="ADMIN001"
+                    employee_id=employee_id
                 )
                 
                 session.add(admin_user)
@@ -183,9 +187,9 @@ def main():
     
     parser = argparse.ArgumentParser(description="Database initialization script")
     parser.add_argument("command", choices=["init", "create-admin"], help="Command to execute")
-    parser.add_argument("--email", default="admin@example.com", help="Admin email")
+    parser.add_argument("--email", default="admin2@example.com", help="Admin email")
     parser.add_argument("--password", default="admin123", help="Admin password")
-    parser.add_argument("--username", default="admin", help="Admin username")
+    parser.add_argument("--username", default="admin2", help="Admin username")
     
     args = parser.parse_args()
     
