@@ -14201,3 +14201,5 @@ FROM users
 WHERE users.id = $1::UUID AND users.is_active = true]
 [parameters: (UUID('663c3a32-596c-4fec-955e-6eace86eb281'),)]
 (Background on this error at: https://sqlalche.me/e/20/dbapi)
+2025-10-13 20:45:41 - app.core.database - ERROR - database - init_db - Error initializing database: database "hragent2" does not exist
+2025-10-13 20:45:41 - main - ERROR - main - lifespan - Failed to initialize database: database "hragent2" does not exist

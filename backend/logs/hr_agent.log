@@ -29325,3 +29325,554 @@ WHERE pg_catalog.pg_type.typname = $1::VARCHAR AND pg_catalog.pg_type_is_visible
 2025-10-13 10:43:58 - app.core.database - INFO - database - close_db - Database connections closed
 2025-10-13 10:43:58 - main - INFO - main - lifespan - Database connections closed
 2025-10-13 10:43:58 - main - INFO - main - lifespan - HR Agent Backend shutdown complete
+2025-10-13 20:45:41 - app.core.logging - INFO - logging - setup_logging - Logging configuration setup complete
+2025-10-13 20:45:41 - main - INFO - main - lifespan - Logging configured
+2025-10-13 20:45:41 - app.core.database - ERROR - database - init_db - Error initializing database: database "hragent2" does not exist
+2025-10-13 20:45:41 - main - ERROR - main - lifespan - Failed to initialize database: database "hragent2" does not exist
+2025-10-13 20:54:49 - app.core.logging - INFO - logging - setup_logging - Logging configuration setup complete
+2025-10-13 20:54:49 - main - INFO - main - lifespan - Logging configured
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - select pg_catalog.version()
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [raw sql] ()
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - select current_schema()
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [raw sql] ()
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - show standard_conforming_strings
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [raw sql] ()
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _begin_impl - BEGIN (implicit)
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - CREATE EXTENSION IF NOT EXISTS vector
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [generated in 0.00038s] ()
+2025-10-13 20:54:49 - app.core.database - INFO - database - init_db - pgvector extension enabled
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [generated in 0.00044s] ('users', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.05904s ago] ('documents', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.07497s ago] ('document_chunks', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.1061s ago] ('knowledge_bases', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.121s ago] ('faqs', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.1312s ago] ('conversations', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.1413s ago] ('messages', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.1512s ago] ('job_descriptions', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.1613s ago] ('scoring_criteria', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.1708s ago] ('resume_evaluations', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.1794s ago] ('interview_plans', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.1886s ago] ('exams', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.1975s ago] ('questions', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.2072s ago] ('exam_results', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_type.typname 
+FROM pg_catalog.pg_type JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_type.typnamespace 
+WHERE pg_catalog.pg_type.typname = $1::VARCHAR AND pg_catalog.pg_type_is_visible(pg_catalog.pg_type.oid) AND pg_catalog.pg_namespace.nspname != $2::VARCHAR
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [generated in 0.00047s] ('userrole', 'pg_catalog')
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - CREATE TYPE userrole AS ENUM ('ADMIN', 'HR_MANAGER', 'HR_SPECIALIST', 'EMPLOYEE')
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00038s] ()
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_type.typname 
+FROM pg_catalog.pg_type JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_type.typnamespace 
+WHERE pg_catalog.pg_type.typname = $1::VARCHAR AND pg_catalog.pg_type_is_visible(pg_catalog.pg_type.oid) AND pg_catalog.pg_namespace.nspname != $2::VARCHAR
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.03529s ago] ('conversationstatus', 'pg_catalog')
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - CREATE TYPE conversationstatus AS ENUM ('ACTIVE', 'ARCHIVED', 'DELETED')
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00040s] ()
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_type.typname 
+FROM pg_catalog.pg_type JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_type.typnamespace 
+WHERE pg_catalog.pg_type.typname = $1::VARCHAR AND pg_catalog.pg_type_is_visible(pg_catalog.pg_type.oid) AND pg_catalog.pg_namespace.nspname != $2::VARCHAR
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.08263s ago] ('messagerole', 'pg_catalog')
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - CREATE TYPE messagerole AS ENUM ('USER', 'ASSISTANT', 'SYSTEM')
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00038s] ()
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_type.typname 
+FROM pg_catalog.pg_type JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_type.typnamespace 
+WHERE pg_catalog.pg_type.typname = $1::VARCHAR AND pg_catalog.pg_type_is_visible(pg_catalog.pg_type.oid) AND pg_catalog.pg_namespace.nspname != $2::VARCHAR
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.1248s ago] ('jdstatus', 'pg_catalog')
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - CREATE TYPE jdstatus AS ENUM ('DRAFT', 'PUBLISHED', 'ARCHIVED')
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00038s] ()
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_type.typname 
+FROM pg_catalog.pg_type JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_type.typnamespace 
+WHERE pg_catalog.pg_type.typname = $1::VARCHAR AND pg_catalog.pg_type_is_visible(pg_catalog.pg_type.oid) AND pg_catalog.pg_namespace.nspname != $2::VARCHAR
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.1674s ago] ('scoringstatus', 'pg_catalog')
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - CREATE TYPE scoringstatus AS ENUM ('DRAFT', 'ACTIVE', 'ARCHIVED')
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00032s] ()
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - SELECT pg_catalog.pg_type.typname 
+FROM pg_catalog.pg_type JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_type.typnamespace 
+WHERE pg_catalog.pg_type.typname = $1::VARCHAR AND pg_catalog.pg_type_is_visible(pg_catalog.pg_type.oid) AND pg_catalog.pg_namespace.nspname != $2::VARCHAR
+2025-10-13 20:54:49 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [cached since 0.2089s ago] ('resumestatus', 'pg_catalog')
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - CREATE TYPE resumestatus AS ENUM ('PENDING', 'REJECTED', 'INTERVIEW')
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00036s] ()
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - 
+CREATE TABLE users (
+	username VARCHAR(50) NOT NULL, 
+	email VARCHAR(255) NOT NULL, 
+	full_name VARCHAR(255) NOT NULL, 
+	hashed_password VARCHAR(255) NOT NULL, 
+	phone VARCHAR(20), 
+	department VARCHAR(100), 
+	position VARCHAR(100), 
+	employee_id VARCHAR(50), 
+	role userrole NOT NULL, 
+	is_superuser BOOLEAN NOT NULL, 
+	is_verified BOOLEAN NOT NULL, 
+	bio TEXT, 
+	avatar_url VARCHAR(500), 
+	last_login TIMESTAMP WITHOUT TIME ZONE, 
+	id UUID NOT NULL, 
+	created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL, 
+	updated_at TIMESTAMP WITHOUT TIME ZONE NOT NULL, 
+	is_active BOOLEAN NOT NULL, 
+	created_by UUID, 
+	updated_by UUID, 
+	PRIMARY KEY (id), 
+	UNIQUE (employee_id)
+)
+
+
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00053s] ()
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - CREATE UNIQUE INDEX ix_users_username ON users (username)
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00052s] ()
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - CREATE UNIQUE INDEX ix_users_email ON users (email)
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00028s] ()
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - CREATE INDEX ix_users_id ON users (id)
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00027s] ()
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - 
+CREATE TABLE knowledge_bases (
+	name VARCHAR(255) NOT NULL, 
+	description TEXT, 
+	is_public BOOLEAN NOT NULL, 
+	is_searchable BOOLEAN NOT NULL, 
+	meta_data JSON, 
+	document_count INTEGER NOT NULL, 
+	category VARCHAR(100), 
+	tags JSON, 
+	id UUID NOT NULL, 
+	created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL, 
+	updated_at TIMESTAMP WITHOUT TIME ZONE NOT NULL, 
+	is_active BOOLEAN NOT NULL, 
+	created_by UUID, 
+	updated_by UUID, 
+	PRIMARY KEY (id), 
+	UNIQUE (name)
+)
+
+
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00082s] ()
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - CREATE INDEX ix_knowledge_bases_id ON knowledge_bases (id)
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00028s] ()
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - 
+CREATE TABLE exams (
+	title VARCHAR(255) NOT NULL, 
+	subject VARCHAR(100) NOT NULL, 
+	description TEXT, 
+	difficulty VARCHAR(50) NOT NULL, 
+	duration INTEGER NOT NULL, 
+	total_score FLOAT NOT NULL, 
+	question_types JSON, 
+	question_counts JSON, 
+	knowledge_files JSON, 
+	special_requirements TEXT, 
+	content TEXT, 
+	id UUID NOT NULL, 
+	created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL, 
+	updated_at TIMESTAMP WITHOUT TIME ZONE NOT NULL, 
+	is_active BOOLEAN NOT NULL, 
+	created_by UUID, 
+	updated_by UUID, 
+	PRIMARY KEY (id)
+)
+
+
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00052s] ()
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - CREATE INDEX ix_exams_id ON exams (id)
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00042s] ()
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - COMMENT ON COLUMN exams.title IS '试卷标题'
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00038s] ()
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - COMMENT ON COLUMN exams.subject IS '科目'
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00045s] ()
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - COMMENT ON COLUMN exams.description IS '试卷描述'
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00057s] ()
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - COMMENT ON COLUMN exams.difficulty IS '难度等级'
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00054s] ()
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - COMMENT ON COLUMN exams.duration IS '考试时长(分钟)'
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00055s] ()
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - COMMENT ON COLUMN exams.total_score IS '总分'
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00056s] ()
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - COMMENT ON COLUMN exams.question_types IS '题型配置'
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00041s] ()
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - COMMENT ON COLUMN exams.question_counts IS '题目数量配置'
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00044s] ()
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - COMMENT ON COLUMN exams.knowledge_files IS '知识库文件'
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00043s] ()
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - COMMENT ON COLUMN exams.special_requirements IS '特殊要求'
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00046s] ()
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - COMMENT ON COLUMN exams.content IS '原始试卷内容'
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00046s] ()
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - 
+CREATE TABLE exam_results (
+	exam_id UUID NOT NULL, 
+	exam_name VARCHAR(200) NOT NULL, 
+	student_name VARCHAR(100) NOT NULL, 
+	department VARCHAR(100), 
+	total_possible_score FLOAT NOT NULL, 
+	total_actual_score FLOAT NOT NULL, 
+	exam_data JSON NOT NULL, 
+	submit_time TIMESTAMP WITHOUT TIME ZONE, 
+	status VARCHAR(20) NOT NULL, 
+	id UUID NOT NULL, 
+	created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL, 
+	updated_at TIMESTAMP WITHOUT TIME ZONE NOT NULL, 
+	is_active BOOLEAN NOT NULL, 
+	created_by UUID, 
+	updated_by UUID, 
+	PRIMARY KEY (id)
+)
+
+
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00047s] ()
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - CREATE INDEX ix_exam_results_id ON exam_results (id)
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00059s] ()
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - COMMENT ON COLUMN exam_results.exam_id IS '考试ID'
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00046s] ()
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - COMMENT ON COLUMN exam_results.exam_name IS '考试名称'
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00027s] ()
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - COMMENT ON COLUMN exam_results.student_name IS '考生姓名'
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00024s] ()
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - COMMENT ON COLUMN exam_results.department IS '考生部门'
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00033s] ()
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - COMMENT ON COLUMN exam_results.total_possible_score IS '试卷总分'
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00050s] ()
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - COMMENT ON COLUMN exam_results.total_actual_score IS '实际得分'
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00023s] ()
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - COMMENT ON COLUMN exam_results.exam_data IS '完整考试数据JSON，包含试卷内容、学生答案、评分结果等'
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00022s] ()
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - COMMENT ON COLUMN exam_results.submit_time IS '提交时间'
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00024s] ()
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - COMMENT ON COLUMN exam_results.status IS '考试状态'
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00024s] ()
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - 
+CREATE TABLE documents (
+	filename VARCHAR(255) NOT NULL, 
+	original_filename VARCHAR(255) NOT NULL, 
+	file_path VARCHAR(500) NOT NULL, 
+	file_size INTEGER NOT NULL, 
+	file_hash VARCHAR(64) NOT NULL, 
+	mime_type VARCHAR(100) NOT NULL, 
+	extracted_content TEXT, 
+	summary TEXT, 
+	meta_data JSON, 
+	embedding VECTOR(2048), 
+	category VARCHAR(100), 
+	tags JSON, 
+	user_id UUID NOT NULL, 
+	knowledge_base_id UUID, 
+	id UUID NOT NULL, 
+	created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL, 
+	updated_at TIMESTAMP WITHOUT TIME ZONE NOT NULL, 
+	is_active BOOLEAN NOT NULL, 
+	created_by UUID, 
+	updated_by UUID, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(user_id) REFERENCES users (id), 
+	FOREIGN KEY(knowledge_base_id) REFERENCES knowledge_bases (id)
+)
+
+
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00024s] ()
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - CREATE INDEX ix_documents_id ON documents (id)
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00025s] ()
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - 
+CREATE TABLE faqs (
+	question TEXT NOT NULL, 
+	answer TEXT NOT NULL, 
+	category VARCHAR(100), 
+	tags JSON, 
+	view_count INTEGER NOT NULL, 
+	helpful_count INTEGER NOT NULL, 
+	not_helpful_count INTEGER NOT NULL, 
+	knowledge_base_id UUID, 
+	id UUID NOT NULL, 
+	created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL, 
+	updated_at TIMESTAMP WITHOUT TIME ZONE NOT NULL, 
+	is_active BOOLEAN NOT NULL, 
+	created_by UUID, 
+	updated_by UUID, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(knowledge_base_id) REFERENCES knowledge_bases (id)
+)
+
+
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00024s] ()
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - CREATE INDEX ix_faqs_id ON faqs (id)
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00023s] ()
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - 
+CREATE TABLE conversations (
+	title VARCHAR(255) NOT NULL, 
+	description TEXT, 
+	status conversationstatus NOT NULL, 
+	meta_data JSON, 
+	total_messages INTEGER NOT NULL, 
+	user_id UUID NOT NULL, 
+	id UUID NOT NULL, 
+	created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL, 
+	updated_at TIMESTAMP WITHOUT TIME ZONE NOT NULL, 
+	is_active BOOLEAN NOT NULL, 
+	created_by UUID, 
+	updated_by UUID, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(user_id) REFERENCES users (id)
+)
+
+
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00023s] ()
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - CREATE INDEX ix_conversations_id ON conversations (id)
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00023s] ()
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - 
+CREATE TABLE job_descriptions (
+	title VARCHAR(255) NOT NULL, 
+	department VARCHAR(100), 
+	location VARCHAR(100), 
+	salary_range VARCHAR(100), 
+	experience_level VARCHAR(100), 
+	education VARCHAR(100), 
+	job_type VARCHAR(50), 
+	skills JSON, 
+	content TEXT NOT NULL, 
+	requirements TEXT, 
+	status jdstatus NOT NULL, 
+	meta_data JSON, 
+	conversation_id VARCHAR(255), 
+	workflow_type VARCHAR(50) NOT NULL, 
+	user_id UUID NOT NULL, 
+	id UUID NOT NULL, 
+	created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL, 
+	updated_at TIMESTAMP WITHOUT TIME ZONE NOT NULL, 
+	is_active BOOLEAN NOT NULL, 
+	created_by UUID, 
+	updated_by UUID, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(user_id) REFERENCES users (id)
+)
+
+
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00039s] ()
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - CREATE INDEX ix_job_descriptions_id ON job_descriptions (id)
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00046s] ()
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - 
+CREATE TABLE questions (
+	exam_id UUID NOT NULL, 
+	question_type VARCHAR(50) NOT NULL, 
+	question_text TEXT NOT NULL, 
+	options JSON, 
+	correct_answer TEXT, 
+	score FLOAT NOT NULL, 
+	order_index INTEGER NOT NULL, 
+	explanation TEXT, 
+	id UUID NOT NULL, 
+	created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL, 
+	updated_at TIMESTAMP WITHOUT TIME ZONE NOT NULL, 
+	is_active BOOLEAN NOT NULL, 
+	created_by UUID, 
+	updated_by UUID, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(exam_id) REFERENCES exams (id)
+)
+
+
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00032s] ()
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - CREATE INDEX ix_questions_id ON questions (id)
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00026s] ()
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - COMMENT ON COLUMN questions.exam_id IS '所属试卷ID'
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00030s] ()
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - COMMENT ON COLUMN questions.question_type IS '题型'
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00024s] ()
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - COMMENT ON COLUMN questions.question_text IS '题目内容'
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00023s] ()
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - COMMENT ON COLUMN questions.options IS '选择题选项'
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00026s] ()
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - COMMENT ON COLUMN questions.correct_answer IS '正确答案'
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00023s] ()
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - COMMENT ON COLUMN questions.score IS '分值'
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00022s] ()
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - COMMENT ON COLUMN questions.order_index IS '题目顺序'
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00020s] ()
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - COMMENT ON COLUMN questions.explanation IS '题目解释'
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00023s] ()
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - 
+CREATE TABLE document_chunks (
+	content TEXT NOT NULL, 
+	chunk_index INTEGER NOT NULL, 
+	chunk_size INTEGER NOT NULL, 
+	embedding VECTOR(2048), 
+	meta_data JSON, 
+	document_id UUID NOT NULL, 
+	id UUID NOT NULL, 
+	created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL, 
+	updated_at TIMESTAMP WITHOUT TIME ZONE NOT NULL, 
+	is_active BOOLEAN NOT NULL, 
+	created_by UUID, 
+	updated_by UUID, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(document_id) REFERENCES documents (id)
+)
+
+
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00025s] ()
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - CREATE INDEX ix_document_chunks_id ON document_chunks (id)
+2025-10-13 20:54:50 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00022s] ()
+2025-10-13 20:54:51 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - 
+CREATE TABLE messages (
+	content TEXT NOT NULL, 
+	role messagerole NOT NULL, 
+	model_name VARCHAR(100), 
+	tokens_used INTEGER, 
+	response_time FLOAT, 
+	context JSON, 
+	meta_data JSON, 
+	rating INTEGER, 
+	feedback TEXT, 
+	conversation_id UUID NOT NULL, 
+	parent_message_id UUID, 
+	id UUID NOT NULL, 
+	created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL, 
+	updated_at TIMESTAMP WITHOUT TIME ZONE NOT NULL, 
+	is_active BOOLEAN NOT NULL, 
+	created_by UUID, 
+	updated_by UUID, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(conversation_id) REFERENCES conversations (id), 
+	FOREIGN KEY(parent_message_id) REFERENCES messages (id)
+)
+
+
+2025-10-13 20:54:51 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00032s] ()
+2025-10-13 20:54:51 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - CREATE INDEX ix_messages_id ON messages (id)
+2025-10-13 20:54:51 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00028s] ()
+2025-10-13 20:54:51 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - 
+CREATE TABLE scoring_criteria (
+	title VARCHAR(255) NOT NULL, 
+	job_title VARCHAR(255), 
+	content TEXT NOT NULL, 
+	criteria_data JSON, 
+	total_score VARCHAR(10) NOT NULL, 
+	scoring_dimensions JSON, 
+	status scoringstatus NOT NULL, 
+	meta_data JSON, 
+	conversation_id VARCHAR(255), 
+	workflow_type VARCHAR(50) NOT NULL, 
+	user_id UUID NOT NULL, 
+	job_description_id UUID, 
+	id UUID NOT NULL, 
+	created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL, 
+	updated_at TIMESTAMP WITHOUT TIME ZONE NOT NULL, 
+	is_active BOOLEAN NOT NULL, 
+	created_by UUID, 
+	updated_by UUID, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(user_id) REFERENCES users (id), 
+	FOREIGN KEY(job_description_id) REFERENCES job_descriptions (id)
+)
+
+
+2025-10-13 20:54:51 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00028s] ()
+2025-10-13 20:54:51 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - CREATE INDEX ix_scoring_criteria_id ON scoring_criteria (id)
+2025-10-13 20:54:51 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00023s] ()
+2025-10-13 20:54:51 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - 
+CREATE TABLE resume_evaluations (
+	original_filename VARCHAR(255) NOT NULL, 
+	file_path VARCHAR(500), 
+	file_type VARCHAR(10) NOT NULL, 
+	file_size INTEGER, 
+	resume_content TEXT NOT NULL, 
+	candidate_name VARCHAR(100), 
+	candidate_position VARCHAR(200), 
+	candidate_age INTEGER, 
+	candidate_gender VARCHAR(10), 
+	work_years VARCHAR(50), 
+	education_level VARCHAR(100), 
+	school VARCHAR(200), 
+	total_score FLOAT, 
+	evaluation_metrics JSON, 
+	status resumestatus NOT NULL, 
+	job_description_id UUID NOT NULL, 
+	scoring_criteria_id UUID, 
+	conversation_id VARCHAR(255), 
+	ai_response JSON, 
+	user_id UUID NOT NULL, 
+	id UUID NOT NULL, 
+	created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL, 
+	updated_at TIMESTAMP WITHOUT TIME ZONE NOT NULL, 
+	is_active BOOLEAN NOT NULL, 
+	created_by UUID, 
+	updated_by UUID, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(job_description_id) REFERENCES job_descriptions (id), 
+	FOREIGN KEY(scoring_criteria_id) REFERENCES scoring_criteria (id), 
+	FOREIGN KEY(user_id) REFERENCES users (id)
+)
+
+
+2025-10-13 20:54:51 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00024s] ()
+2025-10-13 20:54:51 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - CREATE INDEX ix_resume_evaluations_id ON resume_evaluations (id)
+2025-10-13 20:54:51 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00031s] ()
+2025-10-13 20:54:51 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - 
+CREATE TABLE interview_plans (
+	candidate_name VARCHAR(100) NOT NULL, 
+	candidate_position VARCHAR(200) NOT NULL, 
+	content TEXT NOT NULL, 
+	resume_evaluation_id UUID NOT NULL, 
+	user_id UUID NOT NULL, 
+	id UUID NOT NULL, 
+	created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL, 
+	updated_at TIMESTAMP WITHOUT TIME ZONE NOT NULL, 
+	is_active BOOLEAN NOT NULL, 
+	created_by UUID, 
+	updated_by UUID, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(resume_evaluation_id) REFERENCES resume_evaluations (id), 
+	FOREIGN KEY(user_id) REFERENCES users (id)
+)
+
+
+2025-10-13 20:54:51 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00024s] ()
+2025-10-13 20:54:51 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - CREATE INDEX ix_interview_plans_id ON interview_plans (id)
+2025-10-13 20:54:51 - sqlalchemy.engine.Engine - INFO - base - _exec_single_context - [no key 0.00038s] ()
+2025-10-13 20:54:51 - sqlalchemy.engine.Engine - INFO - base - _commit_impl - COMMIT
+2025-10-13 20:54:51 - app.core.database - INFO - database - init_db - Database initialized successfully
+2025-10-13 20:54:51 - main - INFO - main - lifespan - Database initialized successfully
+2025-10-13 20:54:51 - main - INFO - main - lifespan - HR Agent Backend started successfully
+2025-10-13 20:54:57 - main - INFO - main - lifespan - Shutting down HR Agent Backend...
+2025-10-13 20:54:57 - app.core.database - INFO - database - close_db - Database connections closed
+2025-10-13 20:54:57 - main - INFO - main - lifespan - Database connections closed
+2025-10-13 20:54:57 - main - INFO - main - lifespan - HR Agent Backend shutdown complete
