@@ -1245,21 +1245,16 @@ const shareExam = async (exam) => {
     // 生成分享链接
     const shareUrl = `${window.location.origin}/exam-share/${examData.id}`
     
-    // 复制到剪贴板
-    await navigator.clipboard.writeText(shareUrl)
-    
-    // 显示分享链接对话框
-    ElMessageBox.alert(
-      `分享链接已复制到剪贴板：<br/><br/><code style="background: #f5f5f5; padding: 8px; border-radius: 4px; word-break: break-all;">${shareUrl}</code>`,
-      '试卷分享',
-      {
-        dangerouslyUseHTMLString: true,
-        confirmButtonText: '确定',
-        type: 'success'
-      }
-    )
-    
-    ElMessage.success('分享链接已复制到剪贴板')
+    // 新窗口打开分享地址（生产环境更可靠）
+    const win = window.open(shareUrl, '_blank', 'noopener,noreferrer')
+    if (win) {
+      win.opener = null
+      ElMessage.success('已在新窗口打开分享页面')
+    } else {
+      // 弹窗被拦截时回退为当前窗口跳转
+      window.location.href = shareUrl
+      ElMessage.info('已跳转到分享页面')
+    }
   } catch (error) {
     console.error('分享失败:', error)
     ElMessage.error('分享失败，请重试')
