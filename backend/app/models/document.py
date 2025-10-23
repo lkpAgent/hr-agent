@@ -46,25 +46,4 @@ class Document(BaseModel):
         return f"<Document at {hex(id(self))}>"
 
 
-class DocumentChunk(BaseModel):
-    """Document chunks for better vector search and retrieval"""
-    
-    __tablename__ = "document_chunks"
-    
-    # Content
-    content = Column(Text, nullable=False)
-    chunk_index = Column(Integer, nullable=False)
-    chunk_size = Column(Integer, nullable=False)
-    
-    # Vector embedding
-    embedding = Column(Vector(settings.VECTOR_DIMENSION), nullable=True)
-    
-    # Metadata
-    meta_data = Column(JSON, nullable=True)
-    
-    # Relationships
-    document_id = Column(UUID(as_uuid=True), ForeignKey("documents.id"), nullable=False)
-    document = relationship("Document")
-    
-    def __repr__(self):
-        return f"<DocumentChunk(document_id='{self.document_id}', chunk_index={self.chunk_index})>"
+# DocumentChunk model removed - using langchain_pg_embedding table directly

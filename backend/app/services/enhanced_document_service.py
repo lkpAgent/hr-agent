@@ -7,7 +7,7 @@ import hashlib
 from typing import List, Optional, Dict, Any, BinaryIO
 from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update, delete, desc, func
+from sqlalchemy import select, update, delete, desc, func, text
 from sqlalchemy.orm import selectinload
 
 # LangChain imports
@@ -19,7 +19,7 @@ import PyPDF2
 from docx import Document as DocxDocument
 import tempfile
 
-from app.models.document import Document, DocumentChunk
+from app.models.document import Document
 from app.models.knowledge_base import KnowledgeBase
 from app.services.llm_service import LLMService
 from app.services.embedding_service import get_embedding_service
@@ -31,20 +31,208 @@ logger = logging.getLogger(__name__)
 
 class EnhancedDocumentService:
     """Enhanced service for managing documents with LangChain integration"""
-    
+
     def __init__(self, db: AsyncSession):
         self.db = db
         self.llm_service = LLMService()
-        
+
         # Use shared embedding service to avoid repeated initialization
         self.embedding_service = get_embedding_service()
         self.embeddings = self.embedding_service.get_embeddings()
         self.text_splitter = self.embedding_service.get_text_splitter()
-        
+
         # Database connection string for PGVector (use psycopg2 for sync connection)
         self.connection_string = settings.DATABASE_URL
-        
+
         logger.info("Enhanced document service initialized with shared embedding service")
+
+    def _split_by_semantic_points(self, text: str, split_points: List[str]) -> List[str]:
+        """根据语义分割点切分文本"""
+        chunks = []
+        current_pos = 0
+
+        # 按顺序查找每个分割点并切分文本
+        for point in split_points:
+            pos = text.find(point, current_pos)
+            if pos != -1:
+                # 添加当前位置到分割点位置的文本块
+                if pos > current_pos:
+                    chunk = text[current_pos:pos].strip()
+                    if chunk:
+                        chunks.append(chunk)
+                current_pos = pos
+
+        # 添加最后一个文本块
+        if current_pos < len(text):
+            chunk = text[current_pos:].strip()
+            if chunk:
+                chunks.append(chunk)
+
+        return chunks
+    async def get_semantic_split_points(self, content: str) -> List[str]:
+        try:
+            # 通过聊天模型生成分割点，仅返回以 `~~` 分隔的分割点字符串
+            system_prompt = (
+                "你是一个文档结构分析助手。只输出用于 split 的分割点字符串，"
+                "用`~~`分隔，不要输出任何其他文字。确保每个分割点在原文中唯一，"
+                "如果遇到重复标题或目录项，需要在分割点后追加少量后续字符形成唯一片段。"
+            )
+            user_prompt = (
+                "# 任务\n请分析文档，识别适合作为分割点的文本片段。\n\n"
+                "# 规则\n"
+                "1) 分割点应位于句子或段落的开头；\n"
+                "2) 分割后每段尽量<=500字，严禁>1000字；\n"
+                "3) 若存在重复片段（例如目录与正文相同标题），需在分割点后追加少量后续内容以确保唯一；\n"
+                "4) 仅输出分割点字符串，使用`~~`分隔，不要解释或添加其他文本。\n\n"
+                f"# 文档（截断）\n{content[:10000]}"
+            )
+
+            response = await self.llm_service.client.chat.completions.create(
+                model=self.llm_service.llm_model,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
+                temperature=0.2,
+                max_tokens=1000,
+            )
+            raw = response.choices[0].message.content or ""
+            points = [p.strip() for p in raw.split("~~") if p.strip()]
+            if not points:
+                return []
+
+            # 去重并保持顺序
+            seen = set()
+            unique_points = []
+            for p in points:
+                if p not in seen:
+                    seen.add(p)
+                    unique_points.append(p)
+
+            # 保证每个分割点在正文中唯一：必要时追加后续字符
+            def ensure_unique(point: str) -> str:
+                start = content.find(point)
+                if start == -1:
+                    return ""  # 模型输出不在原文中，丢弃
+                # 统计出现次数
+                count = 0
+                search_pos = 0
+                while True:
+                    idx = content.find(point, search_pos)
+                    if idx == -1:
+                        break
+                    count += 1
+                    search_pos = idx + 1
+                if count <= 1:
+                    return point
+                # 重复：逐步扩展片段直到唯一或达到限制
+                # 最多追加 100 个字符，步长 10
+                max_extra = 100
+                step = 10
+                extra = 0
+                while extra <= max_extra:
+                    candidate = content[start:start + len(point) + extra]
+                    # 重新统计
+                    c = 0
+                    sp = 0
+                    while True:
+                        j = content.find(candidate, sp)
+                        if j == -1:
+                            break
+                        c += 1
+                        sp = j + 1
+                    if c <= 1:
+                        return candidate
+                    extra += step
+                # 仍不唯一则返回原始（极少数情况），后续切分时按位置处理
+                return point
+
+            adjusted_points_with_index: List[tuple[int, str]] = []
+            for p in unique_points:
+                adj = ensure_unique(p)
+                if not adj:
+                    continue
+                idx = content.find(adj)
+                if idx != -1:
+                    adjusted_points_with_index.append((idx, adj))
+
+            # 按在正文中的出现位置排序
+            adjusted_points_with_index.sort(key=lambda x: x[0])
+            final_points = [pt for _, pt in adjusted_points_with_index]
+            return final_points
+        except Exception as e:
+            logger.error(f"Enhanced document service get_semantic_split_points error: {e}")
+            return []
+
+    def _force_split_long_chunk(self, chunk: str) -> List[str]:
+        """强制分割超长段落（超过1000字符）"""
+        max_length = 1000
+        chunks = []
+
+        # 先尝试按换行符分割
+        if '\n' in chunk:
+            lines = chunk.split('\n')
+            current_chunk = ""
+            for line in lines:
+                if len(current_chunk) + len(line) + 1 > max_length:
+                    if current_chunk:
+                        chunks.append(current_chunk)
+                        current_chunk = line
+                    else:
+                        chunks.append(line[:max_length])
+                        current_chunk = line[max_length:]
+                else:
+                    if current_chunk:
+                        current_chunk += "\n" + line
+                    else:
+                        current_chunk = line
+            if current_chunk:
+                chunks.append(current_chunk)
+        else:
+            # 没有换行符则直接按长度分割
+            chunks = [chunk[i:i + max_length] for i in range(0, len(chunk), max_length)]
+
+        return chunks
+
+    def _merge_short_chunks(self, chunks: List[str], min_length: int = 50, max_length: int = 1000) -> List[str]:
+        """合并过短片段，避免产生极短段落，同时不超过最大长度"""
+        if not chunks:
+            return []
+        merged: List[str] = []
+        i = 0
+        while i < len(chunks):
+            cur = chunks[i]
+            if len(cur) < min_length and i + 1 < len(chunks):
+                nxt = chunks[i + 1]
+                if len(cur) + len(nxt) <= max_length:
+                    merged.append(cur + ("\n" if cur and nxt and not cur.endswith("\n") else "") + nxt)
+                    i += 2
+                    continue
+            merged.append(cur)
+            i += 1
+        return merged
+
+    async def _split_text(self, content: str) -> List[str]:
+        """主分割流程：使用 LLM 分割点 + 切分 + 长度约束"""
+        # 1) 获取分割点（可能为空）
+        points = await self.get_semantic_split_points(content)
+        # 2) 根据分割点切分；若为空则整体作为一个片段
+        if points:
+            chunks = self._split_by_semantic_points(content, points)
+        else:
+            chunks = [content]
+        # 3) 对超长片段进行强制分割（>1000）
+        normalized: List[str] = []
+        for ch in chunks:
+            if len(ch) > 1000:
+                normalized.extend(self._force_split_long_chunk(ch))
+            else:
+                normalized.append(ch)
+        # 4) 合并过短片段（<50）
+        normalized = self._merge_short_chunks(normalized, min_length=50, max_length=1000)
+        # 5) 去除空白
+        normalized = [c.strip() for c in normalized if c and c.strip()]
+        return normalized
 
     async def upload_document(
         self,
@@ -63,7 +251,7 @@ class EnhancedDocumentService:
             except (ValueError, TypeError):
                 logger.warning(f"Invalid knowledge_base_id format: {knowledge_base_id}")
                 kb_id = None
-        
+
         return await self.upload_and_process_document(
             file=file.file,
             filename=file.filename,
@@ -87,35 +275,35 @@ class EnhancedDocumentService:
             # Read file content
             file_content = file.read()
             file.seek(0)  # Reset file pointer
-            
+
             # Generate file hash
             file_hash = hashlib.sha256(file_content).hexdigest()
-            
+
             # Check if document already exists
             existing_doc = await self._get_document_by_hash(file_hash, user_id)
             if existing_doc:
                 logger.info(f"Document with hash {file_hash} already exists")
                 return existing_doc
-            
+
             # Determine MIME type
             mime_type = self._get_mime_type(filename)
-            
+
             # Save file temporarily for processing
             temp_file_path = await self._save_temp_file(file_content, filename)
-            
+
             try:
                 # Extract text content
                 extracted_content = await self._extract_text_content(temp_file_path, mime_type)
-                
+
                 # Generate summary
                 summary = await self.llm_service.summarize_text(extracted_content) if extracted_content else None
-                
+
                 # Generate embedding for the document
                 # document_embedding = await self.embeddings.aembed_query(extracted_content) if extracted_content else None
-                
+
                 # Save file permanently
                 file_path = await self._save_file(file_content, filename, user_id)
-                
+
                 # Create document record
                 document = Document(
                     filename=filename,
@@ -132,61 +320,69 @@ class EnhancedDocumentService:
                     user_id=user_id,
                     knowledge_base_id=knowledge_base_id
                 )
-                
+
                 self.db.add(document)
                 await self.db.commit()
                 await self.db.refresh(document)
-                
+
                 # Create document chunks using PGVector
                 if extracted_content:
                     await self._create_document_chunks_with_pgvector(document, extracted_content)
-                
+
                 logger.info(f"Document uploaded and processed successfully: {document.id}")
                 return document
-                
+
             finally:
                 # Clean up temporary file
                 if os.path.exists(temp_file_path):
                     os.unlink(temp_file_path)
-                    
+
         except Exception as e:
             logger.error(f"Error uploading document: {e}")
             await self.db.rollback()
             raise
 
-    async def _create_document_chunks_with_pgvector(self, document: Document, content: str):
-        """Create document chunks using PGVector for storage"""
+    async def _create_document_chunks_with_pgvector(self, document: Document, content: str) -> None:
+        """Create document chunks using PGVector for embeddings"""
         try:
-            # Split text into chunks
-            text_chunks = self.text_splitter.split_text(content)
-            
-            # Create LangChain documents
+            # text_chunks = self.get_semantic_split_points(content)
+            text_chunks = await self._split_text(content)
+            if not text_chunks:
+                logger.warning(f"No text chunks provided for document {document.id}")
+                return
+
+            # Create LangChain documents with metadata
             langchain_docs = []
             for i, chunk_text in enumerate(text_chunks):
                 doc = LangChainDocument(
                     page_content=chunk_text,
                     metadata={
                         "document_id": str(document.id),
+                        "knowledge_base_id": str(document.knowledge_base_id),
                         "chunk_index": i,
                         "chunk_size": len(chunk_text),
                         "filename": document.filename,
-                        "category": document.category,
-                        "knowledge_base_id": str(document.knowledge_base_id)
+                        "category": document.category or "general",
+                        "file_path": document.file_path,
+                        "mime_type": document.mime_type
                     }
                 )
                 langchain_docs.append(doc)
-            
-            if langchain_docs:
-                # Use PGVector to store documents with embeddings
-                collection_name = f"document_chunks_{document.user_id}".replace("-", "_")
-                
-                # Connect to existing collection or create new one
-                vector_store = PGVector(
+
+            # Get or create vector store
+            collection_name = f"document_chunks_{document.user_id}".replace("-", "_")
+
+            vector_store = PGVector(
                     connection=self.connection_string,
                     embeddings=self.embeddings,
                     collection_name=collection_name,
                     use_jsonb=True
                 )
+
+
+            if vector_store:
+                collection_name = f"kb_{document.knowledge_base_id}" if document.knowledge_base_id else "default"
+                logger.info(f"Adding {len(langchain_docs)} documents to PGVector collection: {collection_name}")
                 
                 # Add documents to vector store (synchronous operation)
                 try:
@@ -196,23 +392,9 @@ class EnhancedDocumentService:
                     logger.error(f"Error adding documents to PGVector: {e}")
                     raise
                 
-                # Create records in our DocumentChunk table for consistency (optional)
-                for i, chunk_text in enumerate(text_chunks):
-                    chunk = DocumentChunk(
-                        content=chunk_text,
-                        chunk_index=i,
-                        chunk_size=len(chunk_text),
-                        embedding=None,  # Use None for Vector fields when using PGVector
-                        document_id=document.id,
-                        meta_data={
-                            "filename": document.filename,
-                            "category": document.category
-                        }
-                    )
-                    self.db.add(chunk)
-                
+                # No longer creating DocumentChunk records - using langchain_pg_embedding directly
                 await self.db.commit()
-                logger.info(f"Created {len(text_chunks)} chunks for document {document.id}")
+                logger.info(f"Created {len(text_chunks)} chunks for document {document.id} in PGVector")
                 
         except Exception as e:
             logger.error(f"Error creating document chunks: {e}")
@@ -377,7 +559,7 @@ class EnhancedDocumentService:
             return None
 
     async def get_document_chunks(self, document_id: str, user_id: UUID) -> List[Dict[str, Any]]:
-        """Get document chunks for preview"""
+        """Get document chunks for preview from langchain_pg_embedding table"""
         try:
             # First check if document exists and user has permission
             document = await self.get_by_id(document_id)
@@ -387,23 +569,30 @@ class EnhancedDocumentService:
             if document.user_id != user_id:
                 raise ValueError("Permission denied")
             
-            # Get chunks from database
-            query = select(DocumentChunk).where(
-                DocumentChunk.document_id == document_id
-            ).order_by(DocumentChunk.chunk_index)
+            # Query langchain_pg_embedding table directly
+            query = text("""
+                SELECT 
+                    id,
+                    document,
+                    cmetadata
+                FROM langchain_pg_embedding 
+                WHERE cmetadata->>'document_id' = :document_id
+                ORDER BY CAST(cmetadata->>'chunk_index' AS INTEGER)
+            """)
             
-            result = await self.db.execute(query)
-            chunks = result.scalars().all()
+            result = await self.db.execute(query, {"document_id": str(document_id)})
+            rows = result.fetchall()
             
             # Format chunks for response
             formatted_chunks = []
-            for chunk in chunks:
+            for row in rows:
+                metadata = row.cmetadata if row.cmetadata else {}
                 formatted_chunks.append({
-                    "id": str(chunk.id),
-                    "content": chunk.content,
-                    "chunk_index": chunk.chunk_index,
-                    "chunk_size": chunk.chunk_size,
-                    "metadata": chunk.meta_data
+                    "id": str(row.id),
+                    "content": row.document,
+                    "chunk_index": metadata.get("chunk_index", 0),
+                    "chunk_size": metadata.get("chunk_size", len(row.document) if row.document else 0),
+                    "metadata": metadata
                 })
             
             return formatted_chunks
@@ -413,12 +602,14 @@ class EnhancedDocumentService:
             raise
 
     async def delete(self, document: Document) -> None:
-        """Delete a document and its chunks"""
+        """Delete a document and its chunks from langchain_pg_embedding"""
         try:
-            # Delete document chunks first
-            await self.db.execute(
-                delete(DocumentChunk).where(DocumentChunk.document_id == document.id)
-            )
+            # Delete document chunks from langchain_pg_embedding table
+            delete_query = text("""
+                DELETE FROM langchain_pg_embedding 
+                WHERE cmetadata->>'document_id' = :document_id
+            """)
+            await self.db.execute(delete_query, {"document_id": str(document.id)})
             
             # Delete the document
             await self.db.delete(document)
@@ -428,7 +619,7 @@ class EnhancedDocumentService:
             if document.file_path and os.path.exists(document.file_path):
                 os.unlink(document.file_path)
                 
-            logger.info(f"Deleted document {document.id}")
+            logger.info(f"Deleted document {document.id} and its embeddings")
             
         except Exception as e:
             logger.error(f"Error deleting document: {e}")

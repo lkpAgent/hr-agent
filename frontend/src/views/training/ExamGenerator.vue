@@ -1251,9 +1251,13 @@ const shareExam = async (exam) => {
       win.opener = null
       ElMessage.success('已在新窗口打开分享页面')
     } else {
-      // 弹窗被拦截时回退为当前窗口跳转
-      window.location.href = shareUrl
-      ElMessage.info('已跳转到分享页面')
+      // 弹窗被拦截时，不改变当前页面，提供可点击链接
+      // ElMessageBox.alert(
+      //   `<div>浏览器拦截了新窗口打开。您可以点击 <a href="${shareUrl}" target="_blank" rel="noopener noreferrer">在新窗口打开分享页面</a>，或复制以下链接：</div>
+      //    <div style="margin-top:8px;"><code>${shareUrl}</code></div>`,
+      //   '打开分享页面',
+      //   { dangerouslyUseHTMLString: true }
+      // )
     }
   } catch (error) {
     console.error('分享失败:', error)
