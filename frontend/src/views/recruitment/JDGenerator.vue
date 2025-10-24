@@ -1,5 +1,5 @@
 <template>
-  <div class="jd-generator">
+  <div class="jd-generator" v-loading="parsingIntent" element-loading-text="正在解析需求为表单数据..." element-loading-background="rgba(255, 255, 255, 0.7)">
     <div class="page-container">
       <!-- 页面头部 -->
       <div class="page-header">
@@ -525,6 +525,7 @@ const generating = ref(false)
 const generatedJD = ref('')
 const streamContent = ref('')
 const saving = ref(false)
+const parsingIntent = ref(false)
 
 // 打字机效果相关
 const fullStreamContent = ref('') // 存储完整的流式内容
@@ -1523,11 +1524,14 @@ onMounted(async () => {
     
     // 优先调用后端LLM解析为结构化字段并填充表单
     try {
+      parsingIntent.value = true
       const parsed = await hrWorkflowsApi.parseRequirements({ text: String(queryText) })
       fillFormFromParsedData(parsed)
     } catch (e) {
       console.warn('后端解析失败，回退到前端解析：', e)
       await parseQueryAndFillForm(queryText)
+    } finally {
+      parsingIntent.value = false
     }
     
     // 延迟一下确保表单填充完成，然后自动触发AI生成

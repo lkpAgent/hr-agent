@@ -1,5 +1,5 @@
 <template>
-  <div class="exam-generator">
+  <div class="exam-generator" v-loading="parsingIntent" element-loading-text="正在解析意图为表单数据..." element-loading-background="rgba(255, 255, 255, 0.7)">
     <div class="page-container">
       <!-- 页面头部 -->
       <div class="page-header">
@@ -269,24 +269,8 @@
             </template>
 
             <div class="preview-content">
-              <!-- 空状态 -->
-              <div v-if="!generating && !generatedExam" class="empty-preview">
-                <el-empty description="暂无内容" :image-size="100">
-                  <p>配置试卷信息后，点击"AI生成试卷"按钮</p>
-                </el-empty>
-              </div>
-
-              <!-- 生成中状态（无内容时） -->
-              <div v-if="generating && !displayedContent" class="generating-state">
-                <div class="generating-header">
-                  <el-icon class="is-loading"><Loading /></el-icon>
-                  <span>AI正在生成试卷...</span>
-                </div>
-                <el-skeleton :rows="8" animated />
-              </div>
-
               <!-- 实时显示状态（生成中有内容时） -->
-              <div v-else-if="generating && displayedContent" class="typewriter-container">
+              <div v-if="generating && displayedContent" class="typewriter-container">
                 <div class="typewriter-header">
                   <el-icon class="is-loading"><Loading /></el-icon>
                   <span>AI正在生成中...</span>
@@ -305,7 +289,14 @@
                 </div>
               </div>
 
-
+              <!-- 生成中状态（无内容时） -->
+              <div v-else-if="generating" class="generating-state">
+                <div class="generating-header">
+                  <el-icon class="is-loading"><Loading /></el-icon>
+                  <span>AI正在生成试卷...</span>
+                </div>
+                <el-skeleton :rows="8" animated />
+              </div>
 
               <!-- 试卷预览（生成完成） -->
               <div v-else-if="generatedExam !== null" class="exam-preview">
@@ -356,6 +347,8 @@
                     
                     <div 
                       v-for="(question, index) in parsedQuestions" 
+                      
+ 
                       :key="question.id"
                       class="question-item"
                     >
@@ -418,6 +411,13 @@
                     </div>
                   </div>
                 </div>
+              </div>
+
+              <!-- 空状态 -->
+              <div v-else class="empty-preview">
+                <el-empty description="暂无内容" :image-size="100">
+                  <p>配置试卷信息后，点击"AI生成试卷"按钮</p>
+                </el-empty>
               </div>
             </div>
           </el-card>
@@ -541,6 +541,7 @@ const generatedExam = ref(null)
 const examListLoading = ref(false)
 const searchKeyword = ref('')
 const showKnowledgeDialog = ref(false)
+const parsingIntent = ref(false)
 
 // 实时显示相关变量
 const displayedContent = ref('')
@@ -1383,6 +1384,21 @@ const formatExamContent = (content) => {
   return ''
 }
 
+// 生成中或原始字符串内容的安全可读HTML，用于 v-html 展示
+const formatExamContentForDisplay = (content) => {
+  if (!content) return ''
+  const str = typeof content === 'string' ? content : JSON.stringify(content, null, 2)
+  const escapeHtml = (s) => s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+  // 基本可读性处理：换行、分隔符
+  const html = escapeHtml(str)
+    .replace(/\r?\n/g, '<br>')
+    .replace(/\*\*\*/g, '<hr class="exam-separator">')
+  return `<div class="formatted-exam-content">${html}</div>`
+}
+
 
 
 // 初始化用户答案数据结构
@@ -1600,6 +1616,7 @@ onMounted(async () => {
       // 进入创建新试卷模式，确保表单展示
       await createNewExam()
 
+      parsingIntent.value = true
       const resp = await examApi.parseIntent({ text: decodeURIComponent(String(q)) })
       const parsed = resp?.data ?? resp
       if (parsed) {
@@ -1635,6 +1652,8 @@ onMounted(async () => {
     } catch (error) {
       console.error('解析试卷意图失败:', error)
       ElMessage.error('解析试卷意图失败')
+    } finally {
+      parsingIntent.value = false
     }
   }
 })
@@ -1981,7 +2000,8 @@ onMounted(async () => {
   // 预览面板
   .exam-preview-panel {
     .preview-card {
-      height: calc(100vh - 200px);
+      min-height: 400px;
+      height: auto;
       background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(10px);
       border-radius: 16px;
