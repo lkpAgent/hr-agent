@@ -16,6 +16,7 @@ from app.services.lightweight_document_service import LightweightDocumentService
 from app.services.rag_service import RAGService
 from app.core.config import settings
 from app.api.deps import get_current_user
+from app.services.kb_selection_service import KBSelectionService
 
 router = APIRouter()
 
@@ -270,4 +271,29 @@ async def delete_knowledge_document(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error deleting document: {str(e)}"
+        )
+
+
+@router.post("/auto-select-kb")
+async def auto_select_kb(
+    question: str = Form(...),
+    max_candidates: int = Form(100),
+    current_user: UserSchema = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+) -> Any:
+    """
+    Auto-select knowledge base by ranking documents with LLM and return KB ID.
+    """
+    try:
+        kb_selector = KBSelectionService(db)
+        result = await kb_selector.select_kb_for_question(
+            question=question,
+            user_id=current_user.id,
+            max_candidates=max_candidates,
+        )
+        return result
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error selecting knowledge base: {str(e)}"
         )

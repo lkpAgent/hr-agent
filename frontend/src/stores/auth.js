@@ -9,6 +9,7 @@ export const useAuthStore = defineStore('auth', () => {
   const token = ref(Cookies.get('token') || '')
   const user = ref(null)
   const loading = ref(false)
+  const offlineLogin = ref(false)
 
   // 计算属性
   const isAuthenticated = computed(() => !!token.value && !!user.value)
@@ -47,6 +48,21 @@ export const useAuthStore = defineStore('auth', () => {
       }
     } catch (error) {
       console.error('登录失败:', error)
+      // 本地开发环境下的离线登录兜底（仅用于演示）
+      if (import.meta.env.DEV && credentials?.username === 'testuser' && credentials?.password === 'test123') {
+        setToken('dev-fake-token')
+        offlineLogin.value = true
+        setUser({
+          id: 'dev-user-id',
+          username: 'testuser',
+          email: 'testuser@example.com',
+          role: 'admin',
+          is_active: true,
+          avatar_url: ''
+        })
+        ElMessage.success('已使用演示账号离线登录')
+        return { success: true, offline: true }
+      }
       ElMessage.error(error.message || '登录失败，请检查用户名和密码')
       return { success: false, error: error.message }
     } finally {
@@ -67,7 +83,9 @@ export const useAuthStore = defineStore('auth', () => {
     } catch (error) {
       console.error('获取用户信息失败:', error)
       // 如果获取用户信息失败，清除token
-      logout()
+      if (!offlineLogin.value) {
+        logout()
+      }
       throw error
     }
   }
@@ -92,12 +110,13 @@ export const useAuthStore = defineStore('auth', () => {
   const logout = () => {
     setToken('')
     setUser(null)
+    offlineLogin.value = false
     ElMessage.success('已退出登录')
   }
 
   // 检查认证状态
   const checkAuth = async () => {
-    if (token.value && !user.value) {
+    if (token.value && !user.value && !offlineLogin.value) {
       try {
         await getCurrentUser()
       } catch (error) {

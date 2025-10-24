@@ -127,6 +127,11 @@ export const examApi = {
     })
   },
 
+  // 解析试卷意图为结构化字段
+  parseIntent(data) {
+    return request.post('/hr-workflows/papers/parse-intent', data)
+  },
+
   // 构建试卷生成查询
   buildExamQuery(data) {
     const queryParts = [`请生成一份${data.subject}试卷`]

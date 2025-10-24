@@ -524,6 +524,7 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { 
   EditPen, Plus, Document, Search, MoreFilled, Edit, CopyDocument, 
@@ -1585,9 +1586,57 @@ const formatDate = (dateString) => {
   return date.toLocaleDateString('zh-CN')
 }
 
+// 路由
+const route = useRoute()
+
 // 生命周期
 onMounted(async () => {
   await fetchExamList()
+
+  // 解析查询参数 q 并智能填充表单，同时自动进入创建模式并生成
+  const q = route?.query?.q
+  if (q) {
+    try {
+      // 进入创建新试卷模式，确保表单展示
+      await createNewExam()
+
+      const resp = await examApi.parseIntent({ text: decodeURIComponent(String(q)) })
+      const parsed = resp?.data ?? resp
+      if (parsed) {
+        if (parsed.title) form.examName = parsed.title
+        if (typeof parsed.total_score === 'number') form.totalScore = parsed.total_score
+        if (parsed.special_requirements) form.specialRequirements = parsed.special_requirements
+        const qc = parsed.question_counts || {}
+        if (typeof qc.single_choice === 'number') form.questionCounts.single = qc.single_choice
+        if (typeof qc.multiple_choice === 'number') form.questionCounts.multiple = qc.multiple_choice
+        if (typeof qc.short_answer === 'number') form.questionCounts.short = qc.short_answer
+
+        // 处理知识库文件（后端返回的结构：[{id, fileName}]）
+        const kfs = parsed.knowledge_files || []
+        if (Array.isArray(kfs) && kfs.length > 0) {
+          form.knowledgeFiles = kfs.map(f => ({
+            id: f.id,
+            fileName: f.fileName || f.filename || '未命名文档',
+            filename: f.fileName || f.filename || '未命名文档',
+            name: f.fileName || f.filename || '未命名文档',
+            original_filename: f.fileName || f.filename || '未命名文档'
+          }))
+        }
+
+        ElMessage.success('已根据意图自动填充试卷表单')
+
+        // 若已有知识库文件，自动触发试卷生成
+        if (form.knowledgeFiles.length > 0) {
+          await generateExam()
+        } else {
+          ElMessage.warning('未检索到相关知识库文件，请先选择文档')
+        }
+      }
+    } catch (error) {
+      console.error('解析试卷意图失败:', error)
+      ElMessage.error('解析试卷意图失败')
+    }
+  }
 })
 </script>
 

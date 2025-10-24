@@ -477,6 +477,7 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Document,
@@ -514,6 +515,9 @@ marked.setOptions({
   langPrefix: 'hljs language-',
   breaks: true
 })
+
+// 路由实例
+const route = useRoute()
 
 // 响应式数据
 const formRef = ref()
@@ -602,6 +606,14 @@ const skillOptions = [
   'MySQL', 'PostgreSQL', 'MongoDB', 'Redis', 'Docker', 'Kubernetes',
   'AWS', 'Azure', 'Git', 'Linux', 'Nginx', 'Jenkins'
 ]
+
+// 安全默认值处理
+const ensureDefaultSelections = () => {
+  if (!form.location) form.location = cities[0] || ''
+  if (!form.experience) form.experience = '不限'
+  if (!form.education) form.education = '不限'
+  if (!form.jobType) form.jobType = '全职'
+}
 
 // 计算属性
 const renderedJD = computed(() => {
@@ -818,8 +830,108 @@ const handleStreamResponse = async (response) => {
   }
 }
 
+// 解析查询文本并智能填充表单
+const parseQueryAndFillForm = async (queryText) => {
+  try {
+    console.log('开始解析查询文本:', queryText)
+    
+    // 将查询文本放入additionalRequirements字段
+    form.additionalRequirements = queryText
+    
+    // 简单的关键词匹配来智能填充表单
+    const text = queryText.toLowerCase()
+    
+    // 提取职位名称
+    if (text.includes('jd') || text.includes('职位') || text.includes('岗位')) {
+      // 尝试提取具体职位名称
+      const jobMatches = [
+        { keywords: ['java', 'java开发', 'java工程师', 'java后端'], title: 'Java开发工程师' },
+        { keywords: ['前端', '前端开发', '前端工程师', 'vue', 'react'], title: '前端开发工程师' },
+        { keywords: ['产品经理', '产品', 'pm'], title: '产品经理' },
+        { keywords: ['ui', 'ui设计师', '设计师'], title: 'UI设计师' },
+        { keywords: ['测试', '测试工程师', 'qa'], title: '测试工程师' },
+        { keywords: ['运维', '运维工程师', 'devops'], title: '运维工程师' },
+        { keywords: ['财务', '财务经理', '会计'], title: '财务经理' },
+        { keywords: ['人事', 'hr', '人力资源'], title: '人力资源专员' }
+      ]
+      
+      for (const job of jobMatches) {
+        if (job.keywords.some(keyword => text.includes(keyword))) {
+          form.jobTitle = job.title
+          break
+        }
+      }
+    }
+    
+    // 提取工作经验
+    const expMatches = [
+      { keywords: ['3-5年', '3到5年', '三到五年'], value: '3-5年' },
+      { keywords: ['1-3年', '1到3年', '一到三年'], value: '1-3年' },
+      { keywords: ['5年以上', '5年+', '五年以上'], value: '5年以上' },
+      { keywords: ['应届', '无经验', '0年'], value: '应届生' }
+    ]
+    
+    for (const exp of expMatches) {
+      if (exp.keywords.some(keyword => text.includes(keyword))) {
+        form.experience = exp.value
+        break
+      }
+    }
+    
+    // 设置默认值
+    if (!form.jobTitle) {
+      form.jobTitle = '待定职位'
+    }
+    if (!form.location) {
+      form.location = '北京'
+    }
+    if (!form.experience) {
+      form.experience = '3-5年'
+    }
+    if (!form.education) {
+      form.education = '本科'
+    }
+    if (!form.salary) {
+      form.salary = '面议'
+    }
+    
+    console.log('表单填充完成:', form)
+    ElMessage.success('已根据需求自动填充表单，正在生成JD...')
+    
+  } catch (error) {
+    console.error('解析查询文本失败:', error)
+    ElMessage.warning('解析需求失败，将使用默认配置生成JD')
+  }
+}
+
+// 使用后端解析结果填充表单
+const fillFormFromParsedData = (parsed) => {
+  try {
+    if (!parsed) return
+    // 某些请求库可能将数据包裹在 data 或 result 中
+    const data = parsed.data || parsed.result || parsed
+    form.jobTitle = data.job_title || form.jobTitle
+    form.department = data.department || form.department
+    form.location = data.location || form.location
+    form.salary = data.salary || form.salary
+    form.experience = data.experience || form.experience
+    form.education = data.education || form.education
+    form.jobType = data.job_type || form.jobType
+    form.skills = Array.isArray(data.skills) ? data.skills : form.skills
+    form.benefits = Array.isArray(data.benefits) ? data.benefits : form.benefits
+    form.additionalRequirements = data.additional_requirements || String(route.query.q || '')
+    // 如果关键字段缺失，自动选中第一个选项
+    ensureDefaultSelections()
+  } catch (e) {
+    console.error('填充表单失败，使用默认值', e)
+    ensureDefaultSelections()
+  }
+}
+
 const generateJD = async () => {
   try {
+    // 生成前确保缺省值已填充，避免校验报错
+    ensureDefaultSelections()
     await formRef.value.validate()
     
     generating.value = true
@@ -1398,8 +1510,31 @@ const loadScoringCriteria = async (jdId) => {
 }
 
 // 生命周期
-onMounted(() => {
-  fetchJDList()
+onMounted(async () => {
+  await fetchJDList()
+  
+  // 检查URL参数q，如果存在则自动触发创建新JD和AI生成
+  const queryText = route.query.q
+  if (queryText) {
+    console.log('检测到URL参数q:', queryText)
+    
+    // 自动创建新JD
+    createNewJD()
+    
+    // 优先调用后端LLM解析为结构化字段并填充表单
+    try {
+      const parsed = await hrWorkflowsApi.parseRequirements({ text: String(queryText) })
+      fillFormFromParsedData(parsed)
+    } catch (e) {
+      console.warn('后端解析失败，回退到前端解析：', e)
+      await parseQueryAndFillForm(queryText)
+    }
+    
+    // 延迟一下确保表单填充完成，然后自动触发AI生成
+    setTimeout(() => {
+      generateJD()
+    }, 500)
+  }
 })
 
 onUnmounted(() => {

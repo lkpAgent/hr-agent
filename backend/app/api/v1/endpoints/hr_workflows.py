@@ -31,6 +31,7 @@ from app.models.resume_evaluation import ResumeEvaluation
 from app.models.exam import Exam
 from app.models.exam_result import ExamResult
 from app.services.dify_service import DifyService
+from app.services.kb_selection_service import KBSelectionService
 from app.api.deps import get_current_user
 from app.core.logging import logger
 from sqlalchemy import or_
@@ -53,6 +54,151 @@ class ScoringCriteriaGenerateRequest(BaseModel):
     requirements: Dict = None
     conversation_id: str = None
     stream: bool = True
+
+# 新增：需求解析请求/响应模型
+class RequirementParseRequest(BaseModel):
+    text: str
+    conversation_id: Optional[str] = None
+
+class RequirementParseResponse(BaseModel):
+    job_title: Optional[str] = None
+    department: Optional[str] = None
+    location: Optional[str] = None
+    salary: Optional[str] = None
+    experience: Optional[str] = None
+    education: Optional[str] = None
+    job_type: Optional[str] = None
+    skills: Optional[List[str]] = None
+    benefits: Optional[List[str]] = None
+    additional_requirements: Optional[str] = None
+
+@router.post("/parse-requirements")
+async def parse_requirements(
+    request: RequirementParseRequest,
+    current_user: UserSchema = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+) -> Any:
+    """
+    将用户自然语言需求解析为结构化字段，供前端表单自动填充
+    示例输入："JAVA开发工程师、3-5年工作经验、工作地点北京，薪资15000-20000"
+    返回JSON字段：job_title, location, salary, experience, education, job_type, skills, benefits, department, additional_requirements
+    """
+    try:
+        dify_service = DifyService()
+        prompt = (
+            "你是一个招聘助手。请从以下中文需求中提取结构化字段，并严格以JSON格式返回。\n"
+            "不要添加解释，不要返回除JSON外的任何内容。\n"
+            "需求文本：\n" + request.text + "\n\n"
+            "JSON字段定义：{\n"
+            "  \"job_title\": 岗位名称（如JAVA开发工程师、财务经理），\n"
+            "  \"department\": 部门（如技术部、财务部，若无法判断可为空），\n"
+            "  \"location\": 工作地点（城市名），\n"
+            "  \"salary\": 薪资范围（原样返回，如15000-20000或25-35K），\n"
+            "  \"experience\": 工作经验（如3-5年、5年以上），\n"
+            "  \"education\": 学历要求（如本科、专科，若未提及可为空），\n"
+            "  \"job_type\": 工作性质（如全职、兼职，若未提及可为空），\n"
+            "  \"skills\": 技能标签数组（如[\"Java\", \"Spring\"]），\n"
+            "  \"benefits\": 福利数组（如[\"五险一金\", \"带薪年假\"]），\n"
+            "  \"additional_requirements\": 其他补充要求（原文提炼）。\n"
+            "}\n"
+            "示例返回：{\n"
+            "  \"job_title\": \"JAVA开发工程师\",\n"
+            "  \"department\": \"技术部\",\n"
+            "  \"location\": \"北京\",\n"
+            "  \"salary\": \"15000-20000\",\n"
+            "  \"experience\": \"3-5年\",\n"
+            "  \"education\": \"本科\",\n"
+            "  \"job_type\": \"全职\",\n"
+            "  \"skills\": [\"Java\", \"Spring\", \"MySQL\"],\n"
+            "  \"benefits\": [\"五险一金\", \"带薪年假\"],\n"
+            "  \"additional_requirements\": \"具备良好的沟通能力\"\n"
+            "}"
+        )
+
+        ai_response = await dify_service.call_workflow_sync(
+            workflow_type=1,
+            query=prompt,
+            conversation_id=request.conversation_id,
+            additional_inputs={"task": "parse_requirements"}
+        )
+
+        answer_text = ""
+        if isinstance(ai_response, dict):
+            if "answer" in ai_response:
+                answer_text = ai_response["answer"]
+            elif "data" in ai_response and isinstance(ai_response["data"], dict) and "answer" in ai_response["data"]:
+                answer_text = ai_response["data"]["answer"]
+            else:
+                answer_text = json.dumps(ai_response, ensure_ascii=False)
+        else:
+            answer_text = str(ai_response)
+
+        json_str = answer_text.strip()
+        if "```" in json_str:
+            if "```json" in json_str:
+                start = json_str.find("```json") + 7
+            else:
+                start = json_str.find("```") + 3
+            end = json_str.find("```", start)
+            if end > start:
+                json_str = json_str[start:end].strip()
+
+        parsed: Dict[str, Any] = {}
+        try:
+            parsed = json.loads(json_str)
+        except Exception:
+            import re
+            text = request.text
+            parsed = {
+                "job_title": None,
+                "department": None,
+                "location": None,
+                "salary": None,
+                "experience": None,
+                "education": None,
+                "job_type": None,
+                "skills": [],
+                "benefits": [],
+                "additional_requirements": text
+            }
+            title_match = re.search(r"([A-Za-z]+开发工程师|[\u4e00-\u9fa5A-Za-z]+经理|[\u4e00-\u9fa5A-Za-z]+工程师)", text)
+            if title_match:
+                parsed["job_title"] = title_match.group(1)
+            exp_match = re.search(r"(\d+\s*-\s*\d+年|\d+年以上)", text)
+            if exp_match:
+                parsed["experience"] = exp_match.group(1).replace(" ", "")
+            loc_match = re.search(r"北京|上海|深圳|广州|杭州|南京|成都|重庆|苏州|武汉|西安", text)
+            if loc_match:
+                parsed["location"] = loc_match.group(0)
+            sal_match = re.search(r"(\d+\s*-\s*\d+K|\d+\s*-\s*\d+|\d+K\s*-\s*\d+K)", text, re.IGNORECASE)
+            if sal_match:
+                parsed["salary"] = sal_match.group(1).replace(" ", "")
+            edu_match = re.search(r"本科|专科|硕士|博士", text)
+            if edu_match:
+                parsed["education"] = edu_match.group(0)
+            jobtype_match = re.search(r"全职|兼职|实习", text)
+            if jobtype_match:
+                parsed["job_type"] = jobtype_match.group(0)
+
+        result = RequirementParseResponse(
+            job_title=parsed.get("job_title"),
+            department=parsed.get("department"),
+            location=parsed.get("location"),
+            salary=parsed.get("salary"),
+            experience=parsed.get("experience"),
+            education=parsed.get("education"),
+            job_type=parsed.get("job_type"),
+            skills=parsed.get("skills") or [],
+            benefits=parsed.get("benefits") or [],
+            additional_requirements=parsed.get("additional_requirements")
+        )
+        return result.model_dump()
+    except Exception as e:
+        logger.error(f"Error parsing requirements: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"解析需求失败: {str(e)}"
+        )
 
 @router.post("/generate-jd")
 async def generate_job_description(
@@ -1059,6 +1205,195 @@ class ExamResponse(BaseModel):
     created_at: str
     updated_at: str
 
+# 新增：试卷意图解析请求/响应模型
+class ExamIntentParseRequest(BaseModel):
+    text: str
+    conversation_id: Optional[str] = None
+
+class ExamIntentParseResponse(BaseModel):
+    title: Optional[str] = None
+    subject: Optional[str] = None
+    total_score: Optional[int] = 100
+    difficulty: Optional[str] = "medium"  # easy/medium/hard
+    duration: Optional[int] = 90
+    question_counts: Dict[str, int] = {}
+    special_requirements: Optional[str] = None
+    knowledge_files: List[KnowledgeFileInfo] = []
+
+@router.post("/papers/parse-intent")
+async def parse_exam_intent(
+    request: ExamIntentParseRequest,
+    current_user: UserSchema = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+) -> Any:
+    """
+    将自然语言试卷意图解析为结构化字段，供前端表单自动填充
+    支持解析：标题/科目、总分、难度、时长、题量（单选/多选/简答/填空）、特殊要求
+    """
+    import re
+    try:
+        dify_service = DifyService()
+        prompt = (
+            "你是考试出题助手。请从以下中文需求中提取结构化字段，并严格以JSON格式返回。\n"
+            "不要添加解释，不要返回除JSON外的任何内容。\n"
+            "需求文本：\n" + request.text + "\n\n"
+            "JSON字段定义：{\n"
+            "  \"title\": 试卷标题（若未提及可从语义中提取或留空）,\n"
+            "  \"subject\": 科目（如Java、市场营销，若未提及可留空）,\n"
+            "  \"total_score\": 整数，总分（如100）,\n"
+            "  \"difficulty\": 难度（easy/medium/hard）,\n"
+            "  \"duration\": 整数，考试时长（分钟）,\n"
+            "  \"question_counts\": 对象，包含各题型数量，如{\n"
+            "    \"single_choice\": 单选题数量（整数，若未提及为0）,\n"
+            "    \"multiple_choice\": 多选题数量（整数，若未提及为0）,\n"
+            "    \"short_answer\": 简答题数量（整数，若未提及为0）,\n"
+            "    \"fill_blank\": 填空题数量（整数，若未提及为0）\n"
+            "  },\n"
+            "  \"special_requirements\": 其他补充要求（原文提炼，若无则空字符串）\n"
+            "}\n"
+            "示例返回：{\n"
+            "  \"title\": \"Java基础测试\",\n"
+            "  \"subject\": \"Java\",\n"
+            "  \"total_score\": 100,\n"
+            "  \"difficulty\": \"medium\",\n"
+            "  \"duration\": 90,\n"
+            "  \"question_counts\": {\n"
+            "    \"single_choice\": 10,\n"
+            "    \"multiple_choice\": 5,\n"
+            "    \"short_answer\": 2,\n"
+            "    \"fill_blank\": 0\n"
+            "  },\n"
+            "  \"special_requirements\": \"题目覆盖集合、泛型、异常处理等\"\n"
+            "}"
+        )
+
+        ai_response = await dify_service.call_workflow_sync(
+            workflow_type=5,
+            query=prompt,
+            conversation_id=request.conversation_id,
+            additional_inputs={"task": "parse_exam_intent"}
+        )
+
+        answer_text = ""
+        if isinstance(ai_response, dict):
+            if "answer" in ai_response:
+                answer_text = ai_response["answer"]
+            else:
+                try:
+                    answer_text = json.dumps(ai_response, ensure_ascii=False)
+                except Exception:
+                    answer_text = ""
+        elif isinstance(ai_response, str):
+            answer_text = ai_response
+
+        parsed: Dict[str, Any] = {}
+        if answer_text:
+            try:
+                parsed = json.loads(answer_text)
+            except json.JSONDecodeError:
+                parsed = {}
+
+        text = request.text
+        def find_int(pattern: str) -> Optional[int]:
+            m = re.search(pattern, text)
+            if m:
+                try:
+                    return int(m.group(1))
+                except Exception:
+                    return None
+            return None
+
+        difficulty_map = {
+            '简单': 'easy', '易': 'easy', '基础': 'easy',
+            '中等': 'medium', '一般': 'medium',
+            '困难': 'hard', '难': 'hard', '高级': 'hard'
+        }
+        difficulty = parsed.get('difficulty') or next((difficulty_map[k] for k in difficulty_map if k in text), None) or 'medium'
+
+        total_score = parsed.get('total_score')
+        if not isinstance(total_score, int):
+            total_score = find_int(r"总分[:：]?\s*(\d+)") or find_int(r"(\d+)\s*分") or 100
+
+        duration = parsed.get('duration')
+        if not isinstance(duration, int):
+            duration = find_int(r"时长[:：]?\s*(\d+)\s*分钟") or find_int(r"(\d+)\s*分钟") or 90
+
+        qc = parsed.get('question_counts') or {}
+        def qc_val(key: str, patterns: List[str]) -> int:
+            v = qc.get(key)
+            if isinstance(v, int) and v >= 0:
+                return v
+            for p in patterns:
+                res = find_int(p)
+                if isinstance(res, int):
+                    return res
+            return 0
+
+        single_choice = qc_val('single_choice', [r"单选题\s*(\d+)", r"单选\s*(\d+)"])
+        multiple_choice = qc_val('multiple_choice', [r"多选题\s*(\d+)", r"多选\s*(\d+)"])
+        short_answer = qc_val('short_answer', [r"简答题\s*(\d+)", r"简答\s*(\d+)"])
+        fill_blank = qc_val('fill_blank', [r"填空题\s*(\d+)", r"填空\s*(\d+)"])
+
+        title = parsed.get('title') or (re.search(r"(试卷名称|标题)[:：]?\s*([^\n]+)", text) and re.search(r"(试卷名称|标题)[:：]?\s*([^\n]+)", text).group(2).strip())
+        subject = parsed.get('subject') or (re.search(r"(科目|主题)[:：]?\s*([^\n]+)", text) and re.search(r"(科目|主题)[:：]?\s*([^\n]+)", text).group(2).strip())
+        if not subject and title:
+            subject = title
+
+        special_requirements = parsed.get('special_requirements')
+        if not special_requirements:
+            m = re.search(r"(要求|注意事项|其他)[:：]?\s*(.+)", text)
+            special_requirements = m.group(2).strip() if m else ""
+
+        result = ExamIntentParseResponse(
+            title=title,
+            subject=subject,
+            total_score=total_score,
+            difficulty=difficulty,
+            duration=duration,
+            question_counts={
+                'single_choice': single_choice,
+                'multiple_choice': multiple_choice,
+                'short_answer': short_answer,
+                'fill_blank': fill_blank
+            },
+            special_requirements=special_requirements
+        )
+
+        # 自动选择最匹配的知识库文档，填充 knowledge_files
+        try:
+            selector = KBSelectionService(db)
+            question = "".join([
+                subject or "",
+                " ",
+                title or "",
+                " ",
+                special_requirements or "",
+            ]).strip() or (request.text if hasattr(request, 'text') else '')
+            selection = await selector.select_kb_for_question(
+                question=question,
+                user_id=current_user.id,
+                max_candidates=200,
+            )
+            knowledge_files: List[KnowledgeFileInfo] = []
+            if selection and selection.get("document_id"):
+                knowledge_files.append(
+                    KnowledgeFileInfo(
+                        id=str(selection.get("document_id")),
+                        fileName=selection.get("filename")
+                    )
+                )
+            result.knowledge_files = knowledge_files
+        except Exception as se:
+            logger.warning(f"KB auto-selection failed: {se}")
+
+        return result
+    except Exception as e:
+        logger.error(f"Error parsing exam intent: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"试卷意图解析失败: {str(e)}"
+        )
+
 # 生成试卷
 @router.post("/papers/generate")
 async def generate_exam(
@@ -1075,6 +1410,26 @@ async def generate_exam(
         # 初始化服务
         dify_service = DifyService()
         document_service = EnhancedDocumentService(db)
+        
+        # 若未提供知识库文档，自动选择最匹配文档
+        if not request.knowledge_files:
+            try:
+                selector = KBSelectionService(db)
+                selection_question = " ".join([
+                    request.subject or "",
+                    request.title or "",
+                    request.description or "",
+                    request.special_requirements or "",
+                ]).strip()
+                selection = await selector.select_kb_for_question(
+                    question=selection_question,
+                    user_id=current_user.id,
+                    max_candidates=200,
+                )
+                if selection and selection.get("document_id"):
+                    request.knowledge_files = [str(selection.get("document_id"))]
+            except Exception as se:
+                logger.warning(f"KB auto-selection failed: {se}")
         
         # 读取文档内容
         file_contents = []
@@ -1153,6 +1508,15 @@ async def generate_exam(
             additional_inputs["question_counts"] = request.question_counts
         if request.special_requirements:
             additional_inputs["special_requirements"] = request.special_requirements
+        
+        # 附加自动选择的元信息，便于工作流提示词使用
+        if request.knowledge_files:
+            additional_inputs["kb_selection"] = {
+                "selected_document_id": request.knowledge_files[0],
+                "selected_document_filename": None,
+                "selected_kb_id": selection.get("knowledge_base_id") if 'selection' in locals() and selection else None,
+                "kb_selection_confidence": selection.get("confidence", 0.0) if 'selection' in locals() and selection else 0.0,
+            }
         
         if request.stream:
             # 流式响应

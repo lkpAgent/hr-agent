@@ -24,6 +24,11 @@ export const hrWorkflowsApi = {
     return request.post('/hr-workflows/generate-jd', data)
   },
 
+  // 解析自然语言需求为结构化表单字段
+  parseRequirements(data) {
+    return request.post('/hr-workflows/parse-requirements', data)
+  },
+
   // 简历评价
   evaluateResume(data) {
     if (data.stream) {

@@ -614,8 +614,7 @@ onMounted(() => {
   padding: 20px;
 }
 
-.page-container {
-  max-width: 1400px;
+.page-container { 
   margin: 0 auto;
   height: 100%;
   display: flex;

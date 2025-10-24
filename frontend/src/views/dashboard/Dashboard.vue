@@ -1,25 +1,49 @@
 <template>
   <div class="dashboard">
     <div class="page-container">
-      <!-- 欢迎区域 -->
-      <div class="welcome-section">
-        <div class="welcome-content">
-          <h1 class="welcome-title">
-            欢迎回来，{{ user?.full_name || user?.username }}！
-          </h1>
-          <p class="welcome-subtitle">
-            今天是 {{ currentDate }}，让我们开始高效的工作吧
+      <!-- 统一问答入口 -->
+      <div class="qa-hero-section">
+        <div class="qa-hero-content">
+          <div class="hero-title">
+            <el-icon class="hero-icon"><ChatDotRound /></el-icon>
+            <h1>智能工作助手</h1>
+          </div>
+          <p class="hero-subtitle">
+            用自然语言描述您的需求，系统将自动识别意图并跳转到对应功能
           </p>
-        </div>
-        <div class="welcome-actions">
-          <el-button type="primary" size="large" @click="$router.push('/recruitment/jd-generator')">
-            <el-icon><Plus /></el-icon>
-            创建JD
-          </el-button>
-          <el-button size="large" @click="$router.push('/assistant/chat')">
-            <el-icon><ChatDotRound /></el-icon>
-            智能助理
-          </el-button>
+          <div class="qa-input-container">
+            <el-input
+              v-model="qaText"
+              class="qa-hero-input"
+              size="large"
+              placeholder="例如：帮我生成一个前端工程师的JD，或者根据知识库回答薪酬制度相关问题"
+              clearable
+              @keyup.enter="handleIntentSubmit"
+            >
+              <template #suffix>
+                <el-button 
+                  type="primary" 
+                  :loading="qaLoading" 
+                  @click="handleIntentSubmit"
+                  class="qa-submit-btn"
+                >
+                  <el-icon><Search /></el-icon>
+                  智能识别
+                </el-button>
+              </template>
+            </el-input>
+          </div>
+          <div class="quick-examples">
+            <span class="examples-label">快速示例：</span>
+            <el-tag 
+              v-for="example in quickExamples" 
+              :key="example"
+              class="example-tag"
+              @click="useExample(example)"
+            >
+              {{ example }}
+            </el-tag>
+          </div>
         </div>
       </div>
 
@@ -139,8 +163,8 @@
             <el-link type="primary">查看全部</el-link>
           </div>
           <div class="activities-list">
-            <div 
-              v-for="activity in recentActivities" 
+            <div
+              v-for="activity in recentActivities"
               :key="activity.id"
               class="activity-item"
             >
@@ -161,23 +185,18 @@
         <div class="chart-card">
           <div class="card-header">
             <h3>招聘趋势</h3>
-            <el-select v-model="chartPeriod" size="small">
-              <el-option label="最近7天" value="7d" />
-              <el-option label="最近30天" value="30d" />
-              <el-option label="最近90天" value="90d" />
-            </el-select>
           </div>
           <div class="chart-container">
-            <v-chart :option="recruitmentChartOption" style="height: 300px;" />
+            <v-chart :option="recruitmentChartOption" style="height: 300px" />
           </div>
         </div>
 
         <div class="chart-card">
           <div class="card-header">
-            <h3>培训完成率</h3>
+            <h3>培训进度</h3>
           </div>
           <div class="chart-container">
-            <v-chart :option="trainingChartOption" style="height: 300px;" />
+            <v-chart :option="trainingChartOption" style="height: 300px" />
           </div>
         </div>
       </div>
@@ -187,7 +206,10 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import { useAuthStore } from '@/stores/auth'
+import { request } from '@/api'
 import VChart from 'vue-echarts'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
@@ -199,6 +221,7 @@ import {
   GridComponent
 } from 'echarts/components'
 import dayjs from 'dayjs'
+import { Plus, ChatDotRound, UserFilled, Reading, VideoCamera, TrendCharts, Document, Files, EditPen, Search } from '@element-plus/icons-vue'
 
 // 注册ECharts组件
 use([
@@ -211,10 +234,13 @@ use([
   GridComponent
 ])
 
+const router = useRouter()
 const authStore = useAuthStore()
 
 // 响应式数据
 const chartPeriod = ref('30d')
+const qaText = ref('')
+const qaLoading = ref(false)
 
 // 计算属性
 const user = computed(() => authStore.user)
@@ -227,6 +253,13 @@ const stats = ref({
   interview: { total: 23, change: -5 },
   assistant: { total: 342, change: 25 }
 })
+
+const quickExamples = ref([
+  '生成前端工程师JD',
+  '创建Java基础试卷',
+  '制定面试方案',
+  '查询薪酬制度'
+])
 
 const recentActivities = ref([
   {
@@ -258,6 +291,35 @@ const recentActivities = ref([
     time: '2小时前'
   }
 ])
+
+const useExample = (example) => {
+  qaText.value = example
+}
+
+const handleIntentSubmit = async () => {
+  const text = (qaText.value || '').trim()
+  if (!text) {
+    ElMessage.warning('请输入您的需求')
+    return
+  }
+  qaLoading.value = true
+  try {
+    const data = await request.post('/intent/route', { query: text })
+    if (!data || !data.route) {
+      throw new Error('意图解析失败')
+    }
+    const queryParams = { q: text }
+    if (data.intent === 'kb_qa' && data.kb_id) {
+      queryParams.kb_id = data.kb_id
+    }
+    router.push({ path: data.route, query: queryParams })
+  } catch (err) {
+    console.error(err)
+    ElMessage.error('意图识别或跳转失败，请稍后重试')
+  } finally {
+    qaLoading.value = false
+  }
+}
 
 // 图表配置
 const recruitmentChartOption = computed(() => ({
@@ -344,33 +406,164 @@ onMounted(() => {
   overflow-y: auto;
 }
 
-.welcome-section {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.qa-hero-section {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  padding: 32px;
-  border-radius: 12px;
-  margin-bottom: 24px;
-  
-  .welcome-content {
-    .welcome-title {
-      font-size: 28px;
-      font-weight: 600;
-      margin: 0 0 8px 0;
+  padding: 60px 40px;
+  border-radius: 16px;
+  margin-bottom: 32px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 70% 80%, rgba(255, 255, 255, 0.08) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  .qa-hero-content {
+    position: relative;
+    z-index: 1;
+    max-width: 800px;
+    margin: 0 auto;
+
+    .hero-title {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 16px;
+
+      .hero-icon {
+        font-size: 32px;
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      h1 {
+        font-size: 36px;
+        font-weight: 700;
+        margin: 0;
+        background: linear-gradient(45deg, #ffffff, #e8f4fd);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
     }
-    
-    .welcome-subtitle {
-      font-size: 16px;
+
+    .hero-subtitle {
+      font-size: 18px;
       opacity: 0.9;
-      margin: 0;
+      margin: 0 0 32px 0;
+      line-height: 1.6;
+    }
+
+    .qa-input-container {
+      margin-bottom: 24px;
+
+      .qa-hero-input {
+        max-width: 600px;
+        
+        :deep(.el-input__wrapper) {
+          border-radius: 50px;
+          padding: 12px 20px;
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+          border: 2px solid rgba(255, 255, 255, 0.2);
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(10px);
+          
+          &:hover, &.is-focus {
+            border-color: rgba(255, 255, 255, 0.4);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+          }
+        }
+
+        :deep(.el-input__inner) {
+          font-size: 16px;
+          color: #333;
+          
+          &::placeholder {
+            color: #999;
+          }
+        }
+
+        .qa-submit-btn {
+          border-radius: 25px;
+          padding: 8px 20px;
+          font-weight: 600;
+          margin-right: 8px;
+          background: linear-gradient(45deg, #4facfe, #00f2fe);
+          border: none;
+          
+          &:hover {
+            background: linear-gradient(45deg, #3d8bfe, #00d4fe);
+            transform: translateY(-1px);
+          }
+        }
+      }
+    }
+
+    .quick-examples {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+
+      .examples-label {
+        font-size: 14px;
+        opacity: 0.8;
+        margin-right: 8px;
+      }
+
+      .example-tag {
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        
+        &:hover {
+          background: rgba(255, 255, 255, 0.25);
+          border-color: rgba(255, 255, 255, 0.5);
+          transform: translateY(-2px);
+        }
+      }
     }
   }
-  
-  .welcome-actions {
-    display: flex;
-    gap: 12px;
+
+  @media (max-width: 768px) {
+    padding: 40px 20px;
+    
+    .qa-hero-content {
+      .hero-title h1 {
+        font-size: 28px;
+      }
+      
+      .hero-subtitle {
+        font-size: 16px;
+      }
+      
+      .qa-input-container .qa-hero-input {
+        max-width: 100%;
+      }
+      
+      .quick-examples {
+        flex-direction: column;
+        align-items: stretch;
+        
+        .examples-label {
+          margin-right: 0;
+          margin-bottom: 8px;
+        }
+      }
+    }
   }
 }
 
@@ -390,7 +583,7 @@ onMounted(() => {
   gap: 16px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
   border: 1px solid var(--border-lighter);
-  
+
   .stat-icon {
     width: 48px;
     height: 48px;
@@ -400,35 +593,35 @@ onMounted(() => {
     justify-content: center;
     font-size: 24px;
     color: white;
-    
+
     &.recruitment { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
     &.training { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
     &.interview { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
     &.assistant { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
   }
-  
+
   .stat-content {
     flex: 1;
-    
+
     .stat-value {
       font-size: 24px;
       font-weight: 600;
       color: var(--text-primary);
       margin-bottom: 4px;
     }
-    
+
     .stat-label {
       font-size: 14px;
       color: var(--text-secondary);
       margin-bottom: 8px;
     }
-    
+
     .stat-change {
       display: flex;
       align-items: center;
       gap: 4px;
       font-size: 12px;
-      
+
       &.positive { color: var(--success-color); }
       &.negative { color: var(--danger-color); }
     }
@@ -456,7 +649,7 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
-  
+
   h3 {
     font-size: 18px;
     font-weight: 600;
@@ -480,13 +673,13 @@ onMounted(() => {
   border: 1px solid var(--border-lighter);
   cursor: pointer;
   transition: all 0.3s ease;
-  
+
   &:hover {
     border-color: var(--primary-color);
     box-shadow: 0 4px 12px rgba(64, 158, 255, 0.15);
     transform: translateY(-2px);
   }
-  
+
   .action-icon {
     width: 40px;
     height: 40px;
@@ -496,12 +689,12 @@ onMounted(() => {
     justify-content: center;
     font-size: 20px;
     color: white;
-    
+
     &.recruitment { background: var(--primary-color); }
     &.training { background: var(--warning-color); }
     &.assistant { background: var(--success-color); }
   }
-  
+
   .action-content {
     h4 {
       font-size: 14px;
@@ -509,7 +702,7 @@ onMounted(() => {
       color: var(--text-primary);
       margin: 0 0 4px 0;
     }
-    
+
     p {
       font-size: 12px;
       color: var(--text-secondary);
@@ -528,7 +721,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 12px;
-  
+
   .activity-icon {
     width: 32px;
     height: 32px;
@@ -538,22 +731,22 @@ onMounted(() => {
     justify-content: center;
     font-size: 16px;
     color: white;
-    
+
     &.recruitment { background: var(--primary-color); }
     &.training { background: var(--warning-color); }
     &.interview { background: var(--info-color); }
     &.assistant { background: var(--success-color); }
   }
-  
+
   .activity-content {
     flex: 1;
-    
+
     .activity-title {
       font-size: 14px;
       color: var(--text-primary);
       margin-bottom: 2px;
     }
-    
+
     .activity-time {
       font-size: 12px;
       color: var(--text-secondary);
@@ -593,11 +786,11 @@ onMounted(() => {
     gap: 20px;
     text-align: center;
   }
-  
+
   .stats-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .quick-actions-grid {
     grid-template-columns: 1fr;
   }

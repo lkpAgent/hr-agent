@@ -331,7 +331,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, nextTick, computed } from 'vue'
+import { ref, reactive, computed, onMounted, nextTick, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   ChatDotRound,
@@ -351,8 +351,10 @@ import {
 import { useAuthStore } from '@/stores/auth'
 import api from '@/api'
 import { getKnowledgeBases } from '@/api/knowledgeBase'
+import { useRoute } from 'vue-router'
 
 const authStore = useAuthStore()
+const route = useRoute()
 
 // 响应式数据
 const messages = ref([])
@@ -365,35 +367,57 @@ const uploading = ref(false)
 const fileList = ref([])
 const messagesContainer = ref(null)
 
+// 历史对话列表
+const chatHistory = ref([])
+// 自动提问防抖标记，避免重复触发
+const autoAsked = ref(false)
+
 // 知识库相关
 const knowledgeBases = ref([])
 const selectedKnowledgeBase = ref('')
 
-// 历史对话
-const chatHistory = ref([])
-
-// 上传表单
-const uploadForm = reactive({
-  knowledgeBaseId: '',
-  category: '',
-  description: ''
+// 生命周期
+onMounted(async () => {
+  await loadKnowledgeBases()
+  await loadChatHistory()
+  applyRouteParamsAndMaybeAsk()
 })
 
-// 上传配置
-const uploadUrl = computed(() => `${api.defaults.baseURL}/knowledge-assistant/upload`)
-const uploadHeaders = computed(() => ({
-  'Authorization': `Bearer ${authStore.token}`
-}))
-const uploadData = computed(() => ({
-  knowledge_base_id: uploadForm.knowledgeBaseId,
-  category: uploadForm.category,
-  description: uploadForm.description
-}))
+// 从路由应用参数并必要时触发提问
+const applyRouteParamsAndMaybeAsk = async () => {
+  const kbIdFromQuery = (route.query.kb_id || route.query.kbId || '').toString()
+  const questionFromQuery = (route.query.q || '').toString().trim()
 
-// 生命周期
-onMounted(() => {
-  loadKnowledgeBases()
-  loadChatHistory()
+  if (kbIdFromQuery) {
+    const hasKb = (knowledgeBases.value || []).some(kb => kb.id === kbIdFromQuery)
+    if (hasKb) {
+      selectedKnowledgeBase.value = kbIdFromQuery
+    } else if (import.meta.env.DEV) {
+      // 开发环境允许直接使用路由中的kb_id作为演示选择
+      selectedKnowledgeBase.value = kbIdFromQuery
+      if (!(knowledgeBases.value || []).length) {
+        knowledgeBases.value = [{ id: kbIdFromQuery, name: '演示知识库', document_count: 0 }]
+      }
+    }
+  }
+  // 若未选择，回退到默认第一个知识库
+  if (!selectedKnowledgeBase.value && knowledgeBases.value.length > 0) {
+    selectedKnowledgeBase.value = knowledgeBases.value[0].id
+  }
+
+  if (questionFromQuery && !autoAsked.value) {
+    currentMessage.value = questionFromQuery
+    // 允许在未选择知识库时也发起提问（后端将搜索用户可访问的全部文档）
+    autoAsked.value = true
+    await sendMessage()
+  }
+}
+
+// 路由参数变化时，重试应用与提问（提高健壮性）
+watch(() => route.query, async () => {
+  // 等待知识库列表加载完成后再尝试
+  if (!knowledgeBases.value || knowledgeBases.value.length === 0) return
+  await applyRouteParamsAndMaybeAsk()
 })
 
 // 方法
@@ -401,12 +425,15 @@ const loadKnowledgeBases = async () => {
   try {
     const response = await getKnowledgeBases()
     knowledgeBases.value = response || []
-    if (knowledgeBases.value.length > 0 && !selectedKnowledgeBase.value) {
-      selectedKnowledgeBase.value = knowledgeBases.value[0].id
-    }
+    // 移除原本的默认自动选中逻辑，交由 applyRouteParams 处理
   } catch (error) {
     console.error('加载知识库失败:', error)
     ElMessage.error('加载知识库失败')
+    // 开发环境兜底：提供一个演示知识库，支持根据路由kb_id设置
+    if (import.meta.env.DEV) {
+      const fallbackKbId = (route.query.kb_id || route.query.kbId || 'demo-kb').toString()
+      knowledgeBases.value = [{ id: fallbackKbId, name: '演示知识库', document_count: 0 }]
+    }
   }
 }
 
@@ -417,12 +444,30 @@ const handleKnowledgeBaseChange = (value) => {
   documentChunks.value = []
 }
 
+const generateOfflineAnswer = (q) => {
+  const question = (q || '').trim()
+  return [
+    `问题：${question}`,
+    '演示回答（后端未启动，离线生成）：',
+    '1) 明确责任与协调机制：建立由当地政府牵头的水利建设小组，统筹发改、财政、水利、生态环境、应急等部门，形成协同机制。',
+    '2) 制定规划与合规：依据流域与区域总体规划，开展可研、环评与用地审核，确保项目合规与可持续。',
+    '3) 融资与资金管理：通过财政资金、专项债、PPP、政策性银行等多元融资方式，建立透明的资金管控与绩效评估。',
+    '4) 工程建设与质量安全：完善招投标与第三方监理机制，落实质量安全、汛期施工与应急预案。',
+    '5) 环保与生态修复：实施生态流量保障、沿岸绿化与湿地修复，降低工程对生态的影响。',
+    '6) 数字化运维：建设智慧水利平台，集成监测预警、调度与资产管理，提高运行效率。',
+    '7) 公共参与与信息公开：加强科普宣传、征求公众意见并依法依规进行信息披露。',
+    '提示：当前为演示模式，启用后端服务可获得基于知识库的权威回答与引用来源。'
+  ].join('\n')
+}
+
 const sendMessage = async () => {
-  if (!currentMessage.value.trim() || !selectedKnowledgeBase.value) {
-    if (!selectedKnowledgeBase.value) {
-      ElMessage.warning('请先选择知识库')
-    }
+  if (!currentMessage.value.trim()) {
     return
+  }
+  
+  if (!selectedKnowledgeBase.value) {
+    // 未选择知识库时提示，但继续执行提问
+    ElMessage.info('未选择知识库，将在可访问范围内进行搜索')
   }
   
   const question = currentMessage.value.trim()
@@ -456,21 +501,20 @@ const sendMessage = async () => {
     // 准备对话历史（最近10条消息，排除当前流式消息）
     const conversationHistory = messages.value
       .filter(msg => !msg.isStreaming)
-      .slice(-10) // 只取最近10条消息
-      .map(msg => ({
-        role: msg.type === 'user' ? 'user' : 'assistant',
-        content: msg.content
-      }))
-    
+      .slice(-10)
+      .map(msg => ({ role: msg.type === 'user' ? 'user' : 'assistant', content: msg.content }))
+
     // 使用 FormData 发送数据，因为后端期望 Form 格式
     const formData = new FormData()
     formData.append('question', question)
-    formData.append('knowledge_base_id', selectedKnowledgeBase.value)
+    if (selectedKnowledgeBase.value) {
+      formData.append('knowledge_base_id', selectedKnowledgeBase.value)
+    }
     formData.append('context_limit', '5')
     formData.append('conversation_history', JSON.stringify(conversationHistory))
     
     console.log('发送问题:', question)
-    console.log('知识库ID:', selectedKnowledgeBase.value)
+    console.log('知识库ID:', selectedKnowledgeBase.value || '(未选择)')
     
     // 使用 fetch 进行流式请求
     const response = await fetch(`${api.defaults.baseURL}/knowledge-assistant/ask`, {
