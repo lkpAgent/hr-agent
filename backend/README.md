@@ -262,15 +262,5 @@ CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
 # 使用gunicorn
 gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
 ```
-
-## 许可证
-
-MIT License
-
-## 贡献
-
-欢迎提交Issue和Pull Request！
-
-## 联系方式
-
-如有问题，请联系开发团队。
+### 前端部署配置,比如部署在{nginx_home}/html/hragent，则指定base路径编译
+# npm run build -- --base=hragent
