@@ -28,7 +28,7 @@ class ResumeEvaluationUpdate(BaseModel):
     candidate_position: Optional[str] = None
     candidate_age: Optional[int] = None
     candidate_gender: Optional[str] = None
-    work_years: Optional[str] = None
+    work_years: Optional[float] = None
     education_level: Optional[str] = None
     school: Optional[str] = None
     total_score: Optional[float] = None
@@ -47,7 +47,7 @@ class ResumeEvaluationResponse(BaseModel):
     candidate_position: Optional[str] = None
     candidate_age: Optional[int] = None
     candidate_gender: Optional[str] = None
-    work_years: Optional[str] = None
+    work_years: Optional[float] = None
     education_level: Optional[str] = None
     school: Optional[str] = None
     
@@ -103,7 +103,7 @@ class ResumeEvaluationResult(BaseModel):
     total_score: Optional[float]
     name: Optional[str]
     position: Optional[str]
-    workYears: Optional[str]
+    workYears: Optional[float]
     education: Optional[str]
     age: Optional[int]
     sex: Optional[str]
