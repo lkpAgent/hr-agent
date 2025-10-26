@@ -114,7 +114,64 @@ class RAGService:
         )
         
         return rag_chain
-    
+
+    def _should_use_knowledge_base(self, question: str) -> bool:
+        """Decide whether the user's question should use knowledge base retrieval.
+        Returns True if KB should be used, otherwise False.
+        """
+        try:
+
+
+            # LLM-based classification with explicit instruction and examples
+            classification_prompt = (
+                "你是一个分类器。判断该问题是否需要基于知识库内容回答。\n"
+                "分类标准：涉及公司/政府/制度/政策/流程/手册/法规/条例/办法/规定/财政预算/部门职责等具体内容，一般需要知识库（输出KB）；\n"
+                "闲聊、常识性问题、无需查阅内部或法规文档则输出GENERAL。\n"
+                "只输出KB或GENERAL。\n"
+                "示例：\n"
+                "问：讲个笑话\n答：GENERAL\n"
+                "问：根据员工手册说明请假流程\n答：KB\n"
+                "问：省人民政府财政预算相关规定怎么执行\n答：KB\n"
+                f"问：{question}\n答："
+            )
+            # Use a deterministic classifier LLM
+            from langchain_openai import ChatOpenAI
+            classifier_llm = ChatOpenAI(
+                model=settings.LLM_MODEL,
+                api_key=settings.LLM_API_KEY,
+                base_url=settings.LLM_BASE_URL,
+                temperature=0,
+                max_tokens=10
+            )
+            resp = classifier_llm.invoke(classification_prompt)
+            content = getattr(resp, "content", str(resp))
+            return "KB" in (content or "").upper()
+        except Exception as e:
+            logger.warning(f"KB intent detection failed, defaulting to KB: {e}")
+            return True
+
+    def _create_general_chat_chain(self, conversation_history: List[Dict[str, str]]):
+        """General chat chain without KB context."""
+        system_prompt = (
+            "你是一个智能助手。直接根据用户问题进行回答，不使用任何知识库上下文。"
+            "保持回答准确、简洁、有帮助。"
+        )
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", system_prompt),
+            MessagesPlaceholder(variable_name="chat_history"),
+            ("human", "{question}")
+        ])
+        chain = (
+            {
+                "question": RunnablePassthrough(),
+                "chat_history": lambda x: conversation_history
+            }
+            | prompt
+            | self.llm
+            | StrOutputParser()
+        )
+        return chain
+        
     async def ask_question_stream(
         self,
         question: str,
@@ -137,6 +194,33 @@ class RAGService:
             Dict containing streaming response data
         """
         try:
+            conversation_history = conversation_history or []
+            
+            # Intent detection first
+            use_kb = self._should_use_knowledge_base(question)
+            
+            # If a specific knowledge base is provided, always use KB retrieval
+            # if knowledge_base_id:
+            #     use_kb = True
+            
+            logger.info(f"ask_question_stream: use_kb={use_kb}, knowledge_base_id={knowledge_base_id}, user_id={user_id}")
+            
+            if not use_kb:
+                # Stream general LLM answer without KB retrieval
+                yield {
+                    "type": "start",
+                    "question": question,
+                    "sources": [],
+                    "context_used": False,
+                    "num_sources": 0
+                }
+                general_chain = self._create_general_chat_chain(conversation_history)
+                async for chunk in general_chain.astream(question):
+                    if chunk:
+                        yield {"type": "chunk", "content": chunk}
+                yield {"type": "end", "complete": True, "sources": [], "num_sources": 0}
+                return
+            
             # Create collection name for user's documents
             collection_name = f"document_chunks_{user_id}".replace("-", "_")
             
@@ -154,10 +238,9 @@ class RAGService:
                 filter_conditions["knowledge_base_id"] = str(knowledge_base_id)
             
             # Get relevant documents for sources with similarity scores (single retrieval)
-            relevant_docs_with_scores = vector_store.similarity_search_with_relevance_scores(question, k=context_limit, filter=filter_conditions if filter_conditions else None)
-            
-            # Sort by similarity score in descending order (higher scores first)
-            # relevant_docs_with_scores = sorted(relevant_docs_with_scores, key=lambda x: x[1], reverse=True)
+            relevant_docs_with_scores = vector_store.similarity_search_with_relevance_scores(
+                question, k=context_limit, filter=filter_conditions if filter_conditions else None
+            )
             
             # Extract documents without scores for RAG chain
             relevant_docs = [doc for doc, score in relevant_docs_with_scores]
@@ -185,7 +268,7 @@ class RAGService:
             }
             
             # Create RAG chain with pre-retrieved documents (no additional retrieval)
-            rag_chain = self._create_rag_chain_with_docs(relevant_docs, conversation_history or [])
+            rag_chain = self._create_rag_chain_with_docs(relevant_docs, conversation_history)
             
             # Stream the response from LLM
             async for chunk in rag_chain.astream(question):
@@ -235,6 +318,26 @@ class RAGService:
             # Prepare conversation history
             if conversation_history is None:
                 conversation_history = []
+            
+            # Intent detection first
+            use_kb = self._should_use_knowledge_base(question)
+            # If a specific knowledge base is provided, always use KB retrieval
+            if knowledge_base_id:
+                use_kb = True
+            
+            logger.info(f"ask_question: use_kb={use_kb}, knowledge_base_id={knowledge_base_id}, user_id={user_id}")
+            
+            if not use_kb:
+                # General chat path without KB
+                chain = self._create_general_chat_chain(conversation_history)
+                answer = chain.invoke(question)
+                return {
+                    "question": question,
+                    "answer": answer,
+                    "sources": [],
+                    "context_used": False,
+                    "num_sources": 0
+                }
             
             # Create collection name for user's documents
             collection_name = f"document_chunks_{user_id}".replace("-", "_")

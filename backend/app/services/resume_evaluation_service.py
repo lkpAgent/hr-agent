@@ -87,7 +87,7 @@ class ResumeEvaluationService:
                 "total_score": ai_result.total_score,
                 "name": ai_result.name,
                 "position": ai_result.position,
-                "workYears": ai_result.workYears,
+                "workYears": (self._parse_work_years_to_float(ai_result.workYears) or 0.0),
                 "education": ai_result.教育水平,
                 "age": ai_result.年龄,
                 "sex": ai_result.sex,
@@ -379,7 +379,7 @@ class ResumeEvaluationService:
                 candidate_position=ai_result.position,
                 candidate_age=ai_result.年龄,
                 candidate_gender=ai_result.sex,
-                work_years=self._parse_work_years_to_float(ai_result.workYears),
+                work_years=(self._parse_work_years_to_float(ai_result.workYears) or 0.0),
                 education_level=ai_result.教育水平,
                 school=ai_result.school,
                 total_score=ai_result.total_score,
@@ -451,7 +451,10 @@ class ResumeEvaluationService:
         """
         if not text:
             return None
-        s = str(text)
+        s = str(text).strip().lower()
+        # 常见非数值占位统一视为0（回退到调用处做 or 0.0）
+        if s in {"未知", "不详", "none", "null", "n/a", "na", "--", "-", "", "应届", "应届生", "fresh"}:
+            return 0.0
         # 匹配范围 "a-b" 或 "a – b"
         m_range = re.search(r"(\d+(?:\.\d+)?)\s*[\-~–—]\s*(\d+(?:\.\d+)?)", s)
         if m_range:
