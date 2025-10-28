@@ -1720,69 +1720,76 @@ async def submit_exam(
             }
             questions_with_answers.append(question_info)
         
-        # 构建提交给Dify的完整查询内容
-        query_parts = [
-            f"考生姓名：{request.student_name}",
-            f"部门：{request.department}",
-            f"试卷标题：{exam.title}",
-            f"试卷总分：{exam.total_score}",
-            "",
-            "详细题目信息（包含标准答案、解析和考生答案）：",
-        ]
-        
-        for i, q_info in enumerate(questions_with_answers, 1):
-            query_parts.extend([
-                f"第{i}题：",
-                f"  题目类型：{q_info['题目类型']}",
-                f"  题目内容：{q_info['题目内容']}",
-                f"  选项：{q_info['选项']}" if q_info['选项'] else "",
-                f"  标准答案：{q_info['标准答案']}",
-                f"  解析：{q_info['解析']}",
-                f"  分值：{q_info['分值']}分",
-                f"  考生答案：{q_info['考生答案']}",
-                ""
-            ])
-        
-        # query_parts.append("请根据以上信息对考生的答案进行评分，并给出详细的评分说明。")
-        query = "\n".join(filter(None, query_parts))  # 过滤空字符串
-        
-        # 调用Dify进行自动评分
+        # 逐题调用Dify进行评分，避免一次性提交过多内容
         dify_service = DifyService()
-        result = await dify_service.call_workflow_sync(
-            workflow_type=6,  # 使用类型6进行自动评分
-            query=query,
-            additional_inputs={"type": 6}
-        )
-        
-        # 解析Dify返回的得分并填充到每道题的数据结构中
         questions_with_scores = []
-        scores = []
-        
-        # 从Dify结果中提取得分字符串
-        if result and "answer" in result:
-            score_string = result["answer"]
-            # 解析得分字符串，如 "2,2,0" -> [2, 2, 0]
+        per_question_results = []
+        total_score = 0.0
+
+        for idx, q_info in enumerate(questions_with_answers, 1):
+            # 为每道题构造精简评分提示，减少上下文噪声
+            per_query_parts = [
+                f"请对以下试题进行评分，仅返回该题的得分(数字即可)：",
+                f"题目类型：{q_info['题目类型']}",
+                f"题目内容：{q_info['题目内容']}",
+            ]
+            if q_info.get('选项'):
+                per_query_parts.append(f"选项：{q_info['选项']}")
+            per_query_parts.extend([
+                f"标准答案：{q_info['标准答案']}",
+                f"解析：{q_info['解析']}",
+                f"分值（满分）：{q_info['分值']}",
+                f"考生答案：{q_info['考生答案']}",
+                "",
+                "请严格返回纯数字（可为小数），不要包含其他文字、单位或标点。"
+            ])
+            per_query = "\n".join([p for p in per_query_parts if p])
+
+            # 逐题调用工作流进行评分
             try:
-                scores = [float(score.strip()) for score in score_string.split(",")]
-            except (ValueError, AttributeError):
-                # 如果解析失败，使用默认得分0
-                scores = [0.0] * len(questions_with_answers)
-        else:
-            # 如果没有得分信息，使用默认得分0
-            scores = [0.0] * len(questions_with_answers)
-        
-        # 确保得分数量与题目数量匹配
-        while len(scores) < len(questions_with_answers):
-            scores.append(0.0)
-        
-        # 将得分添加到每道题的信息中
-        for i, question_info in enumerate(questions_with_answers):
-            question_with_score = question_info.copy()
-            question_with_score["实际得分"] = scores[i] if i < len(scores) else 0.0
+                per_result = await dify_service.call_workflow_sync(
+                    workflow_type=6,
+                    query=per_query,
+                    additional_inputs={
+                        "type": 6,
+                        "max_score": q_info["分值"],
+                        "question_type": q_info["题目类型"],
+                        "question_index": idx
+                    }
+                )
+                # 解析返回的数值得分
+                raw_answer = per_result.get("answer", "0")
+                try:
+                    per_score = float(str(raw_answer).strip())
+                except ValueError:
+                    per_score = 0.0
+                # 边界保护：0 到满分
+                try:
+                    max_score = float(q_info["分值"]) if q_info.get("分值") is not None else None
+                except Exception:
+                    max_score = None
+                if max_score is not None:
+                    per_score = max(0.0, min(per_score, max_score))
+                total_score += per_score
+
+                per_question_results.append({
+                    "题目编号": q_info["题目编号"],
+                    "raw_answer": raw_answer,
+                    "parsed_score": per_score
+                })
+            except Exception as e:
+                # 失败容错：给0分并记录错误
+                per_score = 0.0
+                per_question_results.append({
+                    "题目编号": q_info["题目编号"],
+                    "error": str(e),
+                    "parsed_score": per_score
+                })
+
+            # 汇总到题目结构
+            question_with_score = q_info.copy()
+            question_with_score["实际得分"] = per_score
             questions_with_scores.append(question_with_score)
-        
-        # 计算总得分
-        total_score = sum(scores)
         
         # 保存考试记录到数据库
         from app.models.exam_result import ExamResult
@@ -1801,7 +1808,10 @@ async def submit_exam(
             },
             "questions": questions_with_scores,
             "student_answers": student_answers,
-            "scoring_result": result,
+            "scoring_result": {
+                "mode": "per_question",
+                "results": per_question_results
+            },
             "submit_time": datetime.utcnow().isoformat(),
             "total_actual_score": total_score,
             "score_percentage": round((total_score / exam.total_score) * 100, 2) if exam.total_score > 0 else 0
