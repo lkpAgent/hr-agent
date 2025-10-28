@@ -2,6 +2,7 @@
 Enhanced document service with LangChain integration for document processing and vectorization
 """
 import logging
+import asyncio
 import os
 import hashlib
 from typing import List, Optional, Dict, Any, BinaryIO
@@ -81,7 +82,7 @@ class EnhancedDocumentService:
                 "# 任务\n请分析文档，识别适合作为分割点的文本片段。\n\n"
                 "# 规则\n"
                 "1) 分割点应位于句子或段落的开头；\n"
-                "2) 分割后每段尽量<=500字，严禁>1000字；\n"
+                "2) 分割后每段尽量<=500字，严禁>800字；\n"
                 "3) 若存在重复片段（例如目录与正文相同标题），需在分割点后追加少量后续内容以确保唯一；\n"
                 "4) 仅输出分割点字符串，使用`~~`分隔，不要解释或添加其他文本。\n\n"
                 f"# 文档（截断）\n{content[:10000]}"
@@ -351,7 +352,7 @@ class EnhancedDocumentService:
                 logger.warning(f"No text chunks provided for document {document.id}")
                 return
 
-            # Create LangChain documents with metadata
+            # Create LangChain documents with metadata (content chunks)
             langchain_docs = []
             for i, chunk_text in enumerate(text_chunks):
                 doc = LangChainDocument(
@@ -364,37 +365,112 @@ class EnhancedDocumentService:
                         "filename": document.filename,
                         "category": document.category or "general",
                         "file_path": document.file_path,
-                        "mime_type": document.mime_type
+                        "mime_type": document.mime_type,
+                        "source_type": "content"
                     }
                 )
                 langchain_docs.append(doc)
 
-            # Get or create vector store
-            collection_name = f"document_chunks_{document.user_id}".replace("-", "_")
+            # Prepare keyword documents per chunk using LLM extraction (5-8 items)
+            keyword_docs = []
+            # Limit concurrent extractions to avoid rate limits
+            semaphore = asyncio.Semaphore(5)
+
+            async def extract_for_chunk(idx: int, txt: str):
+                async with semaphore:
+                    combined = await self.llm_service.extract_keywords_tags_combined(txt, max_items=8)
+                    return idx, combined
+
+            tasks = [extract_for_chunk(i, t) for i, t in enumerate(text_chunks)]
+            extracted = []
+            try:
+                extracted = await asyncio.gather(*tasks)
+            except Exception as e:
+                logger.warning(f"Keyword/tag extraction failed: {e}")
+                extracted = []
+
+            # Build keyword docs from per-chunk extraction
+            kw_map = {idx: data for idx, data in extracted}
+            for i, chunk_text in enumerate(text_chunks):
+                combined_text = kw_map.get(i, "")
+                if not combined_text:
+                    # fallback to a short truncation of chunk
+                    combined_text = chunk_text[:200]
+                kw_doc = LangChainDocument(
+                    # For keywords collection, embed on keywords/tags text
+                    page_content=combined_text,
+                    metadata={
+                        "document_id": str(document.id),
+                        "knowledge_base_id": str(document.knowledge_base_id),
+                        "chunk_index": i,
+                        "chunk_size": len(chunk_text),
+                        "filename": document.filename,
+                        "category": document.category or "general",
+                        "file_path": document.file_path,
+                        "mime_type": document.mime_type,
+                        "source_type": "keywords",
+                        "terms": combined_text,
+                        # Preserve original paragraph for downstream merging & summarization
+                        "paragraph": chunk_text
+                    }
+                )
+                keyword_docs.append(kw_doc)
+
+            # Get or create vector stores
+            chunks_collection = f"document_chunks_{document.user_id}".replace("-", "_")
+            keywords_collection = f"document_keywords_{document.user_id}".replace("-", "_")
 
             vector_store = PGVector(
+                connection=self.connection_string,
+                embeddings=self.embeddings,
+                collection_name=chunks_collection,
+                use_jsonb=True
+            )
+
+            keywords_store = None
+            if keyword_docs:
+                keywords_store = PGVector(
                     connection=self.connection_string,
                     embeddings=self.embeddings,
-                    collection_name=collection_name,
+                    collection_name=keywords_collection,
                     use_jsonb=True
                 )
 
 
             if vector_store:
-                collection_name = f"kb_{document.knowledge_base_id}" if document.knowledge_base_id else "default"
-                logger.info(f"Adding {len(langchain_docs)} documents to PGVector collection: {collection_name}")
+                logger.info(
+                    f"Adding {len(langchain_docs)} chunk docs to PGVector collection: {chunks_collection}"
+                )
                 
                 # Add documents to vector store (synchronous operation)
                 try:
                     vector_store.add_documents(langchain_docs)
-                    logger.info(f"Successfully added {len(langchain_docs)} documents to PGVector collection: {collection_name}")
+                    logger.info(
+                        f"Successfully added {len(langchain_docs)} chunk docs to PGVector collection: {chunks_collection}"
+                    )
                 except Exception as e:
                     logger.error(f"Error adding documents to PGVector: {e}")
                     raise
+
+                # Add keyword docs if available
+                if keywords_store and keyword_docs:
+                    try:
+                        logger.info(
+                            f"Adding {len(keyword_docs)} keyword docs to PGVector collection: {keywords_collection}"
+                        )
+                        keywords_store.add_documents(keyword_docs)
+                        logger.info(
+                            f"Successfully added {len(keyword_docs)} keyword docs to PGVector collection: {keywords_collection}"
+                        )
+                    except Exception as e:
+                        # Do not fail the whole ingestion if keyword indexing has issues
+                        logger.warning(f"Error adding keyword documents to PGVector: {e}")
                 
                 # No longer creating DocumentChunk records - using langchain_pg_embedding directly
                 await self.db.commit()
-                logger.info(f"Created {len(text_chunks)} chunks for document {document.id} in PGVector")
+                logger.info(
+                    f"Created {len(text_chunks)} chunks and {len(keyword_docs)} keyword entries for document {document.id}"
+                )
                 
         except Exception as e:
             logger.error(f"Error creating document chunks: {e}")
@@ -702,14 +778,48 @@ class EnhancedDocumentService:
             
             elif mime_type in ['application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']:
                 if mime_type == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+                    # Prefer docx2txt for robust extraction (handles shapes, complex layouts better)
+                    try:
+                        import docx2txt  # type: ignore
+                        extracted = docx2txt.process(file_path) or ""
+                        if extracted.strip():
+                            logger.info("Extracted DOCX content using docx2txt")
+                            return extracted.strip()
+                        else:
+                            logger.info("docx2txt returned empty; falling back to python-docx")
+                    except Exception as e:
+                        logger.info(f"docx2txt not available or failed: {e}; falling back to python-docx")
+
+                    # Fallback: python-docx paragraphs + tables
                     doc = DocxDocument(file_path)
-                    text = ""
+                    parts = []
                     for paragraph in doc.paragraphs:
-                        text += paragraph.text + "\n"
-                    return text.strip()
+                        if paragraph.text and paragraph.text.strip():
+                            parts.append(paragraph.text)
+                    for table in doc.tables:
+                        for row in table.rows:
+                            for cell in row.cells:
+                                cell_text = "\n".join(p.text for p in cell.paragraphs if p.text and p.text.strip())
+                                if cell_text.strip():
+                                    parts.append(cell_text)
+
+                    # Optional: headers/footers
+                    try:
+                        for section in doc.sections:
+                            for p in section.header.paragraphs:
+                                if p.text and p.text.strip():
+                                    parts.append(p.text)
+                            for p in section.footer.paragraphs:
+                                if p.text and p.text.strip():
+                                    parts.append(p.text)
+                    except Exception:
+                        pass
+
+                    combined = "\n".join(parts).strip()
+                    return combined
                 else:
-                    # For .doc files, we'd need python-docx2txt or similar
-                    logger.warning(f"Unsupported document format: {mime_type}")
+                    # For .doc files, we'd need external tools (e.g., textract, COM automation)
+                    logger.warning(f"Unsupported .doc format for direct extraction: {mime_type}")
                     return ""
             
             else:

@@ -43,6 +43,79 @@ class RAGService:
         self.connection_string = settings.DATABASE_URL
         
         logger.info("RAG service initialized with LangChain components")
+
+    def _merge_docs_with_scores(
+        self,
+        content_results: List[tuple],
+        keyword_results: List[tuple],
+        top_k: int = 5
+    ) -> (List[LangChainDocument], List[Dict[str, Any]]):
+        """Merge two result sets (content vs keywords) by (document_id, chunk_index),
+        combine scores with a weighted scheme, and return top_k docs plus source metadata."""
+        try:
+            merged_map: Dict[tuple, Dict[str, Any]] = {}
+
+            for doc, score in content_results:
+                key = (doc.metadata.get("document_id"), doc.metadata.get("chunk_index"))
+                merged_map[key] = merged_map.get(key, {"doc": doc, "content_score": 0.0, "keywords_score": 0.0})
+                merged_map[key]["doc"] = doc
+                merged_map[key]["content_score"] = float(score)
+
+            for doc, score in keyword_results:
+                key = (doc.metadata.get("document_id"), doc.metadata.get("chunk_index"))
+                merged_map[key] = merged_map.get(key, {"doc": doc, "content_score": 0.0, "keywords_score": 0.0})
+                merged_map[key]["doc"] = merged_map[key]["doc"] or doc
+                merged_map[key]["keywords_score"] = float(score)
+
+            # Combine scores: prioritize content similarity, then keyword match
+            combined_list: List[tuple] = []
+            for key, entry in merged_map.items():
+                combined_score = 0.6 * entry["content_score"] + 0.4 * entry["keywords_score"]
+                combined_list.append((entry["doc"], combined_score, entry))
+
+            # Sort by combined_score descending (higher relevance first)
+            combined_list.sort(key=lambda x: x[1], reverse=True)
+
+            # Build outputs, prefer original paragraph when source_type is 'keywords'
+            top = combined_list[:top_k]
+            docs: List[LangChainDocument] = []
+            sources: List[Dict[str, Any]] = []
+            for doc, combined_score, entry in top:
+                final_page_content = doc.page_content
+                if doc.metadata.get("source_type") == "keywords":
+                    final_page_content = doc.metadata.get("paragraph", final_page_content)
+                final_doc = LangChainDocument(page_content=final_page_content, metadata=doc.metadata)
+                docs.append(final_doc)
+                sources.append({
+                    "document_id": doc.metadata.get("document_id"),
+                    "document_title": doc.metadata.get("filename", "Unknown"),
+                    "chunk_id": doc.metadata.get("chunk_id"),
+                    "chunk_index": doc.metadata.get("chunk_index", 0),
+                    "content": final_page_content,
+                    "combined_score": float(combined_score),
+                    "content_score": float(entry.get("content_score", 0.0)),
+                    "keywords_score": float(entry.get("keywords_score", 0.0)),
+                    "metadata": doc.metadata
+                })
+            return docs, sources
+        except Exception as e:
+            logger.warning(f"Error merging multi-route results: {e}")
+            # Fallback: return content_results only
+            docs = [doc for doc, _ in content_results[:top_k]]
+            sources = []
+            for doc, score in content_results[:top_k]:
+                sources.append({
+                    "document_id": doc.metadata.get("document_id"),
+                    "document_title": doc.metadata.get("filename", "Unknown"),
+                    "chunk_id": doc.metadata.get("chunk_id"),
+                    "chunk_index": doc.metadata.get("chunk_index", 0),
+                    "content": doc.page_content,
+                    "combined_score": float(score),
+                    "content_score": float(score),
+                    "keywords_score": 0.0,
+                    "metadata": doc.metadata
+                })
+            return docs, sources
     
     def _create_rag_chain(self, retriever, conversation_history: List[Dict[str, str]]):
         """Create RAG chain with conversation history."""
@@ -132,6 +205,7 @@ class RAGService:
                 "问：讲个笑话\n答：GENERAL\n"
                 "问：根据员工手册说明请假流程\n答：KB\n"
                 "问：省人民政府财政预算相关规定怎么执行\n答：KB\n"
+                "而如果不是很确定到底是要基于知识库问答还是闲聊无需查阅的问题，则都输出KB\n"
                 f"问：{question}\n答："
             )
             # Use a deterministic classifier LLM
@@ -223,6 +297,7 @@ class RAGService:
             
             # Create collection name for user's documents
             collection_name = f"document_chunks_{user_id}".replace("-", "_")
+            keywords_collection = f"document_keywords_{user_id}".replace("-", "_")
             
             # Connect to vector store
             vector_store = PGVector(
@@ -231,39 +306,40 @@ class RAGService:
                 collection_name=collection_name,
                 use_jsonb=True
             )
+            keywords_store = PGVector(
+                connection=self.connection_string,
+                embeddings=self.embeddings,
+                collection_name=keywords_collection,
+                use_jsonb=True
+            )
             
             # Build filter conditions
             filter_conditions = {}
             if knowledge_base_id:
                 filter_conditions["knowledge_base_id"] = str(knowledge_base_id)
             
-            # Get relevant documents for sources with similarity scores (single retrieval)
-            relevant_docs_with_scores = vector_store.similarity_search_with_relevance_scores(
+            # Multi-route retrieval: content + keywords
+            content_results = vector_store.similarity_search_with_relevance_scores(
                 question, k=context_limit, filter=filter_conditions if filter_conditions else None
             )
-            
-            # Extract documents without scores for RAG chain
-            relevant_docs = [doc for doc, score in relevant_docs_with_scores]
+            keyword_results = []
+            try:
+                keyword_results = keywords_store.similarity_search_with_relevance_scores(
+                    question, k=context_limit, filter=filter_conditions if filter_conditions else None
+                )
+            except Exception:
+                # keywords collection may be empty or not exist yet; ignore errors
+                keyword_results = []
 
-            # Format sources
-            sources = []
-            for doc, score in relevant_docs_with_scores:
-                sources.append({
-                    "document_id": doc.metadata.get("document_id"),
-                    "document_title": doc.metadata.get("filename", "Unknown"),
-                    "chunk_id": doc.metadata.get("chunk_id"),
-                    "chunk_index": doc.metadata.get("chunk_index", 0),
-                    "content": doc.page_content,
-                    "similarity_score": float(score),
-                    "metadata": doc.metadata
-                })
+            # Merge and pick final docs and sources
+            relevant_docs, sources = self._merge_docs_with_scores(content_results, keyword_results, top_k=context_limit)
             
             # Yield initial data with sources
             yield {
                 "type": "start",
                 "question": question,
                 "sources": sources,
-                "context_used": len(relevant_docs_with_scores) > 0,
+                "context_used": len(relevant_docs) > 0,
                 "num_sources": len(sources)
             }
             
@@ -339,8 +415,9 @@ class RAGService:
                     "num_sources": 0
                 }
             
-            # Create collection name for user's documents
+            # Create collection names for user's documents
             collection_name = f"document_chunks_{user_id}".replace("-", "_")
+            keywords_collection = f"document_keywords_{user_id}".replace("-", "_")
             
             # Connect to vector store
             vector_store = PGVector(
@@ -349,42 +426,42 @@ class RAGService:
                 collection_name=collection_name,
                 use_jsonb=True
             )
+            keywords_store = PGVector(
+                connection=self.connection_string,
+                embeddings=self.embeddings,
+                collection_name=keywords_collection,
+                use_jsonb=True
+            )
             
             # Build filter conditions
             filter_conditions = {}
             if knowledge_base_id:
                 filter_conditions["knowledge_base_id"] = str(knowledge_base_id)
             
-            # Update retriever search kwargs
-            search_kwargs = {"k": context_limit}
-            if filter_conditions:
-                search_kwargs["filter"] = filter_conditions
-            
-            # Create retriever with filters
-            retriever = vector_store.as_retriever(
-                search_type="similarity",
-                search_kwargs=search_kwargs
+            # Multi-route retrieval: content + keywords
+            content_results = vector_store.similarity_search_with_relevance_scores(
+                question, k=context_limit, filter=filter_conditions if filter_conditions else None
             )
+            try:
+                keyword_results = keywords_store.similarity_search_with_relevance_scores(
+                    question, k=context_limit, filter=filter_conditions if filter_conditions else None
+                )
+            except Exception:
+                keyword_results = []
+
+            relevant_docs, sources = self._merge_docs_with_scores(content_results, keyword_results, top_k=context_limit)
             
-            # Create RAG chain
-            rag_chain = self._create_rag_chain(retriever, conversation_history)
-            
-            # Get relevant documents for sources
-            relevant_docs = retriever.invoke(question)
+            # Create RAG chain using pre-fetched docs
+            rag_chain = self._create_rag_chain_with_docs(relevant_docs, conversation_history)
             
             # Generate answer using RAG chain
             answer = rag_chain.invoke(question)
             
-            # Format sources
-            sources = []
-            for doc in relevant_docs:
-                sources.append({
-                    "document_id": doc.metadata.get("document_id"),
-                    "document_title": doc.metadata.get("filename", "Unknown"),
-                    "chunk_id": doc.metadata.get("chunk_id"),
-                    "content": doc.page_content[:200] + "..." if len(doc.page_content) > 200 else doc.page_content,
-                    "metadata": doc.metadata
-                })
+            # Format sources already prepared in merge step (truncate content for non-streaming)
+            for s in sources:
+                content = s.get("content", "")
+                if isinstance(content, str) and len(content) > 200:
+                    s["content"] = content[:200] + "..."
             
             return {
                 "question": question,
