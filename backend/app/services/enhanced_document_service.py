@@ -26,6 +26,7 @@ from app.services.llm_service import LLMService
 from app.services.embedding_service import get_embedding_service
 from app.schemas.document import DocumentCreate, DocumentUpdate
 from app.core.config import settings
+from app.utils.text_utils import extract_text_content
 
 logger = logging.getLogger(__name__)
 
@@ -294,7 +295,7 @@ class EnhancedDocumentService:
 
             try:
                 # Extract text content
-                extracted_content = await self._extract_text_content(temp_file_path, mime_type)
+                extracted_content = await extract_text_content(temp_file_path, mime_type)
 
                 # Generate summary
                 summary = await self.llm_service.summarize_text(extracted_content) if extracted_content else None
@@ -697,74 +698,7 @@ class EnhancedDocumentService:
         
         return file_path
 
-    async def _extract_text_content(self, file_path: str, mime_type: str) -> str:
-        """Extract text content from file"""
-        try:
-            if mime_type == 'text/plain' or mime_type == 'text/markdown':
-                with open(file_path, 'r', encoding='utf-8') as f:
-                    return f.read()
-            
-            elif mime_type == 'application/pdf':
-                text = ""
-                with open(file_path, 'rb') as f:
-                    pdf_reader = PyPDF2.PdfReader(f)
-                    for page in pdf_reader.pages:
-                        text += page.extract_text() + "\n"
-                return text.strip()
-            
-            elif mime_type in ['application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']:
-                if mime_type == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
-                    # Prefer docx2txt for robust extraction (handles shapes, complex layouts better)
-                    try:
-                        import docx2txt  # type: ignore
-                        extracted = docx2txt.process(file_path) or ""
-                        if extracted.strip():
-                            logger.info("Extracted DOCX content using docx2txt")
-                            return extracted.strip()
-                        else:
-                            logger.info("docx2txt returned empty; falling back to python-docx")
-                    except Exception as e:
-                        logger.info(f"docx2txt not available or failed: {e}; falling back to python-docx")
-
-                    # Fallback: python-docx paragraphs + tables
-                    doc = DocxDocument(file_path)
-                    parts = []
-                    for paragraph in doc.paragraphs:
-                        if paragraph.text and paragraph.text.strip():
-                            parts.append(paragraph.text)
-                    for table in doc.tables:
-                        for row in table.rows:
-                            for cell in row.cells:
-                                cell_text = "\n".join(p.text for p in cell.paragraphs if p.text and p.text.strip())
-                                if cell_text.strip():
-                                    parts.append(cell_text)
-
-                    # Optional: headers/footers
-                    try:
-                        for section in doc.sections:
-                            for p in section.header.paragraphs:
-                                if p.text and p.text.strip():
-                                    parts.append(p.text)
-                            for p in section.footer.paragraphs:
-                                if p.text and p.text.strip():
-                                    parts.append(p.text)
-                    except Exception:
-                        pass
-
-                    combined = "\n".join(parts).strip()
-                    return combined
-                else:
-                    # For .doc files, we'd need external tools (e.g., textract, COM automation)
-                    logger.warning(f"Unsupported .doc format for direct extraction: {mime_type}")
-                    return ""
-            
-            else:
-                logger.warning(f"Unsupported file type: {mime_type}")
-                return ""
-                
-        except Exception as e:
-            logger.error(f"Error extracting text from {file_path}: {e}")
-            return ""
+    
 
     async def get_document_by_id(
         self,

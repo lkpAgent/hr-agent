@@ -89,7 +89,7 @@ class AIEvaluationResult(BaseModel):
     total_score: float
     name: Optional[str] = None
     position: Optional[str] = None
-    workYears: Optional[str] = None
+    workYears: Optional[float] = None
     教育水平: Optional[str] = None
     年龄: Optional[int] = None
     sex: Optional[str] = None

@@ -5,6 +5,9 @@ import re
 import html
 from typing import List, Optional
 import unicodedata
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def clean_text(text: str) -> str:
@@ -267,3 +270,75 @@ def mask_sensitive_data(text: str, mask_char: str = "*") -> str:
     )
     
     return text
+
+
+async def extract_text_content(file_path: str, mime_type: str) -> str:
+    """Extract text content from a file path using robust handlers.
+
+    This mirrors the enhanced document service's extraction logic so it can be reused
+    across knowledge base ingestion and resume screening.
+    """
+    try:
+        if mime_type in ('text/plain', 'text/markdown'):
+            with open(file_path, 'r', encoding='utf-8') as f:
+                return f.read()
+
+        elif mime_type == 'application/pdf':
+            text = ""
+            try:
+                import PyPDF2  # type: ignore
+            except Exception as e:
+                logger.error(f"PyPDF2 not available for PDF extraction: {e}")
+                return ""
+
+            with open(file_path, 'rb') as f:
+                pdf_reader = PyPDF2.PdfReader(f)
+                for page in pdf_reader.pages:
+                    page_text = page.extract_text() or ""
+                    if page_text:
+                        text += page_text + "\n"
+            return text.strip()
+
+        elif mime_type in ('application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'):
+            if mime_type == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+                # Prefer docx2txt for robust extraction
+                try:
+                    import docx2txt  # type: ignore
+                    extracted = docx2txt.process(file_path) or ""
+                    if extracted.strip():
+                        logger.info("Extracted DOCX content using docx2txt")
+                        return extracted.strip()
+                    else:
+                        logger.info("docx2txt returned empty; falling back to python-docx")
+                except Exception as e:
+                    logger.info(f"docx2txt not available or failed ({e}); falling back to python-docx")
+
+                # Fallback to python-docx
+                try:
+                    from docx import Document as DocxDocument  # type: ignore
+                    doc = DocxDocument(file_path)
+                    parts = []
+                    for p in doc.paragraphs:
+                        if p.text and p.text.strip():
+                            parts.append(p.text)
+                    for table in doc.tables:
+                        for row in table.rows:
+                            for cell in row.cells:
+                                if cell.text and cell.text.strip():
+                                    parts.append(cell.text)
+                    return "\n".join(parts).strip()
+                except Exception as e:
+                    logger.error(f"python-docx failed to extract DOCX content: {e}")
+                    return ""
+
+            # .doc legacy format: unsupported here without external tools
+            logger.warning(f"Unsupported .doc format for direct extraction: {mime_type}")
+            return ""
+
+        else:
+            logger.warning(f"Unsupported file type: {mime_type}")
+            return ""
+
+    except Exception as e:
+        logger.error(f"Error extracting text from {file_path}: {e}")
+        return ""

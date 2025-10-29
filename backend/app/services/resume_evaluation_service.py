@@ -121,8 +121,8 @@ class ResumeEvaluationService:
             )
             criteria = result.scalar_one_or_none()
             
-            if criteria and criteria.evaluation_model:
-                return criteria.evaluation_model
+            if criteria and criteria.content:
+                return criteria.content
             
             # 如果没有找到特定的评价模型，返回默认模型
             return self._get_default_evaluation_model()
@@ -276,7 +276,7 @@ class ResumeEvaluationService:
                 metrics = []
                 for metric_data in result_data.get('evaluation_metrics', []):
                     metric = EvaluationMetric(
-                        name=metric_data.get('name', ''),
+                        name=metric_data.get('评价指标', ''),
                         score=metric_data.get('score', 0),
                         max=metric_data.get('max', 100),
                         reason=metric_data.get('reason', '')
@@ -291,13 +291,21 @@ class ResumeEvaluationService:
                     or result_data.get('工作年限')
                     or result_data.get('工作经验')
                 )
+                try:
+                    normalized_work_years = float(normalized_work_years)
+                except ValueError:
+                    normalized_work_years = 0
                 normalized_education = (
                     result_data.get('education')
                     or result_data.get('education_level')
                     or result_data.get('学历')
                     or result_data.get('教育水平')
                 )
-                normalized_age = result_data.get('age', result_data.get('年龄'))
+                try:
+                    normalized_age = int(result_data.get('age', result_data.get('年龄', 0)))
+                except (ValueError, TypeError):
+                    normalized_age = 0
+
                 normalized_sex = (
                     result_data.get('sex')
                     or result_data.get('gender')
@@ -316,7 +324,7 @@ class ResumeEvaluationService:
                     total_score=result_data.get('total_score', 0),
                     name=result_data.get('name', ''),
                     position=result_data.get('position', ''),
-                    workYears=normalized_work_years or '',
+                    workYears=normalized_work_years or 0,
                     教育水平=normalized_education or '',
                     年龄=normalized_age,
                     sex=normalized_sex or '',

@@ -8,6 +8,8 @@ import tempfile
 from typing import BinaryIO, Tuple, Optional
 from uuid import UUID
 import mimetypes
+from app.utils.text_utils import extract_text_content
+from app.utils.file_utils import get_file_mime_type
 
 logger = logging.getLogger(__name__)
 
@@ -40,21 +42,24 @@ class ResumeParserService:
         return True, "文件验证通过"
 
     async def extract_text_from_file(self, file_content: bytes, filename: str) -> str:
-        """从文件中提取文本内容"""
+        """从文件中提取文本内容（使用公共提取方法）"""
         try:
-            _, ext = os.path.splitext(filename.lower())
-            
-            if ext == '.txt':
-                return await self._extract_from_txt(file_content)
-            elif ext == '.pdf':
-                return await self._extract_from_pdf(file_content)
-            elif ext == '.doc':
-                return await self._extract_from_doc(file_content)
-            elif ext == '.docx':
-                return await self._extract_from_docx(file_content)
-            else:
-                raise ValueError(f"不支持的文件格式: {ext}")
-                
+            # 统一通过公共方法提取，保持与知识库上传一致
+            mime_type = get_file_mime_type(filename)
+
+            # 写入临时文件以复用基于路径的解析逻辑
+            with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(filename)[1]) as temp_file:
+                temp_file.write(file_content)
+                temp_path = temp_file.name
+
+            try:
+                extracted = await extract_text_content(temp_path, mime_type)
+                return extracted
+            finally:
+                try:
+                    os.unlink(temp_path)
+                except Exception:
+                    pass
         except Exception as e:
             logger.error(f"提取文本内容失败: {e}")
             raise Exception(f"文件解析失败: {str(e)}")

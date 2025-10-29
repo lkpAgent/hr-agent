@@ -11,6 +11,7 @@ from app.core.database import get_db
 from app.api.deps import get_current_user
 from app.models.user import User
 from app.services.resume_evaluation_service import ResumeEvaluationService
+from app.services.enhanced_document_service import EnhancedDocumentService
 from app.schemas.resume_evaluation import (
     ResumeEvaluationResponse,
     ResumeEvaluationListResponse,
@@ -52,8 +53,8 @@ async def evaluate_resume(
                 conv_uuid = UUID(conversation_id)
             except ValueError:
                 raise HTTPException(status_code=400, detail="无效的对话ID格式")
-        
-        # 读取文件内容
+
+
         file_content = await file.read()
         if not file_content:
             raise HTTPException(status_code=400, detail="文件内容为空")
