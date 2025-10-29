@@ -371,54 +371,8 @@ class EnhancedDocumentService:
                 )
                 langchain_docs.append(doc)
 
-            # Prepare keyword documents per chunk using LLM extraction (5-8 items)
-            keyword_docs = []
-            # Limit concurrent extractions to avoid rate limits
-            semaphore = asyncio.Semaphore(5)
-
-            async def extract_for_chunk(idx: int, txt: str):
-                async with semaphore:
-                    combined = await self.llm_service.extract_keywords_tags_combined(txt, max_items=8)
-                    return idx, combined
-
-            tasks = [extract_for_chunk(i, t) for i, t in enumerate(text_chunks)]
-            extracted = []
-            try:
-                extracted = await asyncio.gather(*tasks)
-            except Exception as e:
-                logger.warning(f"Keyword/tag extraction failed: {e}")
-                extracted = []
-
-            # Build keyword docs from per-chunk extraction
-            kw_map = {idx: data for idx, data in extracted}
-            for i, chunk_text in enumerate(text_chunks):
-                combined_text = kw_map.get(i, "")
-                if not combined_text:
-                    # fallback to a short truncation of chunk
-                    combined_text = chunk_text[:200]
-                kw_doc = LangChainDocument(
-                    # For keywords collection, embed on keywords/tags text
-                    page_content=combined_text,
-                    metadata={
-                        "document_id": str(document.id),
-                        "knowledge_base_id": str(document.knowledge_base_id),
-                        "chunk_index": i,
-                        "chunk_size": len(chunk_text),
-                        "filename": document.filename,
-                        "category": document.category or "general",
-                        "file_path": document.file_path,
-                        "mime_type": document.mime_type,
-                        "source_type": "keywords",
-                        "terms": combined_text,
-                        # Preserve original paragraph for downstream merging & summarization
-                        "paragraph": chunk_text
-                    }
-                )
-                keyword_docs.append(kw_doc)
-
-            # Get or create vector stores
+            # Get or create vector store for chunks only
             chunks_collection = f"document_chunks_{document.user_id}".replace("-", "_")
-            keywords_collection = f"document_keywords_{document.user_id}".replace("-", "_")
 
             vector_store = PGVector(
                 connection=self.connection_string,
@@ -427,21 +381,17 @@ class EnhancedDocumentService:
                 use_jsonb=True
             )
 
-            keywords_store = None
-            if keyword_docs:
-                keywords_store = PGVector(
-                    connection=self.connection_string,
-                    embeddings=self.embeddings,
-                    collection_name=keywords_collection,
-                    use_jsonb=True
-                )
-
-
             if vector_store:
                 logger.info(
                     f"Adding {len(langchain_docs)} chunk docs to PGVector collection: {chunks_collection}"
                 )
                 
+                # Inject collection metadata before adding
+                for d in langchain_docs:
+                    md = dict(d.metadata or {})
+                    md["collection_name"] = chunks_collection
+                    d.metadata = md
+
                 # Add documents to vector store (synchronous operation)
                 try:
                     vector_store.add_documents(langchain_docs)
@@ -451,25 +401,11 @@ class EnhancedDocumentService:
                 except Exception as e:
                     logger.error(f"Error adding documents to PGVector: {e}")
                     raise
-
-                # Add keyword docs if available
-                if keywords_store and keyword_docs:
-                    try:
-                        logger.info(
-                            f"Adding {len(keyword_docs)} keyword docs to PGVector collection: {keywords_collection}"
-                        )
-                        keywords_store.add_documents(keyword_docs)
-                        logger.info(
-                            f"Successfully added {len(keyword_docs)} keyword docs to PGVector collection: {keywords_collection}"
-                        )
-                    except Exception as e:
-                        # Do not fail the whole ingestion if keyword indexing has issues
-                        logger.warning(f"Error adding keyword documents to PGVector: {e}")
                 
                 # No longer creating DocumentChunk records - using langchain_pg_embedding directly
                 await self.db.commit()
                 logger.info(
-                    f"Created {len(text_chunks)} chunks and {len(keyword_docs)} keyword entries for document {document.id}"
+                    f"Created {len(text_chunks)} chunks for document {document.id}"
                 )
                 
         except Exception as e:

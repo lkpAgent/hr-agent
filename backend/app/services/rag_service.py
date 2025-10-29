@@ -2,9 +2,11 @@
 RAG (Retrieval Augmented Generation) service using LangChain
 """
 import logging
+import re
 from typing import List, Dict, Any, Optional
 from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import text
 
 # LangChain imports
 from langchain_core.documents import Document as LangChainDocument
@@ -44,46 +46,103 @@ class RAGService:
         
         logger.info("RAG service initialized with LangChain components")
 
+    async def _tsvector_search(
+        self,
+        collection_name: str,
+        query: str,
+        k: int = 5,
+        knowledge_base_id: Optional[UUID] = None
+    ) -> List[tuple]:
+        """
+        PostgreSQL全文检索（tsvector）基于 langchain_pg_embedding.document。
+        - 集合名严格过滤：cmetadata->>'collection_name'
+        - 查询重写为 OR 前缀 tsquery（Elasticsearch match 类似：任一词命中即返回）
+        - 对中文/英中混合词保留 ILIKE 后备，提高召回
+        返回 (LangChainDocument, score) 列表，与向量检索输出格式一致。
+        """
+        try:
+            # 1) 查询重写：提取英文/数字/中文词元，移除常见问句停用词，构造 OR 前缀 tsquery
+            stop_words = {"有哪些", "什么", "如何", "怎么", "请问", "的", "和", "与"}
+            terms = re.findall(r"[A-Za-z0-9]+|[\u4e00-\u9fff]+", query)
+            terms = [t.lower() for t in terms if t not in stop_words and len(t) >= 2]
+            tsquery_or = " | ".join(f"{t}:*" for t in terms) if terms else None
+
+            # 2) 构建 SQL：优先使用 to_tsquery(simple, :tsq) 的 OR 匹配；保留 ILIKE 兜底
+            base_sql = (
+                "SELECT id, document, cmetadata, "
+                "ts_rank_cd(to_tsvector('simple', document), to_tsquery('simple', :tsq)) AS rank "
+                "FROM langchain_pg_embedding "
+                "WHERE cmetadata->>'collection_name' = :collection_name "
+                "AND ("
+                "     ( :tsq IS NOT NULL AND to_tsvector('simple', document) @@ to_tsquery('simple', :tsq) ) "
+                "     OR document ILIKE '%' || :q || '%'"
+                ") "
+            )
+            params = {"q": query, "tsq": tsquery_or, "collection_name": collection_name, "limit": k}
+            
+            if knowledge_base_id:
+                base_sql += "AND cmetadata->>'knowledge_base_id' = :kb_id "
+                params["kb_id"] = str(knowledge_base_id)
+            
+            base_sql += "ORDER BY rank DESC LIMIT :limit"
+
+            res2 = await self.db.execute(text(base_sql), params)
+            rows = res2.fetchall()
+            results: List[tuple] = []
+            for r in rows:
+                doc_text = r[1]
+                metadata = r[2] or {}
+                page_content = doc_text
+                lc_doc = LangChainDocument(page_content=page_content, metadata=metadata)
+                results.append((lc_doc, float(r[3]) if r[3] is not None else 0.0))
+            return results
+        except Exception as e:
+            logger.warning(f"tsvector search error: {e}")
+            return []
+
     def _merge_docs_with_scores(
         self,
         content_results: List[tuple],
-        keyword_results: List[tuple],
+        text_results: List[tuple],
         top_k: int = 5
     ) -> (List[LangChainDocument], List[Dict[str, Any]]):
-        """Merge two result sets (content vs keywords) by (document_id, chunk_index),
-        combine scores with a weighted scheme, and return top_k docs plus source metadata."""
+        """Merge vector content results with PostgreSQL tsvector results.
+        Weighted combination and return top_k docs plus source metadata."""
         try:
             merged_map: Dict[tuple, Dict[str, Any]] = {}
 
             for doc, score in content_results:
                 key = (doc.metadata.get("document_id"), doc.metadata.get("chunk_index"))
-                merged_map[key] = merged_map.get(key, {"doc": doc, "content_score": 0.0, "keywords_score": 0.0})
+                merged_map[key] = merged_map.get(key, {"doc": doc, "content_score": 0.0})
                 merged_map[key]["doc"] = doc
                 merged_map[key]["content_score"] = float(score)
 
-            for doc, score in keyword_results:
+            # Integrate tsvector text search results
+            for doc, score in text_results:
                 key = (doc.metadata.get("document_id"), doc.metadata.get("chunk_index"))
-                merged_map[key] = merged_map.get(key, {"doc": doc, "content_score": 0.0, "keywords_score": 0.0})
-                merged_map[key]["doc"] = merged_map[key]["doc"] or doc
-                merged_map[key]["keywords_score"] = float(score)
+                entry = merged_map.get(key, {"doc": doc, "content_score": 0.0})
+                entry["doc"] = entry.get("doc") or doc
+                entry["text_score"] = float(score)
+                merged_map[key] = entry
 
             # Combine scores: prioritize content similarity, then keyword match
             combined_list: List[tuple] = []
             for key, entry in merged_map.items():
-                combined_score = 0.6 * entry["content_score"] + 0.4 * entry["keywords_score"]
+                content_score = float(entry.get("content_score", 0.0))
+                text_score = float(entry.get("text_score", 0.0))
+                # Weighted combination: content (0.7), text (0.3)
+                combined_score = 0.7 * content_score + 0.3 * text_score
                 combined_list.append((entry["doc"], combined_score, entry))
 
             # Sort by combined_score descending (higher relevance first)
             combined_list.sort(key=lambda x: x[1], reverse=True)
 
-            # Build outputs, prefer original paragraph when source_type is 'keywords'
+            # Build outputs
             top = combined_list[:top_k]
             docs: List[LangChainDocument] = []
             sources: List[Dict[str, Any]] = []
             for doc, combined_score, entry in top:
                 final_page_content = doc.page_content
-                if doc.metadata.get("source_type") == "keywords":
-                    final_page_content = doc.metadata.get("paragraph", final_page_content)
                 final_doc = LangChainDocument(page_content=final_page_content, metadata=doc.metadata)
                 docs.append(final_doc)
                 sources.append({
@@ -94,7 +153,7 @@ class RAGService:
                     "content": final_page_content,
                     "combined_score": float(combined_score),
                     "content_score": float(entry.get("content_score", 0.0)),
-                    "keywords_score": float(entry.get("keywords_score", 0.0)),
+                    "text_score": float(entry.get("text_score", 0.0)),
                     "metadata": doc.metadata
                 })
             return docs, sources
@@ -112,7 +171,7 @@ class RAGService:
                     "content": doc.page_content,
                     "combined_score": float(score),
                     "content_score": float(score),
-                    "keywords_score": 0.0,
+                    "text_score": 0.0,
                     "metadata": doc.metadata
                 })
             return docs, sources
@@ -197,15 +256,15 @@ class RAGService:
 
             # LLM-based classification with explicit instruction and examples
             classification_prompt = (
-                "你是一个分类器。判断该问题是否需要基于知识库内容回答。\n"
-                "分类标准：涉及公司/政府/制度/政策/流程/手册/法规/条例/办法/规定/财政预算/部门职责等具体内容，一般需要知识库（输出KB）；\n"
-                "闲聊、常识性问题、无需查阅内部或法规文档则输出GENERAL。\n"
-                "只输出KB或GENERAL。\n"
+                "你是一个分类器。判断该问题是否需要基于知识库内容回答还是由大模型自主回答。\n"
+                "只有用户在明显是闲聊的内容才输出GENERAL。\n"
+                "其他情况都输出KB\n"
                 "示例：\n"
                 "问：讲个笑话\n答：GENERAL\n"
-                "问：根据员工手册说明请假流程\n答：KB\n"
-                "问：省人民政府财政预算相关规定怎么执行\n答：KB\n"
-                "而如果不是很确定到底是要基于知识库问答还是闲聊无需查阅的问题，则都输出KB\n"
+                "问：你好\n答：GENERAL\n"
+                "问：你是谁\n答：GENERAL\n"
+                "问：作首诗\n答：GENERAL\n"
+                "而其他情况或者判断不准的时候，都输出KB\n"
                 f"问：{question}\n答："
             )
             # Use a deterministic classifier LLM
@@ -272,7 +331,7 @@ class RAGService:
             
             # Intent detection first
             use_kb = self._should_use_knowledge_base(question)
-            
+            print('use_kb=======', use_kb)
             # If a specific knowledge base is provided, always use KB retrieval
             # if knowledge_base_id:
             #     use_kb = True
@@ -295,9 +354,8 @@ class RAGService:
                 yield {"type": "end", "complete": True, "sources": [], "num_sources": 0}
                 return
             
-            # Create collection name for user's documents
+            # Create collection name for user's documents (chunks only)
             collection_name = f"document_chunks_{user_id}".replace("-", "_")
-            keywords_collection = f"document_keywords_{user_id}".replace("-", "_")
             
             # Connect to vector store
             vector_store = PGVector(
@@ -306,33 +364,24 @@ class RAGService:
                 collection_name=collection_name,
                 use_jsonb=True
             )
-            keywords_store = PGVector(
-                connection=self.connection_string,
-                embeddings=self.embeddings,
-                collection_name=keywords_collection,
-                use_jsonb=True
-            )
+            # Keywords store removed; keep only chunks vector store
             
             # Build filter conditions
             filter_conditions = {}
             if knowledge_base_id:
                 filter_conditions["knowledge_base_id"] = str(knowledge_base_id)
             
-            # Multi-route retrieval: content + keywords
+            # Multi-route retrieval: content (vector) + text (tsvector)
+            # vector route
             content_results = vector_store.similarity_search_with_relevance_scores(
                 question, k=context_limit, filter=filter_conditions if filter_conditions else None
             )
-            keyword_results = []
-            try:
-                keyword_results = keywords_store.similarity_search_with_relevance_scores(
-                    question, k=context_limit, filter=filter_conditions if filter_conditions else None
-                )
-            except Exception:
-                # keywords collection may be empty or not exist yet; ignore errors
-                keyword_results = []
+
+            # Second route: PostgreSQL tsvector full-text search on chunk collection
+            text_results = await self._tsvector_search(collection_name, question, k=context_limit, knowledge_base_id=knowledge_base_id)
 
             # Merge and pick final docs and sources
-            relevant_docs, sources = self._merge_docs_with_scores(content_results, keyword_results, top_k=context_limit)
+            relevant_docs, sources = self._merge_docs_with_scores(content_results, text_results, top_k=context_limit)
             
             # Yield initial data with sources
             yield {
@@ -415,9 +464,8 @@ class RAGService:
                     "num_sources": 0
                 }
             
-            # Create collection names for user's documents
+            # Create collection names for user's documents (chunks only)
             collection_name = f"document_chunks_{user_id}".replace("-", "_")
-            keywords_collection = f"document_keywords_{user_id}".replace("-", "_")
             
             # Connect to vector store
             vector_store = PGVector(
@@ -426,30 +474,22 @@ class RAGService:
                 collection_name=collection_name,
                 use_jsonb=True
             )
-            keywords_store = PGVector(
-                connection=self.connection_string,
-                embeddings=self.embeddings,
-                collection_name=keywords_collection,
-                use_jsonb=True
-            )
+            # Keywords store removed; keep only chunks vector store
             
             # Build filter conditions
             filter_conditions = {}
             if knowledge_base_id:
                 filter_conditions["knowledge_base_id"] = str(knowledge_base_id)
             
-            # Multi-route retrieval: content + keywords
+            # Multi-route retrieval: content (vector) + text (tsvector)
             content_results = vector_store.similarity_search_with_relevance_scores(
                 question, k=context_limit, filter=filter_conditions if filter_conditions else None
             )
-            try:
-                keyword_results = keywords_store.similarity_search_with_relevance_scores(
-                    question, k=context_limit, filter=filter_conditions if filter_conditions else None
-                )
-            except Exception:
-                keyword_results = []
 
-            relevant_docs, sources = self._merge_docs_with_scores(content_results, keyword_results, top_k=context_limit)
+            # Third route: PostgreSQL tsvector full-text search on chunk collection
+            text_results = await self._tsvector_search(collection_name, question, k=context_limit, knowledge_base_id=knowledge_base_id)
+
+            relevant_docs, sources = self._merge_docs_with_scores(content_results, text_results, top_k=context_limit)
             
             # Create RAG chain using pre-fetched docs
             rag_chain = self._create_rag_chain_with_docs(relevant_docs, conversation_history)
