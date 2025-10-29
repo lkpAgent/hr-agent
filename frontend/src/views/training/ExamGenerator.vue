@@ -1350,7 +1350,8 @@ const parseExamContent = (content) => {
     
     if (questionType === '单选题' || questionType === '多选题' || questionType === '单选' || questionType === '多选') {
       if (options && options.trim()) {
-        question.options = options.split(';').filter(opt => opt.trim()).map((option, optIndex) => ({
+        // 处理中英文分号分割的选项
+        question.options = options.split(/[;；]/).filter(opt => opt.trim()).map((option, optIndex) => ({
           id: String.fromCharCode(65 + optIndex),
           text: option.trim()
         }))

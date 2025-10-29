@@ -291,10 +291,14 @@ class ResumeEvaluationService:
                     or result_data.get('工作年限')
                     or result_data.get('工作经验')
                 )
+                # 处理workYears字段，确保能正确转换为float
                 try:
-                    normalized_work_years = float(normalized_work_years)
-                except ValueError:
-                    normalized_work_years = 0
+                    if normalized_work_years is not None and normalized_work_years != '' and normalized_work_years != '未知':
+                        normalized_work_years = float(normalized_work_years)
+                    else:
+                        normalized_work_years = 0.0
+                except (ValueError, TypeError):
+                    normalized_work_years = 0.0
                 normalized_education = (
                     result_data.get('education')
                     or result_data.get('education_level')
@@ -324,7 +328,7 @@ class ResumeEvaluationService:
                     total_score=result_data.get('total_score', 0),
                     name=result_data.get('name', ''),
                     position=result_data.get('position', ''),
-                    workYears=normalized_work_years or 0,
+                    workYears=normalized_work_years,
                     教育水平=normalized_education or '',
                     年龄=normalized_age,
                     sex=normalized_sex or '',
@@ -356,7 +360,7 @@ class ResumeEvaluationService:
             total_score=60,
             name="未知",
             position="未知",
-            workYears="未知",
+            workYears=0.0,
             教育水平="未知",
             年龄=None,
             sex="未知",

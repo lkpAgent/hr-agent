@@ -127,23 +127,23 @@ def extract_keywords(text: str, max_keywords: int = 10) -> List[str]:
 
 
 def split_text_into_chunks(
-    text: str, 
-    chunk_size: int = 1000, 
+    text: str,
+    chunk_size: int = 1000,
     overlap: int = 100
 ) -> List[str]:
     """Split text into overlapping chunks"""
     if not text:
         return []
-    
+
     if len(text) <= chunk_size:
         return [text]
-    
+
     chunks = []
     start = 0
-    
+
     while start < len(text):
         end = start + chunk_size
-        
+
         # If this is not the last chunk, try to end at a sentence boundary
         if end < len(text):
             # Look for sentence endings
@@ -152,7 +152,7 @@ def split_text_into_chunks(
                 sentence_end = text.rfind('!', start, end)
             if sentence_end == -1:
                 sentence_end = text.rfind('?', start, end)
-            
+
             # If we found a sentence ending, use it
             if sentence_end > start + chunk_size * 0.5:
                 end = sentence_end + 1
@@ -161,19 +161,29 @@ def split_text_into_chunks(
                 space_pos = text.rfind(' ', start, end)
                 if space_pos > start + chunk_size * 0.5:
                     end = space_pos
-        
+
         chunk = text[start:end].strip()
         if chunk:
             chunks.append(chunk)
-        
+
         # Move start position with overlap
         start = end - overlap
-        
+
         # Ensure we don't go backwards
         if start <= chunks[-1] if chunks else 0:
             start = end
-    
+
     return chunks
+
+
+def split_options(options_str: str) -> List[str]:
+    """Split options string by semicolon separator (support both English and Chinese semicolons)"""
+    if not options_str:
+        return []
+
+    # Split by semicolon (both English and Chinese) and clean up each option
+    options = [opt.strip() for opt in re.split(r'[;；]', options_str) if opt.strip()]
+    return options
 
 
 def calculate_text_similarity(text1: str, text2: str) -> float:
