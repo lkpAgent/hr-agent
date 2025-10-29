@@ -371,34 +371,45 @@ const callCustomWorkflow = async () => {
   }
 }
 
-// 处理流式响应
+// 处理流式响应（缓冲分片并过滤控制事件）
 const handleStreamResponse = async (response) => {
   const reader = response.body.getReader()
   const decoder = new TextDecoder()
+  let buffer = ''
 
   try {
     while (true) {
       const { done, value } = await reader.read()
       if (done) break
 
-      const chunk = decoder.decode(value)
-      const lines = chunk.split('\n')
+      // 按流式方式解码并累积到缓冲区，避免半截JSON被渲染
+      buffer += decoder.decode(value, { stream: true })
 
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          const data = line.slice(6)
-          if (data === '[DONE]') {
+      // 事件以"\n\n"分隔，逐个消费完整事件块
+      let sepIndex = buffer.indexOf('\n\n')
+      while (sepIndex !== -1) {
+        const eventChunk = buffer.slice(0, sepIndex)
+        buffer = buffer.slice(sepIndex + 2)
+        sepIndex = buffer.indexOf('\n\n')
+
+        const lines = eventChunk.split('\n')
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue
+          const dataStr = line.slice(6).trim()
+          if (!dataStr) continue
+          if (dataStr === '[DONE]') {
             return
           }
-          
           try {
-            const parsed = JSON.parse(data)
-            if (parsed.answer) {
+            const parsed = JSON.parse(dataStr)
+            const eventType = parsed.event
+            // 仅处理包含内容的消息事件，忽略诸如workflow_started等控制事件
+            if (parsed.answer && (!eventType || eventType === 'message' || eventType === 'message_delta')) {
               result.value += parsed.answer
             }
           } catch (e) {
-            // 如果不是JSON，直接添加到结果中
-            result.value += data
+            // 非完整JSON分片，不渲染，等待后续分片补齐
+            // 这里不将原始data追加到结果中，避免把控制事件或半截JSON展示出来
           }
         }
       }

@@ -1892,7 +1892,7 @@ onUnmounted(() => {
           min-width: 0;
 
           .preview-card {
-            height: 100%;
+
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
