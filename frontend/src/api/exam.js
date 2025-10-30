@@ -65,12 +65,15 @@ export const examApi = {
                 
                 try {
                   const parsed = JSON.parse(currentData)
-                  if (parsed.event === 'message' && parsed.answer) {
-                    fullContent += parsed.answer
+                  const evt = parsed.event
+                  const ans = parsed.answer || (parsed.data && parsed.data.answer) || ''
+                  if ((evt === 'message' || evt === 'message_delta') && ans) {
+                    fullContent += ans
                     if (onProgress) {
-                      onProgress(parsed.answer, fullContent)
+                      onProgress(ans, fullContent)
                     }
                   }
+                  // 忽略控制事件，如 workflow_started、message_completed 等
                 } catch (e) {
                   // 忽略解析错误，可能是ping等非JSON数据
                 }
@@ -97,10 +100,12 @@ export const examApi = {
             
             try {
               const parsed = JSON.parse(currentData)
-              if (parsed.event === 'message' && parsed.answer) {
-                fullContent += parsed.answer
+              const evt = parsed.event
+              const ans = parsed.answer || (parsed.data && parsed.data.answer) || ''
+              if ((evt === 'message' || evt === 'message_delta') && ans) {
+                fullContent += ans
                 if (onProgress) {
-                  onProgress(parsed.answer, fullContent)
+                  onProgress(ans, fullContent)
                 }
               }
             } catch (e) {

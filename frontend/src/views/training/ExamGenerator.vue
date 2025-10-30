@@ -531,6 +531,7 @@ import {
   View, Check, Loading, FolderOpened, Refresh, Share
 } from '@element-plus/icons-vue'
 import { examApi } from '@/api/exam'
+import { marked } from 'marked'
 
 // 响应式数据
 const formRef = ref()
@@ -630,6 +631,17 @@ const fetchExamList = async () => {
     ElMessage.error('获取试卷列表失败')
   } finally {
     examListLoading.value = false
+  }
+}
+
+// 将实时生成的试卷文本格式化为可展示的HTML（支持Markdown）
+const formatExamContentForDisplay = (content) => {
+  if (!content) return ''
+  try {
+    return marked(typeof content === 'string' ? content : String(content))
+  } catch (error) {
+    console.warn('实时内容格式化失败，使用纯文本显示:', error)
+    return String(content).replace(/\n/g, '<br>')
   }
 }
 

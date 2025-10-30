@@ -1100,6 +1100,61 @@ async def generate_exam(
                 content_parts.append(f"=== {file_info['filename']} ===\n{file_info['content']}")
             combined_content = "\n\n".join(content_parts)
         
+        # 分值分配算法（按 2:3:5 权重，并将剩余分数依次分配给最后几题）
+        def allocate_question_scores(total_score: int, counts: Dict[str, int]) -> Dict[str, List[int]]:
+            # 仅支持三种题型：单选题、多选题、简答题
+            weights = {
+                "single_choice": 2,
+                "multiple_choice": 3,
+                "short_answer": 5,
+            }
+
+            # 初始化每题分值列表
+            scores: Dict[str, List[int]] = {
+                t: [0] * max(0, counts.get(t, 0)) for t in ["single_choice", "multiple_choice", "short_answer"]
+            }
+
+            # 计算加权题量总和
+            weighted_total = 0
+            for t, w in weights.items():
+                weighted_total += counts.get(t, 0) * w
+
+            if weighted_total <= 0 or total_score <= 0:
+                return scores
+
+            # 基础单位分和剩余分
+            base_unit = total_score // weighted_total
+            remainder = total_score % weighted_total
+
+            # 先按权重为每题分配基础分值
+            for t, w in weights.items():
+                c = counts.get(t, 0)
+                if c > 0:
+                    base_per_question = w * base_unit
+                    scores[t] = [base_per_question] * c
+
+            # 将剩余分数依次分配给“最后几题”：先简答题末尾，后多选题末尾，再单选题末尾
+            distribution_order = ["short_answer", "multiple_choice", "single_choice"]
+            while remainder > 0:
+                allocated_this_round = False
+                for t in distribution_order:
+                    arr = scores.get(t, [])
+                    # 从末尾开始为每题加 1 分，直到该类型题目遍历完或剩余分数为 0
+                    for i in range(len(arr) - 1, -1, -1):
+                        if remainder <= 0:
+                            break
+                        arr[i] += 1
+                        remainder -= 1
+                        allocated_this_round = True
+                if not allocated_this_round:
+                    # 没有任何题目可分配（例如题量为 0），避免死循环
+                    break
+
+            return scores
+
+        # 先计算分值分配，后构建试卷生成查询
+        question_scores = allocate_question_scores(request.total_score, request.question_counts or {})
+
         # 构建试卷生成查询
         query_parts = [f"请基于以下文档内容生成一份{request.subject}试卷"]
         
@@ -1133,14 +1188,36 @@ async def generate_exam(
                 query_parts.append(f"题目数量：{', '.join(counts_parts)}")
         if request.total_score:
             query_parts.append(f"试卷总分：{request.total_score}")
+        # 在提示词中明确每题分值设置，要求严格遵循
+        # 仅在存在题量时附加说明
+        counts_for_prompt = request.question_counts or {}
+        if any(counts_for_prompt.get(t, 0) > 0 for t in ["single_choice", "multiple_choice", "short_answer"]):
+            def fmt_scores_line(t_key: str, t_name: str) -> str:
+                arr = question_scores.get(t_key, [])
+                if not arr:
+                    return ""
+                return f"{t_name}每题分值（按题序）：{', '.join(str(x) for x in arr)}"
+
+            scores_lines = [
+                fmt_scores_line("single_choice", "单选题"),
+                fmt_scores_line("multiple_choice", "多选题"),
+                fmt_scores_line("short_answer", "简答题"),
+            ]
+            scores_lines = [s for s in scores_lines if s]
+            if scores_lines:
+                query_parts.append("请严格按照以下每题分值设置生成试卷：")
+                query_parts.extend(scores_lines)
         if request.special_requirements:
             query_parts.append(f"特殊要求：{request.special_requirements}")
         
         query = "\n".join(query_parts)
-        
+        print('试卷要求：',query)
         # 准备额外输入参数
         additional_inputs = {
             "fileContent": combined_content,
+            "total_score": request.total_score,
+            # 向工作流传递结构化的分值设置，便于遵守
+            "question_scores": question_scores,
         }
         
         if request.title:
