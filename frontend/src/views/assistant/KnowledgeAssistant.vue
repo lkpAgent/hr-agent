@@ -509,7 +509,11 @@ const sendMessage = async () => {
               documentChunks.value = (data.sources || []).map((source, index) => ({
                 content: source.content || source.page_content,
                 source: source.document_title || source.title || '未知文档',
-                score: source.similarity || source.similarity_score || source.score || 0.8,
+                score: Math.max(0, Math.min(1, Number(
+                  (source.combined_score ?? source.combined_score_raw ?? source.content_score_norm ??
+                   source.similarity ?? source.similarity_score ?? source.score ??
+                   source.content_score ?? source.text_score ?? 0)
+                ))),
                 highlighted: false
               }))
               console.log('流式开始，来源数量:', data.sources?.length || 0)
@@ -534,7 +538,11 @@ const sendMessage = async () => {
                 documentChunks.value = data.sources.map((source, index) => ({
                   content: source.content || source.page_content,
                   source: source.document_title || source.title || '未知文档',
-                  score: source.similarity_score || source.similarity || source.score || 0.8,
+                  score: Math.max(0, Math.min(1, Number(
+                    (source.combined_score ?? source.combined_score_raw ?? source.content_score_norm ??
+                     source.similarity ?? source.similarity_score ?? source.score ??
+                     source.content_score ?? source.text_score ?? 0)
+                  ))),
                   highlighted: false
                 }))
                 console.log('流式完成，更新来源数量:', data.sources.length)
@@ -674,7 +682,11 @@ const loadChatSession = (session) => {
     documentChunks.value = lastAssistantMessage.sources.map((source, index) => ({
       content: source.content,
       source: source.document_title || source.title,
-      score: source.similarity_score || source.score || 0.8,
+      score: Math.max(0, Math.min(1, Number(
+        (source.combined_score ?? source.combined_score_raw ?? source.content_score_norm ??
+         source.similarity ?? source.similarity_score ?? source.score ??
+         source.content_score ?? source.text_score ?? 0)
+      ))),
       highlighted: false
     }))
   }
