@@ -17,6 +17,7 @@ from langchain_postgres import PGVector
 from langchain_openai import ChatOpenAI
 
 from app.services.embedding_service import get_embedding_service
+from app.services.rerank_service import get_rerank_service
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -32,6 +33,9 @@ class RAGService:
         self.embedding_service = get_embedding_service()
         self.embeddings = self.embedding_service.get_embeddings()
         
+        # Initialize rerank service
+        self.rerank_service = get_rerank_service()
+        
         # Initialize LLM
         self.llm = ChatOpenAI(
             model=settings.LLM_MODEL,
@@ -46,12 +50,81 @@ class RAGService:
         
         logger.info("RAG service initialized with LangChain components")
 
+    def _enhance_query_for_kb(self, question: str, conversation_history: Optional[List[Dict[str, str]]] = None) -> Dict[str, Any]:
+        """
+        LLM-based semantic enhancement: rewrite the query and provide expansion keywords.
+        Returns: { "rewritten_query": str, "expanded_keywords": List[str] }
+        """
+        try:
+            if not getattr(settings, "KB_QUERY_ENHANCE_ENABLED", False):
+                return {"rewritten_query": question, "expanded_keywords": []}
+
+            system_prompt = (
+                "你是一个检索查询增强器。\n"
+                "通过对上下文理解，理解用户真实意图，输出更清晰的检索查询和若干关键术语扩展。\n"
+                "返回严格的 JSON 对象：{{\"rewritten_query\": \"...\", \"expanded_keywords\": [\"...\"]}}。\n"
+                "注意：扩展术语需短而准，避免过长句子。"
+            )
+
+            conversation_history = conversation_history or []
+            prompt = ChatPromptTemplate.from_messages([
+                ("system", system_prompt),
+                MessagesPlaceholder(variable_name="chat_history"),
+                ("human", "原始查询：{question}\n请返回 JSON 格式结果")
+            ])
+
+            enhancer_llm = ChatOpenAI(
+                model=settings.LLM_MODEL,
+                api_key=settings.LLM_API_KEY,
+                base_url=settings.LLM_BASE_URL,
+                temperature=0.2,
+                max_tokens=512
+            )
+
+            chain = (
+                {
+                    "question": RunnablePassthrough(),
+                    "chat_history": lambda x: conversation_history
+                }
+                | prompt
+                | enhancer_llm
+                | StrOutputParser()
+            )
+
+            raw = chain.invoke(question)
+            rewritten_query = question
+            expanded_keywords: List[str] = []
+
+            try:
+                import json as pyjson
+                data = pyjson.loads(raw)
+                rewritten_query = data.get("rewritten_query") or question
+                ek = data.get("expanded_keywords") or []
+                if isinstance(ek, list):
+                    expanded_keywords = [str(t).strip() for t in ek if str(t).strip()]
+                elif isinstance(ek, str):
+                    expanded_keywords = [t.strip() for t in ek.split(',') if t.strip()]
+            except Exception:
+                # Fallback: extract tokens directly
+                terms = re.findall(r"[A-Za-z0-9]+|[\u4e00-\u9fff]+", raw)
+                expanded_keywords = [t.lower() for t in terms if len(t) >= 2]
+
+            max_terms = getattr(settings, "KB_QUERY_EXPANSION_MAX_TERMS", 6)
+            if len(expanded_keywords) > max_terms:
+                expanded_keywords = expanded_keywords[:max_terms]
+
+            return {"rewritten_query": rewritten_query, "expanded_keywords": expanded_keywords}
+        except Exception as e:
+            logger.warning(f"query enhancement failed: {e}")
+            return {"rewritten_query": question, "expanded_keywords": []}
+
     async def _tsvector_search(
         self,
         collection_name: str,
         query: str,
         k: int = 5,
-        knowledge_base_id: Optional[UUID] = None
+        knowledge_base_id: Optional[UUID] = None,
+        extra_terms: Optional[List[str]] = None
     ) -> List[tuple]:
         """
         PostgreSQL全文检索（tsvector）基于 langchain_pg_embedding.document。
@@ -65,6 +138,12 @@ class RAGService:
             stop_words = {"有哪些", "什么", "如何", "怎么", "请问", "的", "和", "与"}
             terms = re.findall(r"[A-Za-z0-9]+|[\u4e00-\u9fff]+", query)
             terms = [t.lower() for t in terms if t not in stop_words and len(t) >= 2]
+            # Append extra expansion terms
+            if extra_terms:
+                for t in extra_terms:
+                    t = str(t).strip().lower()
+                    if t and t not in terms and t not in stop_words:
+                        terms.append(t)
             tsquery_or = " | ".join(f"{t}:*" for t in terms) if terms else None
 
             # 2) 构建 SQL：优先使用 to_tsquery(simple, :tsq) 的 OR 匹配；保留 ILIKE 兜底
@@ -100,17 +179,21 @@ class RAGService:
             logger.warning(f"tsvector search error: {e}")
             return []
 
-    def _merge_docs_with_scores(
+    async def _merge_docs_with_scores(
         self,
         content_results: List[tuple],
         text_results: List[tuple],
+        query: str,
         top_k: int = 5
     ) -> (List[LangChainDocument], List[Dict[str, Any]]):
-        """Merge vector content results with PostgreSQL tsvector results.
-        Weighted combination and return top_k docs plus source metadata."""
+        """
+        Merge vector content results with PostgreSQL tsvector results using configurable fusion methods.
+        Supports RRF (Reciprocal Rank Fusion) and weighted sum approaches, with optional reranking.
+        """
         try:
             merged_map: Dict[tuple, Dict[str, Any]] = {}
 
+            # Collect content results
             for doc, score in content_results:
                 key = (doc.metadata.get("document_id"), doc.metadata.get("chunk_index"))
                 merged_map[key] = merged_map.get(key, {"doc": doc, "content_score": 0.0})
@@ -156,7 +239,22 @@ class RAGService:
                     "text_score": float(entry.get("text_score", 0.0)),
                     "metadata": doc.metadata
                 })
+
+            # Apply reranking if enabled
+            if settings.RERANK_ENABLED and self.rerank_service.is_enabled():
+                docs, sources = await self.rerank_service.rerank_documents(
+                    query=query,
+                    documents=docs,
+                    sources=sources,
+                    top_k=top_k
+                )
+            else:
+                # Just take top_k if no reranking
+                docs = docs[:top_k]
+                sources = sources[:top_k]
+
             return docs, sources
+            
         except Exception as e:
             logger.warning(f"Error merging multi-route results: {e}")
             # Fallback: return content_results only
@@ -354,6 +452,11 @@ class RAGService:
                 yield {"type": "end", "complete": True, "sources": [], "num_sources": 0}
                 return
             
+            # Optionally enhance query for KB retrieval
+            enhance = self._enhance_query_for_kb(question, conversation_history)
+            rewritten_query = enhance.get("rewritten_query", question)
+            expanded_keywords = enhance.get("expanded_keywords", [])
+
             # Create collection name for user's documents (chunks only)
             collection_name = f"document_chunks_{user_id}".replace("-", "_")
             
@@ -374,19 +477,29 @@ class RAGService:
             # Multi-route retrieval: content (vector) + text (tsvector)
             # vector route
             content_results = vector_store.similarity_search_with_relevance_scores(
-                question, k=context_limit, filter=filter_conditions if filter_conditions else None
+                rewritten_query, k=context_limit, filter=filter_conditions if filter_conditions else None
             )
 
             # Second route: PostgreSQL tsvector full-text search on chunk collection
-            text_results = await self._tsvector_search(collection_name, question, k=context_limit, knowledge_base_id=knowledge_base_id)
+            text_results = await self._tsvector_search(
+                collection_name,
+                question,
+                k=context_limit,
+                knowledge_base_id=knowledge_base_id,
+                extra_terms=expanded_keywords
+            )
 
             # Merge and pick final docs and sources
-            relevant_docs, sources = self._merge_docs_with_scores(content_results, text_results, top_k=context_limit)
+            relevant_docs, sources = await self._merge_docs_with_scores(content_results, text_results, question, top_k=context_limit)
             
             # Yield initial data with sources
             yield {
                 "type": "start",
                 "question": question,
+                "query_rewrite": {
+                    "rewritten_query": rewritten_query,
+                    "expanded_keywords": expanded_keywords
+                },
                 "sources": sources,
                 "context_used": len(relevant_docs) > 0,
                 "num_sources": len(sources)
@@ -464,6 +577,11 @@ class RAGService:
                     "num_sources": 0
                 }
             
+            # Optionally enhance query for KB retrieval
+            enhance = self._enhance_query_for_kb(question, conversation_history)
+            rewritten_query = enhance.get("rewritten_query", question)
+            expanded_keywords = enhance.get("expanded_keywords", [])
+
             # Create collection names for user's documents (chunks only)
             collection_name = f"document_chunks_{user_id}".replace("-", "_")
             
@@ -483,13 +601,19 @@ class RAGService:
             
             # Multi-route retrieval: content (vector) + text (tsvector)
             content_results = vector_store.similarity_search_with_relevance_scores(
-                question, k=context_limit, filter=filter_conditions if filter_conditions else None
+                rewritten_query, k=context_limit, filter=filter_conditions if filter_conditions else None
             )
 
             # Third route: PostgreSQL tsvector full-text search on chunk collection
-            text_results = await self._tsvector_search(collection_name, question, k=context_limit, knowledge_base_id=knowledge_base_id)
+            text_results = await self._tsvector_search(
+                collection_name,
+                question,
+                k=context_limit,
+                knowledge_base_id=knowledge_base_id,
+                extra_terms=expanded_keywords
+            )
 
-            relevant_docs, sources = self._merge_docs_with_scores(content_results, text_results, top_k=context_limit)
+            relevant_docs, sources = await self._merge_docs_with_scores(content_results, text_results, question, top_k=context_limit)
             
             # Create RAG chain using pre-fetched docs
             rag_chain = self._create_rag_chain_with_docs(relevant_docs, conversation_history)
@@ -508,7 +632,11 @@ class RAGService:
                 "answer": answer,
                 "sources": sources,
                 "context_used": len(relevant_docs) > 0,
-                "num_sources": len(sources)
+                "num_sources": len(sources),
+                "query_rewrite": {
+                    "rewritten_query": rewritten_query,
+                    "expanded_keywords": expanded_keywords
+                }
             }
             
         except Exception as e:

@@ -88,6 +88,23 @@ class Settings(BaseSettings):
     MAX_FILE_SIZE: int = 10 * 1024 * 1024  # 10MB
     UPLOAD_DIR: str = "uploads"
     
+    # RAG Fusion settings (multi-path retrieval)
+    RAG_FUSION_METHOD: str = "weighted_sum"  # "rrf" or "weighted_sum"
+    RAG_FUSION_WEIGHTS: str = "0.7,0.3"  # content_weight,text_weight for weighted_sum
+    # Query enhancement for KB retrieval
+    KB_QUERY_ENHANCE_ENABLED: bool = True
+    KB_QUERY_EXPANSION_MAX_TERMS: int = 6
+    RAG_FUSION_RRF_K: int = 60  # RRF parameter k
+    
+    # Rerank settings
+    RERANK_ENABLED: bool = True
+    # Use a lightweight cross-encoder by default to improve portability
+    RERANK_MODEL: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"  # Default rerank model
+    RERANK_TOP_K: int = 10  # Number of candidates to rerank
+    RERANK_FINAL_K: int = 5  # Final number of results after rerank
+    RERANK_BATCH_SIZE: int = 32  # Batch size for rerank processing
+    RERANK_DEVICE: str = "cpu"  # "cpu" or "cuda"
+    
     # Logging
     LOG_LEVEL: str = "INFO"
     LOG_FORMAT: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"

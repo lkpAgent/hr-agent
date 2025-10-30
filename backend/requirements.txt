@@ -30,6 +30,12 @@ langchain-postgres>=0.0.6  # PGVector支持
 langchain-openai>=0.0.5  # OpenAI集成
 langgraph>=0.0.40  # LangGraph工作流编排
 
+# Rerank模型和依赖
+sentence-transformers>=2.2.2  # 用于rerank模型
+transformers>=4.30.0  # Transformer模型基础库
+torch>=2.0.0  # PyTorch深度学习框架
+FlagEmbedding>=1.2.0  # BGE rerank模型支持
+
 # AI模型服务商
 zhipuai>=2.0.0  # 智谱AI
 openai>=1.0.0   # OpenAI
