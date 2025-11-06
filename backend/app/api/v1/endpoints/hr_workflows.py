@@ -1100,6 +1100,61 @@ async def generate_exam(
                 content_parts.append(f"=== {file_info['filename']} ===\n{file_info['content']}")
             combined_content = "\n\n".join(content_parts)
         
+        # 分值分配算法（按 2:3:5 权重，并将剩余分数依次分配给最后几题）
+        def allocate_question_scores(total_score: int, counts: Dict[str, int]) -> Dict[str, List[int]]:
+            # 仅支持三种题型：单选题、多选题、简答题
+            weights = {
+                "single_choice": 2,
+                "multiple_choice": 3,
+                "short_answer": 5,
+            }
+
+            # 初始化每题分值列表
+            scores: Dict[str, List[int]] = {
+                t: [0] * max(0, counts.get(t, 0)) for t in ["single_choice", "multiple_choice", "short_answer"]
+            }
+
+            # 计算加权题量总和
+            weighted_total = 0
+            for t, w in weights.items():
+                weighted_total += counts.get(t, 0) * w
+
+            if weighted_total <= 0 or total_score <= 0:
+                return scores
+
+            # 基础单位分和剩余分
+            base_unit = total_score // weighted_total
+            remainder = total_score % weighted_total
+
+            # 先按权重为每题分配基础分值
+            for t, w in weights.items():
+                c = counts.get(t, 0)
+                if c > 0:
+                    base_per_question = w * base_unit
+                    scores[t] = [base_per_question] * c
+
+            # 将剩余分数依次分配给“最后几题”：先简答题末尾，后多选题末尾，再单选题末尾
+            distribution_order = ["short_answer", "multiple_choice", "single_choice"]
+            while remainder > 0:
+                allocated_this_round = False
+                for t in distribution_order:
+                    arr = scores.get(t, [])
+                    # 从末尾开始为每题加 1 分，直到该类型题目遍历完或剩余分数为 0
+                    for i in range(len(arr) - 1, -1, -1):
+                        if remainder <= 0:
+                            break
+                        arr[i] += 1
+                        remainder -= 1
+                        allocated_this_round = True
+                if not allocated_this_round:
+                    # 没有任何题目可分配（例如题量为 0），避免死循环
+                    break
+
+            return scores
+
+        # 先计算分值分配，后构建试卷生成查询
+        question_scores = allocate_question_scores(request.total_score, request.question_counts or {})
+
         # 构建试卷生成查询
         query_parts = [f"请基于以下文档内容生成一份{request.subject}试卷"]
         
@@ -1133,14 +1188,36 @@ async def generate_exam(
                 query_parts.append(f"题目数量：{', '.join(counts_parts)}")
         if request.total_score:
             query_parts.append(f"试卷总分：{request.total_score}")
+        # 在提示词中明确每题分值设置，要求严格遵循
+        # 仅在存在题量时附加说明
+        counts_for_prompt = request.question_counts or {}
+        if any(counts_for_prompt.get(t, 0) > 0 for t in ["single_choice", "multiple_choice", "short_answer"]):
+            def fmt_scores_line(t_key: str, t_name: str) -> str:
+                arr = question_scores.get(t_key, [])
+                if not arr:
+                    return ""
+                return f"{t_name}每题分值（按题序）：{', '.join(str(x) for x in arr)}"
+
+            scores_lines = [
+                fmt_scores_line("single_choice", "单选题"),
+                fmt_scores_line("multiple_choice", "多选题"),
+                fmt_scores_line("short_answer", "简答题"),
+            ]
+            scores_lines = [s for s in scores_lines if s]
+            if scores_lines:
+                query_parts.append("请严格按照以下每题分值设置生成试卷：")
+                query_parts.extend(scores_lines)
         if request.special_requirements:
             query_parts.append(f"特殊要求：{request.special_requirements}")
         
         query = "\n".join(query_parts)
-        
+        print('试卷要求：',query)
         # 准备额外输入参数
         additional_inputs = {
             "fileContent": combined_content,
+            "total_score": request.total_score,
+            # 向工作流传递结构化的分值设置，便于遵守
+            "question_scores": question_scores,
         }
         
         if request.title:
@@ -1720,69 +1797,76 @@ async def submit_exam(
             }
             questions_with_answers.append(question_info)
         
-        # 构建提交给Dify的完整查询内容
-        query_parts = [
-            f"考生姓名：{request.student_name}",
-            f"部门：{request.department}",
-            f"试卷标题：{exam.title}",
-            f"试卷总分：{exam.total_score}",
-            "",
-            "详细题目信息（包含标准答案、解析和考生答案）：",
-        ]
-        
-        for i, q_info in enumerate(questions_with_answers, 1):
-            query_parts.extend([
-                f"第{i}题：",
-                f"  题目类型：{q_info['题目类型']}",
-                f"  题目内容：{q_info['题目内容']}",
-                f"  选项：{q_info['选项']}" if q_info['选项'] else "",
-                f"  标准答案：{q_info['标准答案']}",
-                f"  解析：{q_info['解析']}",
-                f"  分值：{q_info['分值']}分",
-                f"  考生答案：{q_info['考生答案']}",
-                ""
-            ])
-        
-        # query_parts.append("请根据以上信息对考生的答案进行评分，并给出详细的评分说明。")
-        query = "\n".join(filter(None, query_parts))  # 过滤空字符串
-        
-        # 调用Dify进行自动评分
+        # 逐题调用Dify进行评分，避免一次性提交过多内容
         dify_service = DifyService()
-        result = await dify_service.call_workflow_sync(
-            workflow_type=6,  # 使用类型6进行自动评分
-            query=query,
-            additional_inputs={"type": 6}
-        )
-        
-        # 解析Dify返回的得分并填充到每道题的数据结构中
         questions_with_scores = []
-        scores = []
-        
-        # 从Dify结果中提取得分字符串
-        if result and "answer" in result:
-            score_string = result["answer"]
-            # 解析得分字符串，如 "2,2,0" -> [2, 2, 0]
+        per_question_results = []
+        total_score = 0.0
+
+        for idx, q_info in enumerate(questions_with_answers, 1):
+            # 为每道题构造精简评分提示，减少上下文噪声
+            per_query_parts = [
+                f"请对以下试题进行评分，仅返回该题的得分(数字即可)：",
+                f"题目类型：{q_info['题目类型']}",
+                f"题目内容：{q_info['题目内容']}",
+            ]
+            if q_info.get('选项'):
+                per_query_parts.append(f"选项：{q_info['选项']}")
+            per_query_parts.extend([
+                f"标准答案：{q_info['标准答案']}",
+                f"解析：{q_info['解析']}",
+                f"分值（满分）：{q_info['分值']}",
+                f"考生答案：{q_info['考生答案']}",
+                "",
+                "请严格返回纯数字（可为小数），不要包含其他文字、单位或标点。如果用户没有作答，必须判0分，否则会收到惩罚！"
+            ])
+            per_query = "\n".join([p for p in per_query_parts if p])
+
+            # 逐题调用工作流进行评分
             try:
-                scores = [float(score.strip()) for score in score_string.split(",")]
-            except (ValueError, AttributeError):
-                # 如果解析失败，使用默认得分0
-                scores = [0.0] * len(questions_with_answers)
-        else:
-            # 如果没有得分信息，使用默认得分0
-            scores = [0.0] * len(questions_with_answers)
-        
-        # 确保得分数量与题目数量匹配
-        while len(scores) < len(questions_with_answers):
-            scores.append(0.0)
-        
-        # 将得分添加到每道题的信息中
-        for i, question_info in enumerate(questions_with_answers):
-            question_with_score = question_info.copy()
-            question_with_score["实际得分"] = scores[i] if i < len(scores) else 0.0
+                per_result = await dify_service.call_workflow_sync(
+                    workflow_type=6,
+                    query=per_query,
+                    additional_inputs={
+                        "type": 6,
+                        "max_score": q_info["分值"],
+                        "question_type": q_info["题目类型"],
+                        "question_index": idx
+                    }
+                )
+                # 解析返回的数值得分
+                raw_answer = per_result.get("answer", "0")
+                try:
+                    per_score = float(str(raw_answer).strip())
+                except ValueError:
+                    per_score = 0.0
+                # 边界保护：0 到满分
+                try:
+                    max_score = float(q_info["分值"]) if q_info.get("分值") is not None else None
+                except Exception:
+                    max_score = None
+                if max_score is not None:
+                    per_score = max(0.0, min(per_score, max_score))
+                total_score += per_score
+
+                per_question_results.append({
+                    "题目编号": q_info["题目编号"],
+                    "raw_answer": raw_answer,
+                    "parsed_score": per_score
+                })
+            except Exception as e:
+                # 失败容错：给0分并记录错误
+                per_score = 0.0
+                per_question_results.append({
+                    "题目编号": q_info["题目编号"],
+                    "error": str(e),
+                    "parsed_score": per_score
+                })
+
+            # 汇总到题目结构
+            question_with_score = q_info.copy()
+            question_with_score["实际得分"] = per_score
             questions_with_scores.append(question_with_score)
-        
-        # 计算总得分
-        total_score = sum(scores)
         
         # 保存考试记录到数据库
         from app.models.exam_result import ExamResult
@@ -1801,7 +1885,10 @@ async def submit_exam(
             },
             "questions": questions_with_scores,
             "student_answers": student_answers,
-            "scoring_result": result,
+            "scoring_result": {
+                "mode": "per_question",
+                "results": per_question_results
+            },
             "submit_time": datetime.utcnow().isoformat(),
             "total_actual_score": total_score,
             "score_percentage": round((total_score / exam.total_score) * 100, 2) if exam.total_score > 0 else 0

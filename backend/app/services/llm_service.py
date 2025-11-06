@@ -248,6 +248,120 @@ Keywords:"""
         except Exception as e:
             logger.error(f"Error extracting keywords: {e}")
             raise
+
+    async def extract_keywords_and_tags(self, text: str, max_items: int = 8) -> Dict[str, List[str]]:
+        """Extract 5-8 per-chunk keywords and tags.
+        Tags should include explicit Chinese ordinal phrases like "第一条"、"第一点"、"第二条"等（如果文本中出现），
+        but exclude pure numeric markers (e.g., "1", "2", "3", "一", "二" without a descriptive suffix).
+        Return a dict: {"keywords": [...], "tags": [...]}.
+        """
+        try:
+            prompt = (
+                "请从下面的段落中提取5-8个关键词和标签。\n"
+                "要求：\n"
+                "- 关键词：能概括段落核心概念或主题，避免过于通用词（如：具体、以及、因此）。\n"
+                "- 标签：如果段落中有明确的中文序号短语（如‘第一条’、‘第一点’、‘第二条’、‘第三点’等），请将这些短语作为标签；仅有纯数字或字母序号（如‘1.’、‘(2)’、‘A.’）不要提取。\n"
+                "- 只返回JSON，不要解释。\n"
+                '- JSON格式：{"keywords": [..], "tags": [..]}\n'
+                f"段落：\n{text}\n\n"
+                "请返回："
+            )
+            response = await self.client.chat.completions.create(
+                model=self.llm_model,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.2,
+                max_tokens=400
+            )
+            content = response.choices[0].message.content.strip()
+
+            # Robust JSON parsing
+            import json
+            result: Dict[str, List[str]] = {"keywords": [], "tags": []}
+            try:
+                parsed = json.loads(content)
+                if isinstance(parsed, dict):
+                    kws = parsed.get("keywords", [])
+                    tags = parsed.get("tags", [])
+                    if isinstance(kws, list):
+                        result["keywords"] = [str(x).strip() for x in kws if str(x).strip()]
+                    if isinstance(tags, list):
+                        result["tags"] = [str(x).strip() for x in tags if str(x).strip()]
+            except Exception:
+                # Fallback: try comma/line splitting
+                lines = [x.strip() for x in content.replace("\r", "").split("\n") if x.strip()]
+                # naive split: lines may contain "keywords: ..." or "tags: ..."
+                for line in lines:
+                    lower = line.lower()
+                    if lower.startswith("keywords") or lower.startswith("关键词"):
+                        items = line.split(":", 1)
+                        if len(items) > 1:
+                            result["keywords"] = [x.strip() for x in items[1].split(",") if x.strip()]
+                    elif lower.startswith("tags") or lower.startswith("标签"):
+                        items = line.split(":", 1)
+                        if len(items) > 1:
+                            result["tags"] = [x.strip() for x in items[1].split(",") if x.strip()]
+
+            # Post-filtering: enforce limits and remove numeric-only tags
+            def is_numeric_only(s: str) -> bool:
+                import re
+                return bool(re.fullmatch(r"[0-9]+|[一二三四五六七八九十]+", s))
+
+            result["keywords"] = result["keywords"][:max_items]
+            result["tags"] = [t for t in result["tags"] if not is_numeric_only(t)][:max_items]
+
+            return result
+        except Exception as e:
+            logger.error(f"Error extracting keywords and tags: {e}")
+            return {"keywords": [], "tags": []}
+
+    async def extract_keywords_tags_combined(self, text: str, max_items: int = 8) -> str:
+        """Extract 5-8 combined keywords/tags as a single comma-separated string.
+        Include explicit Chinese ordinal phrases like "第一条"、"第一点"、"第二条"等（如果文本中出现），
+        but exclude pure numeric markers (e.g., "1", "2", "3", "一", "二" without a descriptive suffix).
+        Return e.g.: "关键词A, 关键词B, 第一条, 第二点".
+        """
+        try:
+            prompt = (
+                "请从下面的段落中提取5-8个关键词或标签，合并在一行返回。\n"
+                "要求：\n"
+                "- 关键词：能概括段落核心概念或主题；避免过于通用词。\n"
+                "- 标签：若出现明确中文序号短语（如‘第一条’、‘第一点’、‘第二条’），则提取；仅有纯数字或字母序号（如‘1.’、‘(2)’、‘A.’）不要提取。\n"
+                "- 只返回逗号分隔的一行结果，不要任何解释或多余文本。\n"
+                "示例输出：关键词A, 关键词B, 第一条, 第二点\n"
+                f"段落：\n{text}\n\n"
+                "请返回："
+            )
+            response = await self.client.chat.completions.create(
+                model=self.llm_model,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.2,
+                max_tokens=300
+            )
+            content = response.choices[0].message.content.strip()
+
+            # Normalize to a comma-separated list
+            raw_items = [x.strip() for x in content.replace("\r", "").replace("\n", " ").split(",")]
+            items = [x for x in raw_items if x]
+
+            # Filter numeric-only tokens
+            import re
+            def is_numeric_only(s: str) -> bool:
+                return bool(re.fullmatch(r"[0-9]+|[一二三四五六七八九十]+", s))
+            items = [x for x in items if not is_numeric_only(x)]
+
+            # Deduplicate preserving order and limit
+            seen = set()
+            deduped = []
+            for x in items:
+                if x not in seen:
+                    seen.add(x)
+                    deduped.append(x)
+            deduped = deduped[:max_items]
+
+            return ", ".join(deduped)
+        except Exception as e:
+            logger.error(f"Error extracting combined keywords/tags: {e}")
+            return ""
     
     async def generate_suggestions(self, query: str, context: str = "") -> List[str]:
         """

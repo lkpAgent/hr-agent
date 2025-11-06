@@ -7,9 +7,9 @@
           <h1 class="welcome-title">
             欢迎回来，{{ user?.full_name || user?.username }}！
           </h1>
-          <p class="welcome-subtitle">
+          <!-- <p class="welcome-subtitle">
             今天是 {{ currentDate }}，让我们开始高效的工作吧
-          </p>
+          </p> -->
         </div>
         <div class="welcome-actions">
           <el-button type="primary" size="large" @click="$router.push('/recruitment/jd-generator')">

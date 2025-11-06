@@ -263,8 +263,7 @@ async def delete_knowledge_document(
                 detail="Not enough permissions"
             )
         
-        await document_service.delete_document(document_id)
-        
+        await document_service.delete(document)
         return {"message": "Document deleted successfully"}
         
     except Exception as e:

@@ -35,7 +35,7 @@ class ResumeEvaluation(BaseModel):
     candidate_position = Column(String(200), nullable=True)  # 应聘岗位
     candidate_age = Column(Integer, nullable=True)  # 年龄
     candidate_gender = Column(String(10), nullable=True)  # 性别
-    work_years = Column(String(50), nullable=True)  # 工作经验
+    work_years = Column(Float, nullable=True)  # 工作经验（年，数字）
     education_level = Column(String(100), nullable=True)  # 教育水平
     school = Column(String(200), nullable=True)  # 学校
     

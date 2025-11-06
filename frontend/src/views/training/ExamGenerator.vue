@@ -531,6 +531,7 @@ import {
   View, Check, Loading, FolderOpened, Refresh, Share
 } from '@element-plus/icons-vue'
 import { examApi } from '@/api/exam'
+import { marked } from 'marked'
 
 // 响应式数据
 const formRef = ref()
@@ -630,6 +631,17 @@ const fetchExamList = async () => {
     ElMessage.error('获取试卷列表失败')
   } finally {
     examListLoading.value = false
+  }
+}
+
+// 将实时生成的试卷文本格式化为可展示的HTML（支持Markdown）
+const formatExamContentForDisplay = (content) => {
+  if (!content) return ''
+  try {
+    return marked(typeof content === 'string' ? content : String(content))
+  } catch (error) {
+    console.warn('实时内容格式化失败，使用纯文本显示:', error)
+    return String(content).replace(/\n/g, '<br>')
   }
 }
 
@@ -1245,21 +1257,20 @@ const shareExam = async (exam) => {
     // 生成分享链接
     const shareUrl = `${window.location.origin}/exam-share/${examData.id}`
     
-    // 复制到剪贴板
-    await navigator.clipboard.writeText(shareUrl)
-    
-    // 显示分享链接对话框
-    ElMessageBox.alert(
-      `分享链接已复制到剪贴板：<br/><br/><code style="background: #f5f5f5; padding: 8px; border-radius: 4px; word-break: break-all;">${shareUrl}</code>`,
-      '试卷分享',
-      {
-        dangerouslyUseHTMLString: true,
-        confirmButtonText: '确定',
-        type: 'success'
-      }
-    )
-    
-    ElMessage.success('分享链接已复制到剪贴板')
+    // 新窗口打开分享地址（生产环境更可靠）
+    const win = window.open(shareUrl, '_blank', 'noopener,noreferrer')
+    if (win) {
+      win.opener = null
+      ElMessage.success('已在新窗口打开分享页面')
+    } else {
+      // 弹窗被拦截时，不改变当前页面，提供可点击链接
+      // ElMessageBox.alert(
+      //   `<div>浏览器拦截了新窗口打开。您可以点击 <a href="${shareUrl}" target="_blank" rel="noopener noreferrer">在新窗口打开分享页面</a>，或复制以下链接：</div>
+      //    <div style="margin-top:8px;"><code>${shareUrl}</code></div>`,
+      //   '打开分享页面',
+      //   { dangerouslyUseHTMLString: true }
+      // )
+    }
   } catch (error) {
     console.error('分享失败:', error)
     ElMessage.error('分享失败，请重试')
@@ -1351,7 +1362,8 @@ const parseExamContent = (content) => {
     
     if (questionType === '单选题' || questionType === '多选题' || questionType === '单选' || questionType === '多选') {
       if (options && options.trim()) {
-        question.options = options.split(';').filter(opt => opt.trim()).map((option, optIndex) => ({
+        // 处理中英文分号分割的选项
+        question.options = options.split(/[;；]/).filter(opt => opt.trim()).map((option, optIndex) => ({
           id: String.fromCharCode(65 + optIndex),
           text: option.trim()
         }))

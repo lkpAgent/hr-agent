@@ -718,10 +718,11 @@ const generateInterviewPlan = async (candidate) => {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
 
-    // 处理流式响应 - 参考JD生成页面的实现
+    // 处理流式响应（缓冲分片并过滤控制事件）
     const reader = response.body.getReader()
     const decoder = new TextDecoder()
     let planContent = ''
+    let buffer = ''
 
     // 初始化面试方案对象
     interviewPlan.value = {
@@ -738,30 +739,36 @@ const generateInterviewPlan = async (candidate) => {
         const { done, value } = await reader.read()
         if (done) break
 
-        const chunk = decoder.decode(value)
-        const lines = chunk.split('\n')
+        // 按流式方式解码并累积到缓冲区，避免半截JSON被渲染
+        buffer += decoder.decode(value, { stream: true })
 
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const data = line.slice(6)
-            if (data === '[DONE]') {
+        // 事件以"\n\n"分隔，逐个消费完整事件块
+        let sepIndex = buffer.indexOf('\n\n')
+        while (sepIndex !== -1) {
+          const eventChunk = buffer.slice(0, sepIndex)
+          buffer = buffer.slice(sepIndex + 2)
+          sepIndex = buffer.indexOf('\n\n')
+
+          const lines = eventChunk.split('\n')
+          for (const line of lines) {
+            if (!line.startsWith('data: ')) continue
+            const dataStr = line.slice(6).trim()
+            if (!dataStr) continue
+            if (dataStr === '[DONE]') {
+              // 结束标记
+              sepIndex = -1
               break
             }
-            
             try {
-              const parsed = JSON.parse(data)
-              // 根据后端返回的数据格式处理：{"event": "message", "answer": "#", ...}
-              if (parsed.answer) {
+              const parsed = JSON.parse(dataStr)
+              const eventType = parsed.event
+              // 仅处理包含内容的消息事件，忽略诸如workflow_started等控制事件
+              if (parsed.answer && (!eventType || eventType === 'message' || eventType === 'message_delta')) {
                 planContent += parsed.answer
-                // 实时更新显示内容
                 interviewPlan.value.content = planContent
               }
             } catch (e) {
-              // 如果不是JSON，直接添加到结果中
-              if (data && data !== '[DONE]') {
-                planContent += data
-                interviewPlan.value.content = planContent
-              }
+              // 非完整JSON分片，不渲染，等待后续分片补齐
             }
           }
         }

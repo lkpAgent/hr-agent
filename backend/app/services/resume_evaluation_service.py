@@ -3,6 +3,7 @@ Resume Evaluation Service for AI-powered resume scoring
 """
 import logging
 import json
+import re
 from typing import Dict, Any, Optional, List
 from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -86,7 +87,7 @@ class ResumeEvaluationService:
                 "total_score": ai_result.total_score,
                 "name": ai_result.name,
                 "position": ai_result.position,
-                "workYears": ai_result.workYears,
+                "workYears": (self._parse_work_years_to_float(ai_result.workYears) or 0.0),
                 "education": ai_result.教育水平,
                 "age": ai_result.年龄,
                 "sex": ai_result.sex,
@@ -120,8 +121,8 @@ class ResumeEvaluationService:
             )
             criteria = result.scalar_one_or_none()
             
-            if criteria and criteria.evaluation_model:
-                return criteria.evaluation_model
+            if criteria and criteria.content:
+                return criteria.content
             
             # 如果没有找到特定的评价模型，返回默认模型
             return self._get_default_evaluation_model()
@@ -198,9 +199,9 @@ class ResumeEvaluationService:
             请严格按照JSON格式返回评价结果。
             """
             
-            # 调用Dify API (使用工作流类型2进行简历评价)
+            # 调用Dify API (使用工作流类型3进行简历评价)
             response = await self.dify_service.call_workflow_sync(
-                workflow_type=2,  # 简历评价工作流
+                workflow_type=3,  # 简历评价工作流
                 query=evaluation_prompt,
                 additional_inputs={
                     "resume_text": resume_text,
@@ -275,12 +276,51 @@ class ResumeEvaluationService:
                 metrics = []
                 for metric_data in result_data.get('evaluation_metrics', []):
                     metric = EvaluationMetric(
-                        name=metric_data.get('name', ''),
+                        name=metric_data.get('评价指标', ''),
                         score=metric_data.get('score', 0),
                         max=metric_data.get('max', 100),
                         reason=metric_data.get('reason', '')
                     )
                     metrics.append(metric)
+                
+                # 规范化字段别名，兼容不同返回命名
+                normalized_work_years = (
+                    result_data.get('workYears')
+                    or result_data.get('work_years')
+                    or result_data.get('work_experience')
+                    or result_data.get('工作年限')
+                    or result_data.get('工作经验')
+                )
+                # 处理workYears字段，确保能正确转换为float
+                try:
+                    if normalized_work_years is not None and normalized_work_years != '' and normalized_work_years != '未知':
+                        normalized_work_years = float(normalized_work_years)
+                    else:
+                        normalized_work_years = 0.0
+                except (ValueError, TypeError):
+                    normalized_work_years = 0.0
+                normalized_education = (
+                    result_data.get('education')
+                    or result_data.get('education_level')
+                    or result_data.get('学历')
+                    or result_data.get('教育水平')
+                )
+                try:
+                    normalized_age = int(result_data.get('age', result_data.get('年龄', 0)))
+                except (ValueError, TypeError):
+                    normalized_age = 0
+
+                normalized_sex = (
+                    result_data.get('sex')
+                    or result_data.get('gender')
+                    or result_data.get('性别')
+                )
+                normalized_school = (
+                    result_data.get('school')
+                    or result_data.get('毕业院校')
+                    or result_data.get('院校')
+                    or result_data.get('学校')
+                )
                 
                 # 构建AI评价结果
                 ai_result = AIEvaluationResult(
@@ -288,19 +328,19 @@ class ResumeEvaluationService:
                     total_score=result_data.get('total_score', 0),
                     name=result_data.get('name', ''),
                     position=result_data.get('position', ''),
-                    workYears=result_data.get('workYears', ''),
-                    教育水平=result_data.get('education', ''),
-                    年龄=result_data.get('age'),
-                    sex=result_data.get('sex', ''),
-                    school=result_data.get('school', '')
+                    workYears=normalized_work_years,
+                    教育水平=normalized_education or '',
+                    年龄=normalized_age,
+                    sex=normalized_sex or '',
+                    school=normalized_school or ''
                 )
                 
                 return ai_result
                 
             except json.JSONDecodeError as e:
-                logger.error(f"JSON解析失败: {e}, 原始响应: {answer}")
+                logger.error(f"JSON解析失败: {e}, 原始响应: {answer_text}")
                 # 返回默认结果
-                return self._create_default_result(answer)
+                return self._create_default_result(answer_text)
                 
         except Exception as e:
             logger.error(f"解析AI响应失败: {e}")
@@ -320,7 +360,7 @@ class ResumeEvaluationService:
             total_score=60,
             name="未知",
             position="未知",
-            workYears="未知",
+            workYears=0.0,
             教育水平="未知",
             年龄=None,
             sex="未知",
@@ -351,7 +391,7 @@ class ResumeEvaluationService:
                 candidate_position=ai_result.position,
                 candidate_age=ai_result.年龄,
                 candidate_gender=ai_result.sex,
-                work_years=ai_result.workYears,
+                work_years=(self._parse_work_years_to_float(ai_result.workYears) or 0.0),
                 education_level=ai_result.教育水平,
                 school=ai_result.school,
                 total_score=ai_result.total_score,
@@ -414,3 +454,33 @@ class ResumeEvaluationService:
         except Exception as e:
             logger.error(f"获取评价结果失败: {e}")
             return None
+
+    def _parse_work_years_to_float(self, text: Optional[str]) -> Optional[float]:
+        """将工作年限字符串解析为数字（年）。支持格式如"3年"、"1.5年"、"1-3年"、"约2年"。
+        - 解析到范围时取平均值；
+        - 仅提取到一个数值时使用该数值；
+        - 解析失败返回None。
+        """
+        if not text:
+            return None
+        s = str(text).strip().lower()
+        # 常见非数值占位统一视为0（回退到调用处做 or 0.0）
+        if s in {"未知", "不详", "none", "null", "n/a", "na", "--", "-", "", "应届", "应届生", "fresh"}:
+            return 0.0
+        # 匹配范围 "a-b" 或 "a – b"
+        m_range = re.search(r"(\d+(?:\.\d+)?)\s*[\-~–—]\s*(\d+(?:\.\d+)?)", s)
+        if m_range:
+            try:
+                a = float(m_range.group(1))
+                b = float(m_range.group(2))
+                return (a + b) / 2.0
+            except Exception:
+                pass
+        # 提取第一个数字
+        m_single = re.search(r"(\d+(?:\.\d+)?)", s)
+        if m_single:
+            try:
+                return float(m_single.group(1))
+            except Exception:
+                return None
+        return None

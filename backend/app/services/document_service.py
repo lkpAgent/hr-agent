@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, delete, desc, func
 from sqlalchemy.orm import selectinload
 
-from app.models.document import Document, DocumentChunk
+from app.models.document import Document
 from app.models.knowledge_base import KnowledgeBase
 from app.services.llm_service import LLMService
 from app.schemas.document import DocumentCreate, DocumentUpdate
@@ -196,10 +196,13 @@ class DocumentService:
             if document.file_path and os.path.exists(document.file_path):
                 os.remove(document.file_path)
             
-            # Delete document chunks
-            await self.db.execute(
-                delete(DocumentChunk).where(DocumentChunk.document_id == document_id)
-            )
+            # Delete document chunks from langchain_pg_embedding table
+            from sqlalchemy import text
+            delete_query = text("""
+                DELETE FROM langchain_pg_embedding 
+                WHERE cmetadata->>'document_id' = :document_id
+            """)
+            await self.db.execute(delete_query, {"document_id": str(document_id)})
             
             # Delete document
             await self.db.execute(
@@ -335,50 +338,5 @@ class DocumentService:
             logger.error(f"Error saving file: {e}")
             raise
     
-    async def _create_document_chunks(self, document: Document) -> None:
-        """Create chunks for better search and processing"""
-        try:
-            content = document.extracted_content
-            chunk_size = 1000  # Characters per chunk
-            overlap = 200  # Overlap between chunks
-            
-            chunks = []
-            start = 0
-            chunk_index = 0
-            
-            while start < len(content):
-                end = min(start + chunk_size, len(content))
-                chunk_content = content[start:end]
-                
-                # Generate embedding for chunk
-                chunk_embedding = await self.llm_service.generate_embedding(chunk_content)
-                
-                chunk = DocumentChunk(
-                    document_id=document.id,
-                    content=chunk_content,
-                    chunk_index=chunk_index,
-                    chunk_size=len(chunk_content),
-                    embedding=chunk_embedding,
-                    meta_data={
-                        "start_char": start,
-                        "end_char": end,
-                        "knowledge_base_id": str(document.knowledge_base_id) if document.knowledge_base_id else None,
-                        "filename": document.filename,
-                        "document_id": str(document.id),
-                        "chunk_id": f"{document.id}_{chunk_index}"
-                    }
-                )
-                
-                chunks.append(chunk)
-                chunk_index += 1
-                start = end - overlap if end < len(content) else end
-            
-            # Save chunks
-            self.db.add_all(chunks)
-            await self.db.commit()
-            
-            logger.info(f"Created {len(chunks)} chunks for document {document.id}")
-            
-        except Exception as e:
-            logger.error(f"Error creating document chunks: {e}")
-            raise
+    # NOTE: _create_document_chunks method removed - now using langchain_pg_embedding directly
+    # Document chunks are created through PGVector in enhanced_document_service.py

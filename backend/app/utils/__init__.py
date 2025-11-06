@@ -18,6 +18,7 @@ __all__ = [
     # Text utilities
     "clean_text",
     "extract_keywords",
+    "extract_text_content",
     "truncate_text",
     "normalize_text",
     "remove_html_tags",

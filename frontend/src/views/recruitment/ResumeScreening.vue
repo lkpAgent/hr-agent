@@ -54,15 +54,15 @@
                   placeholder="工作经验"
                   clearable
                   size="small"
-                  style="width: 120px"
+                  style="width: 160px"
                   @change="applyFilters"
                 >
                   <el-option label="不限" value="" />
-                  <el-option label="应届生" value="0-1年" />
-                  <el-option label="1-3年" value="1-3年" />
-                  <el-option label="3-5年" value="3-5年" />
-                  <el-option label="5-10年" value="5-10年" />
-                  <el-option label="10年以上" value="10年以上" />
+                  <el-option label="应届生（0年）" value="fresh" />
+                  <el-option label="1-3年" value="1-3" />
+                  <el-option label="3-5年" value="3-5" />
+                  <el-option label="5-10年" value="5-10" />
+                  <el-option label="超过10年" value="10+" />
                 </el-select>
               </div>
               
@@ -193,7 +193,7 @@
                   <h3>{{ selectedResume.name }}</h3>
                   <p class="current-position">{{ selectedResume.currentPosition }}</p>
                   <div class="profile-meta">
-                    <span class="meta-item">{{ selectedResume.experience }}</span>
+                    <span class="meta-item">{{ formatExperience(selectedResume.experience) }}</span>
                     <span class="meta-divider">|</span>
                     <span class="meta-item">{{ selectedResume.education }}</span>
                     <span class="meta-divider">|</span>
@@ -201,10 +201,7 @@
                   </div>
                   <!-- 操作按钮行 -->
                   <div class="action-buttons">
-                    <el-button type="danger" size="default" @click="handleReject">
-                      <el-icon><Close /></el-icon>
-                      不通过
-                    </el-button>
+                     
                     <el-button type="primary" size="default" @click="handleInterview">
                       <el-icon><Check /></el-icon>
                       面试
@@ -425,9 +422,26 @@ const filteredResumeList = computed(() => {
     )
   }
 
-  // 工作经验筛选
+  // 工作经验筛选（按数值区间）
   if (filters.experience) {
-    filtered = filtered.filter(resume => resume.experience === filters.experience)
+    filtered = filtered.filter(resume => {
+      const y = Number(resume.experience)
+      if (Number.isNaN(y)) return false
+      switch (filters.experience) {
+        case 'fresh':
+          return y === 0
+        case '1-3':
+          return y > 0 && y <= 3
+        case '3-5':
+          return y > 3 && y <= 5
+        case '5-10':
+          return y > 5 && y <= 10
+        case '10+':
+          return y > 10
+        default:
+          return true
+      }
+    })
   }
 
   // 学历筛选
@@ -730,6 +744,14 @@ const getScoreColor = (score) => {
   if (score >= 80) return '#67c23a'
   if (score >= 60) return '#e6a23c'
   return '#f56c6c'
+}
+
+const formatExperience = (years) => {
+  if (years === null || years === undefined) return '未填写'
+  const y = Number(years)
+  if (Number.isNaN(y)) return '未填写'
+  if (y === 0) return '应届生'
+  return `${y}年`
 }
 
 const getMetricScoreType = (score, max) => {

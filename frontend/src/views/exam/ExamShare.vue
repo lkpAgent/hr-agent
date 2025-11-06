@@ -1,5 +1,11 @@
 <template>
-  <div class="exam-share-container">
+  <div class="exam-share-container" v-loading="submitting" element-loading-text="正在阅卷中，请耐心等待">
+    <!-- 固定顶部阅卷提示条 -->
+    <transition name="fade">
+      <div v-if="submitting" class="grading-banner">
+        正在阅卷中，请耐心等待
+      </div>
+    </transition>
     <!-- 加载状态 -->
     <div v-if="loading" class="loading-container" v-loading="true" element-loading-text="加载试卷中...">
       <div style="height: 200px;"></div>
@@ -380,6 +386,13 @@ const submitExam = async () => {
     })
     
     submitting.value = true
+    // 提交时自动滚动到页面顶部，确保可见等待提示
+    try {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    } catch (e) {
+      // 兼容不支持行为参数的环境
+      window.scrollTo(0, 0)
+    }
     
     // 准备提交数据
     const submitData = {
@@ -463,6 +476,25 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+.grading-banner {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 3000; /* 高于Element Plus默认遮罩层 */
+}
+
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.3s;
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+}
 .exam-share-container {
   min-height: 100vh;
   background: #f5f7fa;

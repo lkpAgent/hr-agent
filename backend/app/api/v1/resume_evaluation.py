@@ -11,6 +11,7 @@ from app.core.database import get_db
 from app.api.deps import get_current_user
 from app.models.user import User
 from app.services.resume_evaluation_service import ResumeEvaluationService
+from app.services.enhanced_document_service import EnhancedDocumentService
 from app.schemas.resume_evaluation import (
     ResumeEvaluationResponse,
     ResumeEvaluationListResponse,
@@ -52,8 +53,8 @@ async def evaluate_resume(
                 conv_uuid = UUID(conversation_id)
             except ValueError:
                 raise HTTPException(status_code=400, detail="无效的对话ID格式")
-        
-        # 读取文件内容
+
+
         file_content = await file.read()
         if not file_content:
             raise HTTPException(status_code=400, detail="文件内容为空")
@@ -197,36 +198,23 @@ async def get_evaluation_detail(
         if not evaluation:
             raise HTTPException(status_code=404, detail="评价记录不存在")
         
-        # 获取关联的职位描述信息
+        # 获取关联的职位描述信息（保留但不参与返回，避免schema不匹配）
         jd = await evaluation_service._get_job_description(evaluation.job_description_id)
         
-        # 构建完整结果
+        # 构建扁平化的结果，符合 ResumeEvaluationResult schema
         result = {
-            "evaluation_id": str(evaluation.id),
-            "file_info": {
-                "filename": evaluation.filename,
-                "file_type": evaluation.file_type,
-                "file_size": evaluation.file_size,
-                "file_hash": evaluation.file_hash
-            },
-            "resume_text": evaluation.resume_text,
-            "ai_evaluation": {
-                "evaluation_metrics": evaluation.evaluation_metrics,
-                "total_score": evaluation.total_score,
-                "candidate_name": evaluation.candidate_name,
-                "candidate_position": evaluation.candidate_position,
-                "work_years": evaluation.work_years,
-                "education_level": evaluation.education_level,
-                "age": evaluation.age,
-                "gender": evaluation.gender,
-                "school": evaluation.school,
-                "raw_response": evaluation.ai_response
-            },
-            "job_description": {
-                "id": str(jd.id) if jd else str(evaluation.job_description_id),
-                "title": jd.title if jd else "未知职位",
-                "company": jd.company if jd else "未知公司"
-            },
+            "id": evaluation.id,
+            "evaluation_metrics": evaluation.evaluation_metrics,
+            "total_score": evaluation.total_score,
+            "name": evaluation.candidate_name,
+            "position": evaluation.candidate_position,
+            "workYears": evaluation.work_years,
+            "education": evaluation.education_level,
+            "age": evaluation.candidate_age,
+            "sex": evaluation.candidate_gender,
+            "school": evaluation.school,
+            "resume_content": evaluation.resume_content,
+            "original_filename": evaluation.original_filename,
             "created_at": evaluation.created_at.isoformat()
         }
         

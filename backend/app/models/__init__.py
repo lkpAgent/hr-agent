@@ -5,7 +5,7 @@ Database models package
 # Import all models to ensure proper relationship mapping
 from app.models.base import BaseModel
 from app.models.user import User
-from app.models.document import Document, DocumentChunk
+from app.models.document import Document
 from app.models.knowledge_base import KnowledgeBase, FAQ
 from app.models.conversation import Conversation, Message
 from app.models.job_description import JobDescription
@@ -20,7 +20,7 @@ __all__ = [
     "BaseModel",
     "User", 
     "Document",
-    "DocumentChunk",
+    # "DocumentChunk",  # removed; use langchain_pg_embedding table instead
     "KnowledgeBase",
     "FAQ",
     "Conversation",
