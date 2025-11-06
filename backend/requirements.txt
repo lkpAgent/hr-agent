@@ -67,7 +67,7 @@ alembic>=1.12.0
 # 监控和日志
 prometheus-client>=0.17.0
 structlog>=23.1.0
-
+bcrypt==4.3.0
 # 安全
 cryptography>=41.0.0
 passlib[bcrypt]>=1.7.4
