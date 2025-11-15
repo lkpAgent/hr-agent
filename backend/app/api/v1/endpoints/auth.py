@@ -11,8 +11,8 @@ from app.core.config import settings
 from app.core.database import get_db
 from app.core.security import create_access_token, verify_password, get_password_hash
 from app.schemas.auth import Token, UserCreate, UserLogin
-from app.schemas.user import User as UserSchema
-from app.services.user_service import UserService
+from app.schemas.user import User as UserSchema, UserWithRoles, Role as RoleSchema
+from app.services.user_service import UserService, RoleService
 from app.api.deps import get_current_user
 
 router = APIRouter()
@@ -120,9 +120,10 @@ async def refresh_token(
     }
 
 
-@router.get("/me", response_model=UserSchema)
+@router.get("/me", response_model=UserWithRoles)
 async def get_current_user_info(
-    current_user: UserSchema = Depends(get_current_user)
+    current_user: UserSchema = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
 ) -> Any:
     """
     Get current user information
@@ -134,8 +135,38 @@ async def get_current_user_info(
         logger.info(f"📋 /me endpoint called")
         logger.info(f"👤 Current user type: {type(current_user)}")
         logger.info(f"👤 Current user: {current_user}")
-        logger.info(f"✅ Returning user info")
-        return current_user
+        role_service = RoleService(db)
+        roles = await role_service.list_user_roles(current_user.id)
+        return {
+            "id": current_user.id,
+            "username": current_user.username,
+            "email": current_user.email,
+            "full_name": current_user.full_name,
+            "phone": current_user.phone,
+            "department": current_user.department,
+            "position": current_user.position,
+            "employee_id": current_user.employee_id,
+            "role": current_user.role,
+            "is_superuser": current_user.is_superuser,
+            "is_verified": current_user.is_verified,
+            "is_active": current_user.is_active,
+            "bio": current_user.bio,
+            "avatar_url": current_user.avatar_url,
+            "last_login": current_user.last_login,
+            "created_at": current_user.created_at,
+            "updated_at": current_user.updated_at,
+            "roles": [
+                {
+                    "id": r.id,
+                    "name": r.name,
+                    "description": r.description,
+                    "is_builtin": r.is_builtin,
+                    "created_at": r.created_at,
+                    "updated_at": r.updated_at,
+                }
+                for r in roles
+            ],
+        }
     except Exception as e:
         logger.error(f"❌ Error in /me endpoint: {e}")
         raise

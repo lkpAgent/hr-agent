@@ -146,6 +146,39 @@ const routes = [
           }
         ]
       },
+      {
+        path: 'system',
+        name: 'SystemManagement',
+        meta: {
+          title: '系统管理',
+          icon: 'Setting',
+          requiresAuth: true
+        },
+        children: [
+          {
+            path: '',
+            redirect: '/system/users'
+          },
+          {
+            path: 'users',
+            name: 'UsersManagement',
+            component: () => import('@/views/system/UsersManagement.vue'),
+            meta: {
+              title: '用户管理',
+              requiresAuth: true
+            }
+          },
+          {
+            path: 'roles',
+            name: 'RolesManagement',
+            component: () => import('@/views/system/RolesManagement.vue'),
+            meta: {
+              title: '角色管理',
+              requiresAuth: true
+            }
+          }
+        ]
+      },
      
       {
         path: 'profile',

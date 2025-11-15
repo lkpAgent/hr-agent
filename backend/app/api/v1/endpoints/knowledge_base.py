@@ -3,13 +3,15 @@ Knowledge base management endpoints
 """
 from typing import Any, List
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.schemas.knowledge_base import KnowledgeBase as KnowledgeBaseSchema, KnowledgeBaseCreate, KnowledgeBaseUpdate
 from app.schemas.user import User as UserSchema
 from app.services.knowledge_base_service import KnowledgeBaseService
-from app.api.deps import get_current_user, get_current_superuser
+from app.api.deps import get_current_user, get_current_admin_by_role
+from app.models.user import Role, UserRoleAssociation
 
 router = APIRouter()
 
@@ -66,11 +68,18 @@ async def get_knowledge_base(
         )
     
     # Check if user has access
-    if not knowledge_base.is_public and not current_user.is_superuser:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions"
+    if not knowledge_base.is_public:
+        result = await db.execute(
+            select(Role)
+            .join(UserRoleAssociation, Role.id == UserRoleAssociation.role_id)
+            .where(UserRoleAssociation.user_id == current_user.id, Role.is_active == True)
         )
+        roles = {r.name for r in result.scalars().all()}
+        if "超级管理员" not in roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not enough permissions"
+            )
     
     return knowledge_base
 
@@ -79,7 +88,7 @@ async def get_knowledge_base(
 async def update_knowledge_base(
     kb_id: str,
     kb_update: KnowledgeBaseUpdate,
-    current_user: UserSchema = Depends(get_current_superuser),
+    current_user: UserSchema = Depends(get_current_admin_by_role),
     db: AsyncSession = Depends(get_db)
 ) -> Any:
     """
@@ -101,7 +110,7 @@ async def update_knowledge_base(
 @router.delete("/{kb_id}")
 async def delete_knowledge_base(
     kb_id: str,
-    current_user: UserSchema = Depends(get_current_superuser),
+    current_user: UserSchema = Depends(get_current_admin_by_role),
     db: AsyncSession = Depends(get_db)
 ) -> Any:
     """
@@ -141,11 +150,18 @@ async def search_knowledge_base(
         )
     
     # Check if user has access
-    if not knowledge_base.is_public and not current_user.is_superuser:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions"
+    if not knowledge_base.is_public:
+        result = await db.execute(
+            select(Role)
+            .join(UserRoleAssociation, Role.id == UserRoleAssociation.role_id)
+            .where(UserRoleAssociation.user_id == current_user.id, Role.is_active == True)
         )
+        roles = {r.name for r in result.scalars().all()}
+        if "超级管理员" not in roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not enough permissions"
+            )
     
     try:
         results = await kb_service.search_knowledge_base(

@@ -170,6 +170,10 @@ const menuRoutes = computed(() => {
       route.path !== 'dashboard' // 工作台单独处理
     )
     .map(route => {
+      // 权限：非超级管理员隐藏系统管理
+      if (route.path === 'system' && !authStore.isAdminByRole) {
+        return null
+      }
       // 处理有子路由的菜单项
       if (route.children && route.children.length > 0) {
         return {
@@ -192,6 +196,7 @@ const menuRoutes = computed(() => {
         path: `/${route.path}` // 确保路径正确
       }
     })
+    .filter(Boolean)
   
   // 工作台菜单项放在最前面
   return [

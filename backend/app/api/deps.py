@@ -1,15 +1,16 @@
 """
 API dependencies for authentication and authorization
 """
-from typing import Generator, Optional
+from typing import Generator, Optional, List
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
 from app.core.config import settings
 from app.core.database import get_db
-from app.models.user import User
+from app.models.user import User, Role, UserRoleAssociation
 from app.schemas.user import User as UserSchema
 from app.services.user_service import UserService
 
@@ -75,20 +76,6 @@ async def get_current_user(
         raise
 
 
-async def get_current_superuser(
-    current_user: User = Depends(get_current_user),
-) -> User:
-    """
-    Get current superuser
-    """
-    if not current_user.is_superuser:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions"
-        )
-    return current_user
-
-
 async def get_current_hr_user(
     current_user: User = Depends(get_current_user),
 ) -> User:
@@ -103,3 +90,43 @@ async def get_current_hr_user(
             detail="HR permissions required"
         )
     return current_user
+
+
+async def get_current_admin_by_role(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> User:
+    query = (
+        select(Role)
+        .join(UserRoleAssociation, Role.id == UserRoleAssociation.role_id)
+        .where(UserRoleAssociation.user_id == current_user.id, Role.is_active == True)
+    )
+    result = await db.execute(query)
+    roles = {r.name for r in result.scalars().all()}
+    if "超级管理员" not in roles:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="需要超级管理员角色"
+        )
+    return current_user
+
+
+def require_any_role_names(required: List[str]):
+    async def dependency(
+        db: AsyncSession = Depends(get_db),
+        current_user: User = Depends(get_current_user),
+    ) -> User:
+        query = (
+            select(Role)
+            .join(UserRoleAssociation, Role.id == UserRoleAssociation.role_id)
+            .where(UserRoleAssociation.user_id == current_user.id, Role.is_active == True)
+        )
+        result = await db.execute(query)
+        roles = {r.name for r in result.scalars().all()}
+        if not any(name in roles for name in required):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="角色权限不足"
+            )
+        return current_user
+    return dependency

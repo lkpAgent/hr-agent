@@ -1,1 +1,0 @@
-Python是一种高级编程语言，以其简洁的语法和强大的功能而闻名。它广泛用于数据科学、机器学习、Web开发和自动化脚本。Python的生态系统包括许多有用的库，如NumPy、Pandas、Scikit-learn和TensorFlow。

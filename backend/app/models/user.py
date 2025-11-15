@@ -1,7 +1,7 @@
 """
 User model for authentication and user management
 """
-from sqlalchemy import Column, String, Boolean, DateTime, Text, Enum
+from sqlalchemy import Column, String, Boolean, DateTime, Text, Enum, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship
 import enum
 
@@ -47,6 +47,28 @@ class User(BaseModel):
     conversations = relationship("Conversation", back_populates="user", cascade="all, delete-orphan")
     documents = relationship("Document", back_populates="uploaded_by", cascade="all, delete-orphan")
     interview_plans = relationship("InterviewPlan", back_populates="user", cascade="all, delete-orphan")
+    roles = relationship("Role", secondary="user_role", back_populates="users")
     
     def __repr__(self):
         return f"<User(username='{self.username}', email='{self.email}')>"
+
+
+class Role(BaseModel):
+    __tablename__ = "role"
+
+    name = Column(String(50), unique=True, nullable=False, index=True)
+    description = Column(String(255), nullable=True)
+    is_builtin = Column(Boolean, default=False, nullable=False)
+
+    users = relationship("User", secondary="user_role", back_populates="roles")
+
+
+class UserRoleAssociation(BaseModel):
+    __tablename__ = "user_role"
+
+    user_id = Column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    role_id = Column(ForeignKey("role.id", ondelete="CASCADE"), nullable=False, index=True)
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "role_id", name="uq_user_role_user_id_role_id"),
+    )

@@ -79,12 +79,15 @@ api.interceptors.response.use(
           break
           
         case 422:
-          // 表单验证错误
-          if (data.detail && Array.isArray(data.detail)) {
+          if (data && data.error && data.error.details && Array.isArray(data.error.details.errors)) {
+            const errors = data.error.details.errors.map(e => `${e.field}: ${e.message}`).join('；')
+            ElMessage.error(`参数错误: ${errors}`)
+          } else if (data.detail && Array.isArray(data.detail)) {
             const errors = data.detail.map(item => item.msg).join(', ')
             ElMessage.error(`参数错误: ${errors}`)
           } else {
-            ElMessage.error(data.message || '参数验证失败')
+            const msg = data?.error?.message || data?.message || '参数验证失败'
+            ElMessage.error(msg)
           }
           break
           

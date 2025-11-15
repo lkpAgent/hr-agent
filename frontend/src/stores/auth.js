@@ -8,10 +8,12 @@ export const useAuthStore = defineStore('auth', () => {
   // 状态
   const token = ref(Cookies.get('token') || '')
   const user = ref(null)
+  const roles = ref([])
   const loading = ref(false)
 
   // 计算属性
   const isAuthenticated = computed(() => !!token.value && !!user.value)
+  const isAdminByRole = computed(() => roles.value.some(r => r.name === '超级管理员'))
 
   // 设置token
   const setToken = (newToken) => {
@@ -26,6 +28,10 @@ export const useAuthStore = defineStore('auth', () => {
   // 设置用户信息
   const setUser = (userInfo) => {
     user.value = userInfo
+  }
+
+  const setRoles = (roleList) => {
+    roles.value = Array.isArray(roleList) ? roleList : []
   }
 
   // 登录
@@ -63,6 +69,13 @@ export const useAuthStore = defineStore('auth', () => {
       
       const userInfo = await authApi.getCurrentUser()
       setUser(userInfo)
+      try {
+        const { accountApi } = await import('@/api/admin')
+        const myRoles = await accountApi.getMyRoles()
+        setRoles(myRoles)
+      } catch (e) {
+        setRoles([])
+      }
       return userInfo
     } catch (error) {
       console.error('获取用户信息失败:', error)
@@ -92,6 +105,7 @@ export const useAuthStore = defineStore('auth', () => {
   const logout = () => {
     setToken('')
     setUser(null)
+    setRoles([])
     ElMessage.success('已退出登录')
   }
 
@@ -116,8 +130,10 @@ export const useAuthStore = defineStore('auth', () => {
     // 状态
     token: computed(() => token.value),
     user: computed(() => user.value),
+    roles: computed(() => roles.value),
     loading: computed(() => loading.value),
     isAuthenticated,
+    isAdminByRole,
     
     // 方法
     login,
@@ -127,6 +143,7 @@ export const useAuthStore = defineStore('auth', () => {
     checkAuth,
     updateUser,
     setToken,
-    setUser
+    setUser,
+    setRoles
   }
 })

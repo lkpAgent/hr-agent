@@ -7,7 +7,7 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, delete, desc
 
-from app.models.user import User, UserRole
+from app.models.user import User, UserRole, Role, UserRoleAssociation
 from app.schemas.user import UserCreate, UserUpdate
 from app.core.security import get_password_hash, verify_password
 
@@ -115,6 +115,14 @@ class UserService:
         except Exception as e:
             logger.error(f"Error getting user {user_id}: {e}")
             raise
+
+    async def get_user_any(self, user_id: UUID) -> Optional[User]:
+        """Get a user by ID, including inactive"""
+        try:
+            return await self.db.get(User, user_id)
+        except Exception as e:
+            logger.error(f"Error getting user (any) {user_id}: {e}")
+            raise
     
     async def get_user_by_email(self, email: str) -> Optional[User]:
         """Get a user by email"""
@@ -163,6 +171,31 @@ class UserService:
         except Exception as e:
             logger.error(f"Error getting users: {e}")
             raise
+
+    async def get_all_users(
+        self,
+        skip: int = 0,
+        limit: int = 20,
+        role: Optional[UserRole] = None,
+        department: Optional[str] = None
+    ) -> List[User]:
+        """Get users including inactive ones (admin list)"""
+        try:
+            query = select(User)
+
+            if role:
+                query = query.where(User.role == role)
+
+            if department:
+                query = query.where(User.department == department)
+
+            query = query.order_by(desc(User.created_at)).offset(skip).limit(limit)
+
+            result = await self.db.execute(query)
+            return result.scalars().all()
+        except Exception as e:
+            logger.error(f"Error getting all users: {e}")
+            raise
     
     async def update_user(
         self,
@@ -173,7 +206,7 @@ class UserService:
         """Update a user"""
         try:
             # Get the user to update
-            user = await self.get_user(user_id)
+            user = await self.db.get(User, user_id)
             if not user:
                 return None
             
@@ -322,3 +355,87 @@ class UserService:
             return True
         
         return False
+
+
+class RoleService:
+    def __init__(self, db: AsyncSession):
+        self.db = db
+
+    async def list_roles(self) -> List[Role]:
+        try:
+            result = await self.db.execute(select(Role).where(Role.is_active == True).order_by(desc(Role.created_at)))
+            return result.scalars().all()
+        except Exception as e:
+            logger.error(f"Error listing roles: {e}")
+            raise
+
+    async def create_role(self, name: str, description: Optional[str] = None, is_builtin: bool = False) -> Role:
+        try:
+            existing = await self.db.execute(select(Role).where(Role.name == name))
+            if existing.scalar_one_or_none():
+                raise ValueError("Role name already exists")
+            role = Role(name=name, description=description, is_builtin=is_builtin)
+            self.db.add(role)
+            await self.db.commit()
+            await self.db.refresh(role)
+            return role
+        except Exception as e:
+            await self.db.rollback()
+            logger.error(f"Error creating role: {e}")
+            raise
+
+    async def delete_role(self, role_id: UUID) -> bool:
+        try:
+            role = await self.db.get(Role, role_id)
+            if not role:
+                return False
+            await self.db.delete(role)
+            await self.db.commit()
+            return True
+        except Exception as e:
+            await self.db.rollback()
+            logger.error(f"Error deleting role {role_id}: {e}")
+            raise
+
+    async def list_user_roles(self, user_id: UUID) -> List[Role]:
+        try:
+            result = await self.db.execute(
+                select(Role)
+                .join(UserRoleAssociation, Role.id == UserRoleAssociation.role_id)
+                .where(UserRoleAssociation.user_id == user_id, Role.is_active == True)
+                .order_by(desc(Role.created_at))
+            )
+            return result.scalars().all()
+        except Exception as e:
+            logger.error(f"Error listing roles for user {user_id}: {e}")
+            raise
+
+    async def assign_roles_to_user(self, user_id: UUID, role_ids: List[UUID]) -> List[Role]:
+        try:
+            # Ensure user exists
+            if not await self.db.get(User, user_id):
+                raise ValueError("User not found")
+
+            # Validate roles exist
+            for rid in role_ids:
+                if not await self.db.get(Role, rid):
+                    raise ValueError(f"Role not found: {rid}")
+
+            # Clear existing associations
+            await self.db.execute(
+                delete(UserRoleAssociation).where(UserRoleAssociation.user_id == user_id)
+            )
+            await self.db.commit()
+
+            # Assign new associations
+            for rid in role_ids:
+                self.db.add(UserRoleAssociation(user_id=user_id, role_id=rid))
+
+            await self.db.commit()
+
+            # Return current roles via explicit query to avoid lazy load
+            return await self.list_user_roles(user_id)
+        except Exception as e:
+            await self.db.rollback()
+            logger.error(f"Error assigning roles to user {user_id}: {e}")
+            raise

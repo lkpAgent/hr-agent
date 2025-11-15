@@ -2,7 +2,7 @@
 User-related Pydantic schemas
 """
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 from uuid import UUID
 from pydantic import BaseModel, EmailStr, Field
 
@@ -42,6 +42,7 @@ class UserUpdate(BaseModel):
     avatar_url: Optional[str] = None
     is_superuser: Optional[bool] = None
     is_verified: Optional[bool] = None
+    is_active: Optional[bool] = None
 
 
 class UserInDB(UserBase):
@@ -85,3 +86,54 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     """Schema for token data"""
     user_id: Optional[UUID] = None
+
+
+class RoleBase(BaseModel):
+    name: str
+    description: Optional[str] = None
+
+
+class RoleCreate(RoleBase):
+    is_builtin: Optional[bool] = False
+
+
+class RoleUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+
+
+class Role(BaseModel):
+    id: UUID
+    name: str
+    description: Optional[str]
+    is_builtin: bool
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class AssignRolesRequest(BaseModel):
+    role_ids: List[UUID]
+
+
+class UserWithRoles(BaseModel):
+    id: UUID
+    username: str
+    email: EmailStr
+    full_name: Optional[str]
+    phone: Optional[str]
+    department: Optional[str]
+    position: Optional[str]
+    employee_id: Optional[str]
+    role: Optional[UserRole]
+    is_superuser: bool
+    is_verified: bool
+    is_active: bool
+    bio: Optional[str]
+    avatar_url: Optional[str]
+    last_login: Optional[datetime]
+    created_at: datetime
+    updated_at: datetime
+    roles: List[Role]
