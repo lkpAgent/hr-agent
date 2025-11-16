@@ -439,3 +439,21 @@ class RoleService:
             await self.db.rollback()
             logger.error(f"Error assigning roles to user {user_id}: {e}")
             raise
+
+    async def get_roles_for_users(self, user_ids: List[UUID]) -> dict[UUID, List[Role]]:
+        try:
+            if not user_ids:
+                return {}
+            result = await self.db.execute(
+                select(UserRoleAssociation.user_id, Role)
+                .join(Role, Role.id == UserRoleAssociation.role_id)
+                .where(UserRoleAssociation.user_id.in_(user_ids), Role.is_active == True)
+            )
+            rows = result.all()
+            mapping: dict[UUID, List[Role]] = {}
+            for uid, role in rows:
+                mapping.setdefault(uid, []).append(role)
+            return mapping
+        except Exception as e:
+            logger.error(f"Error fetching roles for users: {e}")
+            raise

@@ -7,14 +7,15 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.schemas.user import User as UserSchema, UserUpdate, UserCreate, Role as RoleSchema, RoleCreate, AssignRolesRequest
+from app.schemas.user import User as UserSchema, UserUpdate, UserCreate, Role as RoleSchema, RoleCreate, AssignRolesRequest, UserWithRoles
 from app.services.user_service import UserService, RoleService
 from app.api.deps import get_current_user, get_current_admin_by_role
+from app.models.user import UserRole
 
 router = APIRouter()
 
 
-@router.get("/", response_model=List[UserSchema])
+@router.get("/", response_model=List[UserWithRoles])
 async def get_users(
     skip: int = 0,
     limit: int = 100,
@@ -26,7 +27,47 @@ async def get_users(
     """
     user_service = UserService(db)
     users = await user_service.get_all_users(skip=skip, limit=limit)
-    return users
+    role_service = RoleService(db)
+    user_ids = [u.id for u in users]
+    roles_map = await role_service.get_roles_for_users(user_ids)
+
+    result: List[dict] = []
+    for u in users:
+        roles = roles_map.get(u.id, [])
+        role_names = {r.name for r in roles}
+        # 仅根据角色表确定管理员身份
+        derived_role = UserRole.ADMIN if "超级管理员" in role_names else UserRole.EMPLOYEE
+        result.append({
+            "id": u.id,
+            "username": u.username,
+            "email": u.email,
+            "full_name": u.full_name,
+            "phone": u.phone,
+            "department": u.department,
+            "position": u.position,
+            "employee_id": u.employee_id,
+            "role": derived_role,
+            "is_superuser": u.is_superuser,
+            "is_verified": u.is_verified,
+            "is_active": u.is_active,
+            "bio": u.bio,
+            "avatar_url": u.avatar_url,
+            "last_login": u.last_login,
+            "created_at": u.created_at,
+            "updated_at": u.updated_at,
+            "roles": [
+                {
+                    "id": r.id,
+                    "name": r.name,
+                    "description": r.description,
+                    "is_builtin": r.is_builtin,
+                    "created_at": r.created_at,
+                    "updated_at": r.updated_at,
+                }
+                for r in roles
+            ],
+        })
+    return result
 
 
 @router.get("/{user_id}", response_model=UserSchema)

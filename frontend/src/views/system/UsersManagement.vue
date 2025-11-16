@@ -41,8 +41,12 @@
             <el-table-column label="姓名" prop="full_name" min-width="140" />
             <el-table-column label="角色" min-width="220">
               <template #default="{ row }">
-                <el-tag v-for="r in (row.roles || [])" :key="r.id" type="success" class="mr8">{{ r.name }}</el-tag>
-                <el-tag v-if="row.role" type="info" class="mr8">{{ mapEnumRole(row.role) }}</el-tag>
+                <template v-if="row.roles && row.roles.length > 0">
+                  <el-tag v-for="r in row.roles" :key="r.id" type="success" class="mr8">{{ r.name }}</el-tag>
+                </template>
+                <template v-else>
+                  <el-tag type="info" class="mr8">员工</el-tag>
+                </template>
               </template>
             </el-table-column>
             <el-table-column label="状态" min-width="120">
