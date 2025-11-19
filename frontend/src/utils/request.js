@@ -40,9 +40,12 @@ request.interceptors.response.use(
       
       switch (status) {
         case 401:
-          ElMessage.error('未授权，请重新登录')
-          Cookies.remove('token')
-          window.location.href = '/login'
+          if (!window.__AUTH_EXPIRED_NOTIFIED) {
+            window.__AUTH_EXPIRED_NOTIFIED = true
+            ElMessage.error('登录已过期，请重新登录')
+            Cookies.remove('token')
+            window.location.href = '/login'
+          }
           break
         case 403:
           ElMessage.error('权限不足')

@@ -105,57 +105,13 @@
                 </div>
               </div>
 
-              <!-- 打分项 -->
+              <!-- 打分项 - 动态渲染后端返回的实际评价维度 -->
               <div class="score-items">
-                <div class="score-row">
+                <div v-for="(metric, index) in candidate.evaluationMetrics" :key="metric.name" class="score-row">
                   <div class="score-item">
-                    <span class="score-label">学历</span>
+                    <span class="score-label">{{ metric.name }}</span>
                     <el-rate 
-                      v-model="candidate.scores.education" 
-                      :max="5" 
-                      size="small" 
-                      disabled
-                      show-score
-                    />
-                  </div>
-                  <div class="score-item">
-                    <span class="score-label">工作经验</span>
-                    <el-rate 
-                      v-model="candidate.scores.workExperience" 
-                      :max="5" 
-                      size="small" 
-                      disabled
-                      show-score
-                    />
-                  </div>
-                </div>
-                <div class="score-row">
-                  <div class="score-item">
-                    <span class="score-label">技能</span>
-                    <el-rate 
-                      v-model="candidate.scores.skills" 
-                      :max="5" 
-                      size="small" 
-                      disabled
-                      show-score
-                    />
-                  </div>
-                  <div class="score-item">
-                    <span class="score-label">项目经验</span>
-                    <el-rate 
-                      v-model="candidate.scores.projectExperience" 
-                      :max="5" 
-                      size="small" 
-                      disabled
-                      show-score
-                    />
-                  </div>
-                </div>
-                <div class="score-row">
-                  <div class="score-item">
-                    <span class="score-label">综合素质</span>
-                    <el-rate 
-                      v-model="candidate.scores.overallQuality" 
+                      :model-value="Math.min(5, Math.max(0, Math.round((metric.score / metric.max) * 5)))" 
                       :max="5" 
                       size="small" 
                       disabled
@@ -541,7 +497,19 @@ const formattedResumeContent = computed(() => {
 // 格式化面试方案内容
 const formattedInterviewPlan = computed(() => {
   if (!interviewPlan.value?.content) return ''
-  return marked(interviewPlan.value.content)
+  
+  // 清理内容，移除可能包含的SSE事件数据
+  let cleanedContent = interviewPlan.value.content
+  
+  // 如果内容包含workflow_started等事件数据，记录警告并返回空内容
+  if (cleanedContent.includes('"event": "workflow_started"') || 
+      cleanedContent.includes('"conversation_id"') ||
+      cleanedContent.includes('"message_id"')) {
+    console.warn('面试方案内容包含SSE事件数据，需要清理:', cleanedContent)
+    return marked('正在生成面试方案，请稍候...')
+  }
+  
+  return marked(cleanedContent)
 })
 
 // 方法
@@ -599,12 +567,23 @@ const fetchCandidates = async () => {
         totalScore: resume.total_score || 0,
         status: resume.status,
         scores: {
-          education: getMetricScore('学历'),
-          workExperience: getMetricScore('工作经验'),
-          skills: getMetricScore('技能'),
-          projectExperience: getMetricScore('项目经验'),
-          overallQuality: getMetricScore('综合素质')
+          // 动态生成评分维度映射
+          ...(() => {
+            const dynamicScores = {}
+            if (resume.evaluation_metrics && Array.isArray(resume.evaluation_metrics)) {
+              resume.evaluation_metrics.forEach(metric => {
+                // 使用维度名称作为key，转换为camelCase格式
+                const key = metric.name.replace(/匹配度|经验|背景|技能|素质/g, '')
+                  .replace(/^[A-Z]/, m => m.toLowerCase())
+                  .replace(/[-_\s]+(.)?/g, (_, c) => c ? c.toUpperCase() : '')
+                dynamicScores[key] = Math.min(5, Math.max(0, Math.round((metric.score / metric.max) * 5)))
+              })
+            }
+            return dynamicScores
+          })()
         },
+        // 保存原始评价维度数据用于详细展示
+        evaluationMetrics: resume.evaluation_metrics || [],
         resume: {
           personalInfo: {
             name: resume.candidate_name || '未知',
@@ -742,26 +721,53 @@ const generateInterviewPlan = async (candidate) => {
         const lines = chunk.split('\n')
 
         for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const data = line.slice(6)
-            if (data === '[DONE]') {
-              break
+          const l = line.trim()
+          if (!l) continue
+          
+          // 调试：输出原始行数据
+          if (l.startsWith('data:')) {
+            console.log('原始SSE数据行:', l)
+          }
+          
+          if (l.startsWith('event:') || l.startsWith('id:') || l.startsWith('retry:')) continue
+          if (!l.startsWith('data: ')) continue
+
+          const dataStr = l.slice(6).trim()
+          if (!dataStr) continue
+          if (dataStr === '[DONE]') break
+
+          try {
+            const parsed = JSON.parse(dataStr)
+            const evt = parsed.event || parsed.type
+            const newContent = parsed.answer || parsed.content || parsed.text || ''
+            
+            // 调试日志
+            if (evt && evt !== 'message') {
+              console.log('SSE事件:', evt, '内容:', newContent)
             }
             
-            try {
-              const parsed = JSON.parse(data)
-              // 根据后端返回的数据格式处理：{"event": "message", "answer": "#", ...}
-              if (parsed.answer) {
-                planContent += parsed.answer
-                // 实时更新显示内容
-                interviewPlan.value.content = planContent
-              }
-            } catch (e) {
-              // 如果不是JSON，直接添加到结果中
-              if (data && data !== '[DONE]') {
-                planContent += data
-                interviewPlan.value.content = planContent
-              }
+            if (evt && evt !== 'message' && !newContent) continue
+            if (newContent) {
+              planContent += newContent
+              interviewPlan.value.content = planContent
+            } else if (evt && evt === 'message') {
+              // 如果是message事件但没有内容，记录日志
+              console.log('Message事件无有效内容:', parsed)
+            }
+          } catch (e) {
+            const lower = dataStr.toLowerCase()
+            if ((lower.startsWith('{') || lower.startsWith('[')) && lower.includes('"event"')) {
+              console.log('跳过SSE事件数据:', dataStr)
+              continue
+            }
+            // 检查是否包含workflow相关关键词
+            if (lower.includes('workflow') || lower.includes('conversation_id') || lower.includes('message_id')) {
+              console.log('跳过workflow相关数据:', dataStr)
+              continue
+            }
+            if (dataStr && dataStr !== '[DONE]') {
+              planContent += dataStr
+              interviewPlan.value.content = planContent
             }
           }
         }
@@ -1205,6 +1211,7 @@ onMounted(() => {
   display: flex;
   gap: 16px;
   margin-bottom: 8px;
+  align-items: center;
   
   &:last-child {
     margin-bottom: 0;
@@ -1213,12 +1220,17 @@ onMounted(() => {
 
 .score-item {
   flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   
   .score-label {
     display: block;
     font-size: 12px;
-    color: #909399;
-    margin-bottom: 4px;
+    color: #606266;
+    font-weight: 500;
+    min-width: 80px;
+    text-align: right;
   }
 }
 
@@ -2134,6 +2146,18 @@ onMounted(() => {
     .score-row {
       flex-direction: column;
       gap: 8px;
+      align-items: stretch;
+      
+      .score-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+        
+        .score-label {
+          text-align: left;
+          min-width: auto;
+        }
+      }
     }
     
     .candidate-actions {

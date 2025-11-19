@@ -295,6 +295,8 @@
       title="上传简历"
       width="600px"
       :close-on-click-modal="false"
+      :close-on-press-escape="false"
+      :show-close="!uploading"
     >
       <div class="upload-section">
         <!-- JD选择器 -->
@@ -306,6 +308,8 @@
               style="width: 100%"
               filterable
               :loading="jdListLoading"
+              :disabled="uploading"
+              @change="handleJDSelectionChange"
             >
               <el-option
                 v-for="jd in jdList"
@@ -322,7 +326,22 @@
           </el-form-item>
         </div>
         
+        <!-- 上传进度状态 -->
+        <div v-if="uploading" class="upload-status-section">
+          <div class="status-content">
+            <el-icon class="status-icon is-loading"><Loading /></el-icon>
+            <div class="status-text">
+              <h4>正在解析简历并进行智能评估</h4>
+              <p>请稍候，系统正在分析简历内容并与职位要求进行匹配...</p>
+              <div class="status-progress">
+                <el-progress :percentage="100" :indeterminate="true" :duration="2" />
+              </div>
+            </div>
+          </div>
+        </div>
+        
         <el-upload
+          v-else
           ref="uploadRef"
           class="upload-dragger"
           drag
@@ -342,7 +361,7 @@
           </div>
           <template #tip>
             <div class="el-upload__tip">
-              支持 PDF、DOC、DOCX 格式，文件大小不超过 10MB
+              支持 PDF、Word 格式，文件大小不超过 10MB
             </div>
           </template>
         </el-upload>
@@ -350,9 +369,9 @@
       
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="showUploadDialog = false">取消</el-button>
+          <el-button @click="showUploadDialog = false" :disabled="uploading">取消</el-button>
           <el-button type="primary" @click="confirmUpload" :loading="uploading">
-            确定上传
+            {{ uploading ? '处理中...' : '确定上传' }}
           </el-button>
         </span>
       </template>
@@ -361,7 +380,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Document, Star, Close, Check } from '@element-plus/icons-vue'
 import { resumeApi } from '@/api/resume'
@@ -673,12 +692,17 @@ const beforeUpload = (file) => {
     return false
   }
   
-  // 设置上传数据
-  uploadData.value = {
-    job_description_id: selectedJDId.value
+  // 确保上传数据已经设置（通过handleJDSelectionChange设置）
+  if (!uploadData.value.job_description_id) {
+    ElMessage.error('JD信息未正确设置，请重新选择JD')
+    return false
   }
   
   uploading.value = true
+  
+  // 显示等待提示
+  ElMessage.info('正在解析简历并进行智能评估，请稍候...')
+  
   return true
 }
 
@@ -708,6 +732,17 @@ const openUploadDialog = () => {
   fileList.value = []
   uploadData.value = {}
   showUploadDialog.value = true
+}
+
+// 监听JD选择变化，实时更新上传数据
+const handleJDSelectionChange = () => {
+  if (selectedJDId.value) {
+    uploadData.value = {
+      job_description_id: selectedJDId.value
+    }
+  } else {
+    uploadData.value = {}
+  }
 }
 
 const confirmUpload = () => {
@@ -743,6 +778,17 @@ const getMetricScoreType = (score, max) => {
 onMounted(() => {
   fetchResumeList()
   fetchJDList()
+})
+
+// 监听JD选择变化
+watch(selectedJDId, (newValue) => {
+  if (newValue) {
+    uploadData.value = {
+      job_description_id: newValue
+    }
+  } else {
+    uploadData.value = {}
+  }
 })
 </script>
 
@@ -1306,35 +1352,60 @@ onMounted(() => {
     padding: 16px;
     background: rgba(255, 255, 255, 0.05);
     border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .upload-status-section {
+    padding: 40px 20px;
+    text-align: center;
+    background: rgba(64, 158, 255, 0.05);
+    border: 2px dashed rgba(64, 158, 255, 0.3);
+    border-radius: 8px;
+    margin: 20px 0;
     
-    :deep(.el-form-item__label) {
-      color: #333;
-      font-weight: 500;
-    }
-    
-    :deep(.el-select) {
-      .el-input__wrapper {
-        background: rgba(255, 255, 255, 0.9);
-        border: 1px solid #dcdfe6;
-        border-radius: 6px;
+    .status-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      
+      .status-icon {
+        font-size: 48px;
+        color: #409eff;
+        margin-bottom: 16px;
         
-        &:hover {
-          border-color: #c0c4cc;
+        &.is-loading {
+          animation: rotating 2s linear infinite;
+        }
+      }
+      
+      .status-text {
+        h4 {
+          margin: 0 0 8px 0;
+          color: #303133;
+          font-size: 16px;
+          font-weight: 600;
         }
         
-        &.is-focus {
-          border-color: #409eff;
-          box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
+        p {
+          margin: 0;
+          color: #606266;
+          font-size: 14px;
+          line-height: 1.5;
         }
+      }
+      
+      .status-progress {
+        width: 100%;
+        max-width: 300px;
+        margin-top: 16px;
       }
     }
   }
+}
   
   .upload-dragger {
     width: 100%;
   }
-}
 
 // 响应式设计
 @media (max-width: 1200px) {

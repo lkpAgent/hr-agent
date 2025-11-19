@@ -613,7 +613,10 @@ const sendMessage = async () => {
     // 检查是否是网络错误或服务器错误
     if (error.message.includes('401') || error.message.includes('403')) {
       assistantMessage.content = '认证失败，请重新登录。'
-      ElMessage.error('认证失败，请重新登录')
+      if (!window.__AUTH_EXPIRED_NOTIFIED) {
+        window.__AUTH_EXPIRED_NOTIFIED = true
+        ElMessage.error('登录已过期，请重新登录')
+      }
     } else if (error.message.includes('500')) {
       assistantMessage.content = '服务器内部错误，请稍后重试。'
       ElMessage.error('服务器内部错误，请稍后重试')

@@ -46,9 +46,37 @@ class ResumeEvaluationService:
                 raise ValueError(message)
             
             # 2. 提取文本内容
+            logger.info(f"开始解析文件: {filename}, 大小: {len(file_content)} 字节")
+            
+            # 检测文档类型
+            doc_type = self.resume_parser._detect_document_type(file_content, filename)
+            logger.info(f"检测到文档类型: {doc_type}")
+            
             resume_text = await self.resume_parser.extract_text_from_file(file_content, filename)
-            if not resume_text.strip():
-                raise ValueError("无法从文件中提取到有效内容")
+            logger.info(f"文件解析完成，提取到文本长度: {len(resume_text) if resume_text else 0}")
+            
+            if not resume_text or not resume_text.strip():
+                logger.error(f"文件解析失败 - 文件名: {filename}, 文档类型: {doc_type}, 提取内容: '{resume_text[:100] if resume_text else '空'}'")
+                
+                # 根据文档类型提供具体的错误提示
+                if doc_type == 'scanned_pdf':
+                    raise ValueError(f"无法从PDF文件 '{filename}' 中提取文本内容。该PDF可能是扫描文档，只包含图片而不包含可选择的文本。请使用包含可选择文本的PDF文件，或将简历内容直接复制粘贴到文本框中。")
+                elif doc_type == 'image_heavy_doc':
+                    raise ValueError(f"无法从Word文件 '{filename}' 中提取有效文本内容。该文档可能主要是图片或包含大量图片内容。请使用包含文本内容的Word文档，或将简历内容直接复制粘贴到文本框中。")
+                else:
+                    raise ValueError(f"无法从文件 '{filename}' 中提取到有效内容。请确保文件包含可读的文本内容，而不是扫描的图片或受保护的文档。支持PDF、Word(.doc/.docx)和纯文本(.txt)格式。")
+            
+            # 验证提取的内容质量
+            validation_result = self.resume_parser._validate_extracted_content(resume_text, filename)
+            if not validation_result['is_valid']:
+                logger.warning(f"内容验证失败 - 文件名: {filename}, 原因: {validation_result['reason']}")
+                
+                if validation_result['reason'] == 'too_short':
+                    logger.warning(f"文件 '{filename}' 内容过短，但仍继续处理")
+                elif validation_result['reason'] == 'no_readable_text':
+                    raise ValueError(f"文件 '{filename}' 提取的内容不包含可读文本。请确保上传的是包含文本内容的文档，而不是图片或扫描件。")
+            else:
+                logger.info(f"内容验证通过 - 文件名: {filename}, 文本长度: {validation_result['text_length']}, 中英文: {validation_result['has_chinese']}/{validation_result['has_english']}, 关键词: {validation_result['keyword_count']}")
             
             # 3. 获取文件信息
             file_info = self.resume_parser.get_file_info(filename, file_content)
@@ -112,24 +140,21 @@ class ResumeEvaluationService:
             return None
     
     async def _get_evaluation_model(self, jd_id: UUID) -> str:
-        """获取评价模型"""
+        """获取评价模型 - 使用评分标准的content字段作为评价依据"""
         try:
             # 查询与JD关联的评分标准
             result = await self.db.execute(
                 select(ScoringCriteria).where(ScoringCriteria.job_description_id == jd_id)
             )
             criteria = result.scalar_one_or_none()
-            
-            if criteria and criteria.evaluation_model:
-                return criteria.evaluation_model
-            
-            # 如果没有找到特定的评价模型，返回默认模型
-            return self._get_default_evaluation_model()
+
+            # 返回默认模型
+            return criteria.content
             
         except Exception as e:
             logger.error(f"获取评价模型失败: {e}")
             return self._get_default_evaluation_model()
-    
+
     def _get_default_evaluation_model(self) -> str:
         """获取默认评价模型"""
         return """
@@ -200,7 +225,7 @@ class ResumeEvaluationService:
             
             # 调用Dify API (使用工作流类型2进行简历评价)
             response = await self.dify_service.call_workflow_sync(
-                workflow_type=2,  # 简历评价工作流
+                workflow_type=3,  # 简历评价工作流
                 query=evaluation_prompt,
                 additional_inputs={
                     "resume_text": resume_text,
@@ -239,9 +264,12 @@ class ResumeEvaluationService:
             
             # 尝试解析JSON
             try:
+                logger.info(f"开始解析AI响应，原始文本长度: {len(answer_text)}")
+                
                 # 尝试直接解析JSON
                 if answer_text.startswith('{') and answer_text.endswith('}'):
                     result_data = json.loads(answer_text)
+                    logger.info(f"直接JSON解析成功，数据字段: {list(result_data.keys())}")
                 else:
                     # 如果响应包含代码块，提取JSON部分
                     if '```json' in answer_text:
@@ -281,26 +309,31 @@ class ResumeEvaluationService:
                         reason=metric_data.get('reason', '')
                     )
                     metrics.append(metric)
-                
+                # 处理年龄字段
+                try:
+                    age_value = int(result_data.get('age')) if result_data.get('age') else 0
+                except (ValueError, TypeError):
+                    age_value = 0  # 解析失败时默认设为0
+
                 # 构建AI评价结果
                 ai_result = AIEvaluationResult(
                     evaluation_metrics=metrics,
                     total_score=result_data.get('total_score', 0),
                     name=result_data.get('name', ''),
                     position=result_data.get('position', ''),
-                    workYears=result_data.get('workYears', ''),
+                    workYears=str(result_data.get('workYears', '')),
                     教育水平=result_data.get('education', ''),
-                    年龄=result_data.get('age'),
+                    年龄=age_value,
                     sex=result_data.get('sex', ''),
                     school=result_data.get('school', '')
                 )
-                
+
                 return ai_result
                 
             except json.JSONDecodeError as e:
-                logger.error(f"JSON解析失败: {e}, 原始响应: {answer}")
+                logger.error(f"JSON解析失败: {e}, 原始响应: {answer_text}")
                 # 返回默认结果
-                return self._create_default_result(answer)
+                return self._create_default_result(answer_text)
                 
         except Exception as e:
             logger.error(f"解析AI响应失败: {e}")

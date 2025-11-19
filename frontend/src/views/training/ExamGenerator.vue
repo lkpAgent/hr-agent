@@ -1642,9 +1642,13 @@ onMounted(async () => {
 
         ElMessage.success('已根据意图自动填充试卷表单')
 
-        // 若已有知识库文件，自动触发试卷生成
+        // 立即关闭意图解析提示框
+        parsingIntent.value = false
+
+        // 若已有知识库文件，自动触发试卷生成（不阻塞关闭解析提示）
         if (form.knowledgeFiles.length > 0) {
-          await generateExam()
+          // 异步触发生成，避免阻塞解析提示的关闭
+          setTimeout(() => { generateExam() }, 0)
         } else {
           ElMessage.warning('未检索到相关知识库文件，请先选择文档')
         }
@@ -1653,6 +1657,7 @@ onMounted(async () => {
       console.error('解析试卷意图失败:', error)
       ElMessage.error('解析试卷意图失败')
     } finally {
+      // 兜底：确保提示框关闭
       parsingIntent.value = false
     }
   }

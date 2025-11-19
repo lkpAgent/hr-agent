@@ -1,4 +1,4 @@
-﻿# Web框架和核心依赖
+# Web框架和核心依赖
 fastapi>=0.104.1
 uvicorn[standard]>=0.24.0
 pydantic==2.7.4
@@ -40,6 +40,7 @@ python-docx>=0.8.11  # Word文档处理
 markdown>=3.5.0  # Markdown文件处理
 chardet>=5.2.0   # 文件编码检测
 pdfplumber>=0.11.7  #pdf内容提取
+docx2txt>=0.8    # DOC文件处理（旧版Word）
 # 工作流编排和智能体
 celery>=5.3.0    # 异步任务队列
 redis>=5.0.0     # Redis缓存和消息队列

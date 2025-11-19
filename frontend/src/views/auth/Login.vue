@@ -151,6 +151,8 @@ const handleLogin = async () => {
     })
     
     if (result.success) {
+      // 清除认证过期标记
+      window.__AUTH_EXPIRED_NOTIFIED = false
       router.push('/')
     }
   } catch (error) {

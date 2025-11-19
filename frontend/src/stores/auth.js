@@ -84,7 +84,7 @@ export const useAuthStore = defineStore('auth', () => {
       console.error('获取用户信息失败:', error)
       // 如果获取用户信息失败，清除token
       if (!offlineLogin.value) {
-        logout()
+        logout({ silent: true })
       }
       throw error
     }
@@ -101,17 +101,20 @@ export const useAuthStore = defineStore('auth', () => {
       return false
     } catch (error) {
       console.error('刷新token失败:', error)
-      logout()
+      logout({ silent: true })
       return false
     }
   }
 
   // 登出
-  const logout = () => {
+  const logout = (options = {}) => {
+    const silent = !!options.silent
     setToken('')
     setUser(null)
     offlineLogin.value = false
-    ElMessage.success('已退出登录')
+    if (!silent) {
+      ElMessage.success('已退出登录')
+    }
   }
 
   // 检查认证状态
@@ -121,7 +124,7 @@ export const useAuthStore = defineStore('auth', () => {
         await getCurrentUser()
       } catch (error) {
         console.error('检查认证状态失败:', error)
-        logout()
+        logout({ silent: true })
       }
     }
   }

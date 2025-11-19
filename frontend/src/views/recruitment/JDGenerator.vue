@@ -371,7 +371,7 @@
                       </div>
 
                       <!-- 评分标准内容 -->
-                      <div class="scoring-content">
+              <div class="scoring-content" style="flex-grow: 1; min-height: 0; height: calc(100% - 140px);">
                         <!-- 生成中状态 - 无内容时显示骨架屏 -->
                         <div v-if="scoringGenerating && !scoringDisplayedContent" class="generating-container">
                           <el-skeleton :rows="8" animated />
@@ -776,9 +776,13 @@ const handleStreamResponse = async (response) => {
 
       for (const line of lines) {
         if (line.trim() === '') continue // 跳过空行
+        if (line.startsWith('event:')) continue
+        if (line.startsWith('id:') || line.startsWith('retry:')) continue
         
         if (line.startsWith('data: ')) {
           const data = line.slice(6).trim()
+          const lower = data.toLowerCase()
+          if (lower === 'ping' || lower.startsWith('event: ping')) continue
           console.log('解析数据行:', data)
           
           if (data === '[DONE]') {
@@ -818,7 +822,7 @@ const handleStreamResponse = async (response) => {
           } catch (e) {
             console.log('JSON解析失败，原始数据:', data, '错误:', e)
             // 如果不是JSON，直接添加到结果中
-            if (data && data !== '[DONE]') {
+            if (data && data !== '[DONE]' && !data.toLowerCase().startsWith('event:')) {
               fullStreamContent.value += data
               displayedContent.value = fullStreamContent.value
             }
@@ -1988,7 +1992,7 @@ onUnmounted(() => {
             }
 
             .jd-form {
-              height: calc(100vh - 300px);
+              height: calc(100% - 140px);
               overflow-y: auto;
               padding-right: 8px;
 
@@ -2070,8 +2074,10 @@ onUnmounted(() => {
             }
 
             .preview-content {
-              height: calc(100vh - 300px);
+              height: calc(100% - 20px);
               overflow-y: auto;
+              display: flex;
+              flex-direction: column;
 
               .generating-container {
                 .generating-text {
@@ -2087,6 +2093,7 @@ onUnmounted(() => {
 
               .edit-container {
                 height: 100%;
+                min-height: 400px;
 
                 .edit-textarea {
                   height: 100%;
@@ -2102,6 +2109,9 @@ onUnmounted(() => {
               }
 
               .preview-container {
+                height: 100%;
+                min-height: 400px;
+                
                 .markdown-content {
                   line-height: 1.8;
                   color: #303133;
@@ -2253,6 +2263,9 @@ onUnmounted(() => {
 
 // 打字机效果样式
 .typewriter-container {
+  height: 100%;
+  min-height: 400px;
+  
   .typewriter-header {
     display: flex;
     align-items: center;

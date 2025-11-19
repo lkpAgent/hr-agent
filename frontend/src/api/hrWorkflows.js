@@ -1,5 +1,33 @@
 import { request } from '@/api/index'
 import Cookies from 'js-cookie'
+import { ElMessage } from 'element-plus'
+import { useAuthStore } from '@/stores/auth'
+
+// 统一的fetch错误处理函数
+const handleFetchError = (response) => {
+  if (!response.ok) {
+    if (response.status === 401) {
+      // 401错误处理
+      const authStore = useAuthStore()
+      authStore.logout({ silent: true })
+      if (!window.__AUTH_EXPIRED_NOTIFIED) {
+        window.__AUTH_EXPIRED_NOTIFIED = true
+        ElMessage.error('登录已过期，请重新登录')
+        window.location.href = '/login'
+      }
+    } else if (response.status === 403) {
+      ElMessage.error('没有权限访问该资源')
+    } else if (response.status === 404) {
+      ElMessage.error('请求的资源不存在')
+    } else if (response.status >= 500) {
+      ElMessage.error('服务器内部错误')
+    } else {
+      ElMessage.error(`请求失败: ${response.status}`)
+    }
+    throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+  }
+  return response
+}
 
 export const hrWorkflowsApi = {
   // 获取工作流类型列表
@@ -18,7 +46,7 @@ export const hrWorkflowsApi = {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(data)
-      })
+      }).then(handleFetchError)
     }
     
     return request.post('/hr-workflows/generate-jd', data)
@@ -40,7 +68,7 @@ export const hrWorkflowsApi = {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(data)
-      })
+      }).then(handleFetchError)
     }
     
     return request.post('/hr-workflows/evaluate-resume', data)
@@ -57,7 +85,7 @@ export const hrWorkflowsApi = {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(data)
-      })
+      }).then(handleFetchError)
     }
     
     return request.post('/hr-workflows/generate-interview-plan', data)
@@ -80,7 +108,7 @@ export const hrWorkflowsApi = {
           'Authorization': `Bearer ${token}`
         },
         body: formData
-      })
+      }).then(handleFetchError)
     }
     
     return request.post('/hr-workflows/generate-interview-plan-by-resume', data)
@@ -97,7 +125,7 @@ export const hrWorkflowsApi = {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(data)
-      })
+      }).then(handleFetchError)
     }
     
     return request.post('/hr-workflows/custom', data)
@@ -148,7 +176,7 @@ export const hrWorkflowsApi = {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(data)
-      })
+      }).then(handleFetchError)
     }
     
     return request.post('/hr-workflows/generate-scoring-criteria', data)

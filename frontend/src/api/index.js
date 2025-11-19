@@ -60,13 +60,14 @@ api.interceptors.response.use(
       
       switch (status) {
         case 401:
-          // 未授权，清除token并跳转到登录页
           const authStore = useAuthStore()
-          authStore.logout()
-          
-          if (router.currentRoute.value.path !== '/login') {
-            ElMessage.error('登录已过期，请重新登录')
-            router.push('/login')
+          authStore.logout({ silent: true })
+          if (!window.__AUTH_EXPIRED_NOTIFIED) {
+            window.__AUTH_EXPIRED_NOTIFIED = true
+            if (router.currentRoute.value.path !== '/login') {
+              ElMessage.error('登录已过期，请重新登录')
+              router.push('/login')
+            }
           }
           break
           
