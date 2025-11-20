@@ -627,7 +627,29 @@ const renderedJD = computed(() => {
     return ''
   }
   
-  return marked(content)
+  // 清理内容，移除可能包含的SSE事件数据
+  let cleanedContent = content
+  
+  // 如果内容包含SSE事件数据，记录警告并清理
+  if (cleanedContent.includes('"event": "node_finished"') || 
+      cleanedContent.includes('"event": "workflow_started"') ||
+      cleanedContent.includes('"conversation_id"') ||
+      cleanedContent.includes('"message_id"') ||
+      cleanedContent.includes('data: {"event"')) {
+    console.warn('JD内容包含SSE事件数据，需要清理:', cleanedContent)
+    
+    // 尝试清理明显的SSE数据
+    cleanedContent = cleanedContent.replace(/data:\s*\{[^{}]*"event"[^{}]*\}/g, '')
+    cleanedContent = cleanedContent.replace(/\{[^{}]*"event":\s*"node_finished"[^{}]*\}/g, '')
+    cleanedContent = cleanedContent.replace(/data:\s*\{[^{}]*"conversation_id"[^{}]*\}/g, '')
+    
+    // 如果清理后内容为空，返回提示信息
+    if (!cleanedContent.trim()) {
+      return marked('正在生成JD内容，请稍候...')
+    }
+  }
+  
+  return marked(cleanedContent)
 })
 
 // 打字机效果显示内容的计算属性
@@ -762,73 +784,107 @@ const handleStreamResponse = async (response) => {
   const reader = response.body.getReader()
   const decoder = new TextDecoder()
 
+  let currentEvent = null
+  let currentDataParts = []
+  
+  // 调试：记录原始响应
+  console.log('开始处理SSE流式响应')
+
   try {
     while (true) {
       const { done, value } = await reader.read()
-      if (done) {
-        console.log('流式响应读取完成')
-        break
-      }
+      if (done) break
 
       const chunk = decoder.decode(value)
-      console.log('接收到数据块:', chunk)
       const lines = chunk.split('\n')
 
-      for (const line of lines) {
-        if (line.trim() === '') continue // 跳过空行
-        if (line.startsWith('event:')) continue
-        if (line.startsWith('id:') || line.startsWith('retry:')) continue
-        
-        if (line.startsWith('data: ')) {
-          const data = line.slice(6).trim()
-          const lower = data.toLowerCase()
-          if (lower === 'ping' || lower.startsWith('event: ping')) continue
-          console.log('解析数据行:', data)
-          
-          if (data === '[DONE]') {
-            console.log('收到结束标记，开始打字机效果')
-            // 流式响应结束，开始打字机效果
-            if (fullStreamContent.value) {
-              console.log('完整内容:', fullStreamContent.value)
-              startTypewriter(fullStreamContent.value)
-              streamContent.value = fullStreamContent.value
-            } else {
-              console.log('没有接收到任何内容')
-            }
-            return
-          }
-          
-          try {
-            const parsed = JSON.parse(data)
-            console.log('解析的JSON数据:', parsed)
+      for (const rawLine of lines) {
+        const line = rawLine.trim()
+        if (!line) {
+          if (currentDataParts.length > 0) {
+            const dataStr = currentDataParts.join('\n').trim()
+            currentDataParts = []
             
-            // 检查不同可能的字段
-            if (parsed.answer) {
-              console.log('找到answer字段:', parsed.answer)
-              fullStreamContent.value += parsed.answer
-              // 实时显示内容（不等待完成）
-              displayedContent.value = fullStreamContent.value
-            } else if (parsed.content) {
-              console.log('找到content字段:', parsed.content)
-              fullStreamContent.value += parsed.content
-              displayedContent.value = fullStreamContent.value
-            } else if (parsed.text) {
-              console.log('找到text字段:', parsed.text)
-              fullStreamContent.value += parsed.text
-              displayedContent.value = fullStreamContent.value
-            } else {
-              console.log('未找到内容字段，完整数据:', parsed)
+            // 调试：记录处理的数据帧
+            console.log('处理SSE数据帧:', dataStr)
+
+            if (dataStr === '[DONE]') {
+              if (fullStreamContent.value) {
+                startTypewriter(fullStreamContent.value)
+                streamContent.value = fullStreamContent.value
+              }
+              return
             }
-          } catch (e) {
-            console.log('JSON解析失败，原始数据:', data, '错误:', e)
-            // 如果不是JSON，直接添加到结果中
-            if (data && data !== '[DONE]' && !data.toLowerCase().startsWith('event:')) {
-              fullStreamContent.value += data
-              displayedContent.value = fullStreamContent.value
+
+            try {
+              const parsed = JSON.parse(dataStr)
+              const evt = parsed.event || parsed.type || currentEvent
+              const newContent = parsed.answer || parsed.content || parsed.text || ''
+              
+              // 调试：记录事件类型和内容
+              if (evt) {
+                console.log('SSE事件类型:', evt, '内容:', newContent)
+              }
+              
+              if (evt && evt !== 'message' && !newContent) {
+                currentEvent = null
+                console.log('跳过非消息事件:', evt)
+                continue
+              }
+              if (newContent) {
+                fullStreamContent.value += newContent
+                displayedContent.value = fullStreamContent.value
+                console.log('添加内容:', newContent)
+              }
+            } catch {
+              const lower = dataStr.toLowerCase()
+              if ((lower.startsWith('{') || lower.startsWith('[')) && lower.includes('"event"')) {
+                currentEvent = null
+                console.log('跳过事件JSON数据:', dataStr)
+                continue
+              }
+              // 检查是否包含node_finished等事件关键词
+              if (lower.includes('node_finished') || lower.includes('workflow') || lower.includes('event')) {
+                console.log('跳过包含事件关键词的数据:', dataStr)
+                continue
+              }
+              if (dataStr && dataStr !== '[DONE]') {
+                console.log('添加纯文本内容:', dataStr)
+                fullStreamContent.value += dataStr
+                displayedContent.value = fullStreamContent.value
+              }
             }
           }
+          currentEvent = null
+          continue
+        }
+
+        if (line.startsWith('event: ')) {
+          currentEvent = line.slice(7).trim()
+          continue
+        }
+        if (line.startsWith('data: ')) {
+          const d = line.slice(6).trim()
+          const lower = d.toLowerCase()
+          if (lower === 'ping') continue
+          currentDataParts.push(d)
+          continue
         }
       }
+    }
+    if (currentDataParts.length > 0) {
+      const dataStr = currentDataParts.join('\n').trim()
+      try {
+        const parsed = JSON.parse(dataStr)
+        const evt = parsed.event || parsed.type || currentEvent
+        const newContent = parsed.answer || parsed.content || parsed.text || ''
+        if (!evt || evt === 'message') {
+          if (newContent) {
+            fullStreamContent.value += newContent
+            displayedContent.value = fullStreamContent.value
+          }
+        }
+      } catch {}
     }
   } finally {
     reader.releaseLock()
@@ -1584,7 +1640,7 @@ onUnmounted(() => {
     margin: 0 auto;
     width: 100%;
     position: relative;
-    z-index: 1;
+    z-index: 2; // 提高主容器的层级，确保高于背景装饰
   }
 
   .page-header {
@@ -2078,6 +2134,8 @@ onUnmounted(() => {
               overflow-y: auto;
               display: flex;
               flex-direction: column;
+              position: relative;
+              z-index: 3; // 确保预览内容区域有足够高的层级
 
               .generating-container {
                 .generating-text {
@@ -2259,6 +2317,30 @@ onUnmounted(() => {
       }
     }
   }
+}
+
+// 评分标准操作栏样式
+.scoring-actions {
+  position: relative;
+  z-index: 10; // 提高层级，确保不被SVG背景覆盖
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+// 评分标准容器样式
+.scoring-criteria-container {
+  position: relative;
+  z-index: 5; // 确保容器本身有足够高的层级
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 // 打字机效果样式
