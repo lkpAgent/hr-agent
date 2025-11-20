@@ -305,9 +305,9 @@ def main():
         
         elif command == "create-quick":
             creator.create_admin_user(
-                username="admin",
-                email="admin@hr-agent.com",
-                password="admin123",
+                username="testuser",
+                email="testuser@hr-agent.com",
+                password="test123",
                 full_name="System Administrator"
             )
         

@@ -1992,7 +1992,7 @@ onUnmounted(() => {
             }
 
             .jd-form {
-              height: calc(100% - 140px);
+              height: calc(100% - 40px);
               overflow-y: auto;
               padding-right: 8px;
 
@@ -2245,7 +2245,7 @@ onUnmounted(() => {
         .jd-editor-content {
           .editor-main {
             flex-direction: column;
-
+            min-height: 300px;
             .config-panel {
               width: 100%;
               height: 400px;
