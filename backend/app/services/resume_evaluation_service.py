@@ -276,7 +276,7 @@ class ResumeEvaluationService:
                 metrics = []
                 for metric_data in result_data.get('evaluation_metrics', []):
                     metric = EvaluationMetric(
-                        name=metric_data.get('评价指标', ''),
+                        name=metric_data.get('name', ''),
                         score=metric_data.get('score', 0),
                         max=metric_data.get('max', 100),
                         reason=metric_data.get('reason', '')
