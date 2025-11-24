@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.schemas.chat import ChatMessage, ChatResponse, ChatRequest
 from app.schemas.user import User as UserSchema
+from app.schemas.conversation import ConversationCreate
 from app.services.chat_service import ChatService
 from app.services.conversation_service import ConversationService
 from app.api.deps import get_current_user
@@ -39,9 +40,12 @@ async def send_message(
                 )
         else:
             # Create new conversation
+            conversation_data = ConversationCreate(
+                title=chat_request.message[:50] + "..." if len(chat_request.message) > 50 else chat_request.message
+            )
             conversation = await conversation_service.create_conversation(
                 user_id=current_user.id,
-                title=chat_request.message[:50] + "..." if len(chat_request.message) > 50 else chat_request.message
+                conversation_data=conversation_data
             )
         
         # Process the message and get AI response
@@ -84,9 +88,12 @@ async def stream_message(
                 )
         else:
             # Create new conversation
+            conversation_data = ConversationCreate(
+                title=chat_request.message[:50] + "..." if len(chat_request.message) > 50 else chat_request.message
+            )
             conversation = await conversation_service.create_conversation(
                 user_id=current_user.id,
-                title=chat_request.message[:50] + "..." if len(chat_request.message) > 50 else chat_request.message
+                conversation_data=conversation_data
             )
         
         # Get streaming response

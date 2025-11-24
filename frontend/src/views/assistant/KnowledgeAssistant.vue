@@ -351,6 +351,13 @@ import {
 import { useAuthStore } from '@/stores/auth'
 import api from '@/api'
 import { getKnowledgeBases } from '@/api/knowledgeBase'
+import { 
+  getConversations, 
+  createConversation, 
+  deleteConversation,
+  getConversationMessages,
+  saveConversationMessages 
+} from '@/api/conversation'
 
 const authStore = useAuthStore()
 
@@ -371,6 +378,7 @@ const selectedKnowledgeBase = ref('')
 
 // 历史对话
 const chatHistory = ref([])
+const currentConversationId = ref(null) // 当前对话ID
 
 // 上传表单
 const uploadForm = reactive({
@@ -605,6 +613,7 @@ const clearChat = async () => {
     
     messages.value = []
     documentChunks.value = []
+    currentConversationId.value = null // 清空当前对话ID
     ElMessage.success('对话已清空')
   } catch {
     // 用户取消
@@ -637,78 +646,136 @@ const getScoreType = (score) => {
 }
 
 // 历史对话相关方法
-const loadChatHistory = () => {
-  const saved = localStorage.getItem('chat_history')
-  if (saved) {
-    try {
-      chatHistory.value = JSON.parse(saved)
-    } catch (error) {
-      console.error('加载历史对话失败:', error)
-      chatHistory.value = []
+const loadChatHistory = async () => {
+  try {
+    const response = await getConversations()
+    if (response.data && Array.isArray(response.data)) {
+      chatHistory.value = response.data.map(conv => ({
+        id: conv.id,
+        title: conv.title || `对话 ${conv.id}`,
+        preview: conv.description || '',
+        messages: conv.messages || [],
+        messageCount: conv.message_count || 0,
+        timestamp: new Date(conv.created_at || conv.timestamp),
+        knowledgeBaseId: conv.meta_data?.knowledge_base_id || null
+      }))
     }
+  } catch (error) {
+    console.error('加载历史对话失败:', error)
+    ElMessage.error('加载历史对话失败')
+    chatHistory.value = []
   }
 }
 
-const saveChatSession = () => {
+const saveChatSession = async () => {
   if (messages.value.length === 0) return
   
-  const session = {
-    id: Date.now(),
-    title: messages.value[0]?.content?.substring(0, 30) + '...',
-    preview: messages.value[0]?.content?.substring(0, 100) + '...',
-    messages: [...messages.value],
-    messageCount: messages.value.length,
-    timestamp: new Date(),
-    knowledgeBaseId: selectedKnowledgeBase.value
+  try {
+    // 创建新对话，只使用后端支持的字段
+    const conversationData = {
+      title: messages.value[0]?.content?.substring(0, 30) + '...',
+      description: messages.value[0]?.content?.substring(0, 100) + '...',
+      meta_data: {
+        knowledge_base_id: selectedKnowledgeBase.value,
+        message_count: messages.value.length
+      }
+    }
+    
+    const response = await createConversation(conversationData)
+    if (response.data) {
+      currentConversationId.value = response.data.id
+      
+      // 重新加载历史对话列表
+      await loadChatHistory()
+    }
+  } catch (error) {
+    console.error('保存对话失败:', error)
+    ElMessage.error('保存对话失败')
   }
-  
-  // 保持最多20个历史对话
-  chatHistory.value.unshift(session)
-  if (chatHistory.value.length > 20) {
-    chatHistory.value = chatHistory.value.slice(0, 20)
-  }
-  
-  localStorage.setItem('chat_history', JSON.stringify(chatHistory.value))
 }
 
-const loadChatSession = (session) => {
-  messages.value = [...session.messages]
-  selectedKnowledgeBase.value = session.knowledgeBaseId
-  showChatHistory.value = false
-  
-  // 重新生成文档片段（如果有助手消息）
-  const lastAssistantMessage = messages.value.filter(m => m.type === 'assistant').pop()
-  if (lastAssistantMessage && lastAssistantMessage.sources) {
-    documentChunks.value = lastAssistantMessage.sources.map((source, index) => ({
-      content: source.content,
-      source: source.document_title || source.title,
-      score: Math.max(0, Math.min(1, Number(
-        (source.combined_score ?? source.combined_score_raw ?? source.content_score_norm ??
-         source.similarity ?? source.similarity_score ?? source.score ??
-         source.content_score ?? source.text_score ?? 0)
-      ))),
-      highlighted: false
-    }))
+const loadChatSession = async (session) => {
+  try {
+    // 从后端加载完整的对话消息
+    const response = await getConversationMessages(session.id)
+    if (response.data && Array.isArray(response.data)) {
+      messages.value = response.data.map(msg => ({
+        type: msg.role === 'user' ? 'user' : 'assistant',
+        content: msg.content,
+        sources: msg.sources || [],
+        isStreaming: false
+      }))
+    } else {
+      // 如果后端没有消息数据，使用本地保存的消息
+      messages.value = session.messages || []
+    }
+    
+    currentConversationId.value = session.id
+    selectedKnowledgeBase.value = session.knowledgeBaseId || null
+    showChatHistory.value = false
+    
+    // 重新生成文档片段（如果有助手消息）
+    const lastAssistantMessage = messages.value.filter(m => m.type === 'assistant').pop()
+    if (lastAssistantMessage && lastAssistantMessage.sources) {
+      documentChunks.value = lastAssistantMessage.sources.map((source, index) => ({
+        content: source.content,
+        source: source.document_title || source.title,
+        score: Math.max(0, Math.min(1, Number(
+          (source.combined_score ?? source.combined_score_raw ?? source.content_score_norm ??
+           source.similarity ?? source.similarity_score ?? source.score ??
+           source.content_score ?? source.text_score ?? 0)
+        ))),
+        highlighted: false
+      }))
+    }
+    
+    nextTick(() => {
+      scrollToBottom()
+    })
+  } catch (error) {
+    console.error('加载对话失败:', error)
+    ElMessage.error('加载对话失败')
+    // 如果加载失败，使用本地数据
+    messages.value = session.messages || []
+    selectedKnowledgeBase.value = session.knowledgeBaseId
+    showChatHistory.value = false
   }
-  
-  nextTick(() => {
-    scrollToBottom()
-  })
 }
 
 const deleteChatSession = async (index) => {
   try {
+    const session = chatHistory.value[index]
+    if (!session || !session.id) {
+      ElMessage.error('无法删除对话：对话信息不完整')
+      return
+    }
+    
     await ElMessageBox.confirm('确定要删除这个历史对话吗？', '提示', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning'
     })
     
+    // 调用后端API删除对话
+    await deleteConversation(session.id)
+    
+    // 从本地列表中移除
     chatHistory.value.splice(index, 1)
-    localStorage.setItem('chat_history', JSON.stringify(chatHistory.value))
+    
+    // 如果删除的是当前对话，清空当前对话
+    if (currentConversationId.value === session.id) {
+      currentConversationId.value = null
+      messages.value = []
+      documentChunks.value = []
+      selectedKnowledgeBase.value = null
+    }
+    
     ElMessage.success('历史对话已删除')
-  } catch {
-    // 用户取消
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('删除对话失败:', error)
+      ElMessage.error('删除对话失败')
+    }
   }
 }
 

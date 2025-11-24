@@ -30,7 +30,23 @@ async def get_conversations(
         skip=skip,
         limit=limit
     )
-    return conversations
+    
+    # Convert conversations to dict to avoid DetachedInstanceError
+    result = []
+    for conv in conversations:
+        result.append({
+            "id": conv.id,
+            "user_id": conv.user_id,
+            "title": conv.title,
+            "description": conv.description,
+            "status": conv.status,
+            "message_count": conv.total_messages,  # Map total_messages to message_count for schema
+            "meta_data": conv.meta_data,
+            "created_at": conv.created_at,
+            "updated_at": conv.updated_at
+        })
+    
+    return result
 
 
 @router.post("/", response_model=ConversationSchema)
@@ -45,10 +61,21 @@ async def create_conversation(
     conversation_service = ConversationService(db)
     conversation = await conversation_service.create_conversation(
         user_id=current_user.id,
-        title=conversation_data.title,
-        description=conversation_data.description
+        conversation_data=conversation_data
     )
-    return conversation
+    
+    # Convert to dict to avoid DetachedInstanceError
+    return {
+        "id": conversation.id,
+        "user_id": conversation.user_id,
+        "title": conversation.title,
+        "description": conversation.description,
+        "status": conversation.status,
+        "message_count": conversation.total_messages,
+        "meta_data": conversation.meta_data,
+        "created_at": conversation.created_at,
+        "updated_at": conversation.updated_at
+    }
 
 
 @router.get("/{conversation_id}", response_model=ConversationSchema)
@@ -75,7 +102,18 @@ async def get_conversation(
             detail="Not enough permissions"
         )
     
-    return conversation
+    # Convert to dict to avoid DetachedInstanceError
+    return {
+        "id": conversation.id,
+        "user_id": conversation.user_id,
+        "title": conversation.title,
+        "description": conversation.description,
+        "status": conversation.status,
+        "message_count": conversation.total_messages,
+        "meta_data": conversation.meta_data,
+        "created_at": conversation.created_at,
+        "updated_at": conversation.updated_at
+    }
 
 
 @router.put("/{conversation_id}", response_model=ConversationSchema)

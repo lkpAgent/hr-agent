@@ -32,7 +32,7 @@ class ConversationService:
                 title=conversation_data.title,
                 description=conversation_data.description,
                 status=ConversationStatus.ACTIVE,
-                meta_data=conversation_data.metadata or {}
+                meta_data=conversation_data.meta_data or {}
             )
             
             self.db.add(conversation)
