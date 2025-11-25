@@ -131,11 +131,13 @@ class ResumeEvaluationService:
             logger.error(f"简历评价失败: {e}")
             raise
 
+    # 根据简历内容与投递邮件的主题匹配最合适的JD
     async def evaluate_resume_auto(
         self,
         user_id: UUID,
         file_content: bytes,
         filename: str,
+        subject: str,
         conversation_id: Optional[UUID] = None
     ) -> Dict[str, Any]:
         """无JD输入时，自动匹配最合适的JD并进行评价"""
@@ -147,7 +149,8 @@ class ResumeEvaluationService:
         if not resume_text or not resume_text.strip():
             raise ValueError("无法从简历中提取有效文本")
         # 自动匹配 JD
-        jd_id = await self._match_best_jd(resume_text, create_by=str(user_id))
+        #拼接主题与邮件正文
+        jd_id = await self._match_best_jd(subject=subject, resume_text= resume_text, create_by=str(user_id))
         if not jd_id:
             raise ValueError("未匹配到合适的职位描述")
         # 调用已有评价流程
@@ -159,14 +162,13 @@ class ResumeEvaluationService:
             conversation_id=conversation_id
         )
 
-    async def _match_best_jd(self, resume_text: str,create_by: str) -> Optional[UUID]:
+    async def _match_best_jd(self, subject:str ,resume_text: str,create_by: str) -> Optional[UUID]:
         """通过大模型服务判断最匹配的JD"""
         # 取所有 JD
         result = await self.db.execute(select(JobDescription).where(JobDescription.created_by == create_by))
         jds: List[JobDescription] = [row[0] for row in result.all()]
         if not jds:
             return None
-
 
         # 组装简洁的 JD 选项，避免超长提示
         jd_options = [
@@ -178,16 +180,17 @@ class ResumeEvaluationService:
         ]
         # 构造提示词
         prompt = (
-            "你是一个职位匹配助手。根据候选人的简历内容，从给定的JD列表中选择最匹配的一项。"
-            "请直接返回最匹配的第一条jd_id"
+            "你是一个职位匹配助手。如果候选人投递邮件的主题中包括了他要投递的岗位，则从给定的JD列表中选择最匹配的一项。"
+            "如果投递邮件主题中没有要投递的岗位，则从候选人的简历内容，去从给定的JD列表中选择最匹配的一项。"
+            "输出要求：不要给出匹配理由，直接输出jd id的值"
         )
         try:
             # 使用通用 LLM 服务进行匹配，而不是 Dify 工作流
             import json as _json
             jd_compact = _json.dumps(jd_options, ensure_ascii=False)[:12000]
             llm_input = (
-                f"{prompt}\n\n候选人简历：\n{resume_text[:8000]}\n\nJD列表(JSON)：\n{jd_compact}\n\n"
-                "输出要求：仅返回jd_id"
+                f"{prompt}\n\n候选人投递邮件主题：{subject}\n\n候选人简历：\n{resume_text[:8000]}\n\nJD列表(JSON)：\n{jd_compact}\n\n"
+                " "
             )
             jd_id_str = await self.llm_service.generate_response(message=llm_input)
             print(f"LLM JD匹配结果：{jd_id_str}")
@@ -195,7 +198,7 @@ class ResumeEvaluationService:
                 raise ValueError("匹配结果不包含jd_id")
             # 返回UUID
             for jd in jds:
-                if str(jd.id) == jd_id_str:
+                if str(jd.id) in jd_id_str:
                     print(f"LLM JD匹配成功：{jd.title}")
                     return jd.id
             return None
@@ -498,7 +501,7 @@ class ResumeEvaluationService:
     ) -> List[ResumeEvaluation]:
         """获取评价历史"""
         try:
-            query = select(ResumeEvaluation).where(ResumeEvaluation.user_id == user_id)
+            query = select(ResumeEvaluation).where(ResumeEvaluation.user_id == user_id).order_by(ResumeEvaluation.total_score.desc())
             
             # 添加状态过滤
             if status:

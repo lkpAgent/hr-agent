@@ -61,7 +61,7 @@ async def get_evaluation_history(
     """
     try:
         service = ResumeEvaluationService(db)
-        evaluations = await service.get_user_evaluations(
+        evaluations = await service.get_evaluation_history(
             user_id=current_user.id,
             skip=skip,
             limit=limit

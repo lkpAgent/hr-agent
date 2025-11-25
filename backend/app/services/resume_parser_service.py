@@ -140,63 +140,86 @@ class ResumeParserService:
             raise Exception(f"PDF文件解析失败: {str(e)}")
     
     async def _extract_from_doc(self, file_content: bytes) -> str:
-        """从DOC文件提取文本"""
+        """从DOC（二进制/RTF兼容）文件提取文本"""
+        import tempfile
+        import os
+        import subprocess
+        text_result = ""
+
+        # RTF 兼容：有些 .doc 实际是 RTF 格式
         try:
-            import docx2txt
-            import tempfile
-            import os
-            
-            # 将字节内容写入临时文件
-            with tempfile.NamedTemporaryFile(suffix='.doc', delete=False) as temp_file:
-                temp_file.write(file_content)
-                temp_file_path = temp_file.name
-            
+            import re
+            def rtf_to_text_basic(rtf_bytes: bytes) -> str:
+                s = rtf_bytes.decode('latin-1', errors='ignore')
+                s = s.replace('\\par', '\n')
+                s = re.sub(r"\\'([0-9a-fA-F]{2})", lambda m: bytes.fromhex(m.group(1)).decode('latin-1', errors='ignore'), s)
+                s = s.replace('\\{', '{').replace('\\}', '}').replace('\\\\', '\\')
+                s = re.sub(r"\\[a-zA-Z]+-?\d* ?", "", s)
+                s = re.sub(r"[{}]", "", s)
+                s = re.sub(r"\s+", " ", s)
+                return s.strip()
+            header = file_content[:10]
+            if header.strip().lower().startswith(b"{\\rtf"):
+                text_result = rtf_to_text_basic(file_content)
+                if text_result:
+                    return text_result
+        except Exception:
+            pass
+
+        # 写入临时文件供外部工具/库解析
+        with tempfile.NamedTemporaryFile(suffix='.doc', delete=False) as temp_file:
+            temp_file.write(file_content)
+            temp_file_path = temp_file.name
+
+        try:
+            # 优先尝试 antiword（适配较好）
             try:
-                # 使用docx2txt提取文本
-                text = docx2txt.process(temp_file_path)
-                if text and text.strip():
-                    return text.strip()
-                else:
-                    logger.warning("docx2txt未提取到任何内容")
-                    return ""
-            finally:
-                # 清理临时文件
-                if os.path.exists(temp_file_path):
-                    os.unlink(temp_file_path)
-                
-        except ImportError:
-            logger.error("DOC解析库未安装，请安装 docx2txt")
-            # 尝试使用antiword作为备选方案
+                result = subprocess.run(['antiword', temp_file_path], capture_output=True, text=True, timeout=30)
+                if result.returncode == 0 and result.stdout.strip():
+                    return result.stdout.strip()
+            except (subprocess.SubprocessError, FileNotFoundError) as e:
+                logger.info(f"antiword不可用或失败: {e}")
+
+            # 其次尝试 catdoc
             try:
-                import subprocess
-                import tempfile
-                import os
-                
-                # 写入临时文件
-                with tempfile.NamedTemporaryFile(suffix='.doc', delete=False) as temp_file:
-                    temp_file.write(file_content)
-                    temp_file_path = temp_file.name
-                
-                try:
-                    # 尝试使用antiword命令行工具
-                    result = subprocess.run(['antiword', temp_file_path], 
-                                        capture_output=True, text=True, timeout=30)
-                    if result.returncode == 0 and result.stdout.strip():
-                        return result.stdout.strip()
-                except (subprocess.SubprocessError, FileNotFoundError):
-                    logger.warning("antiword命令不可用")
-                finally:
-                    if os.path.exists(temp_file_path):
-                        os.unlink(temp_file_path)
-                        
+                result = subprocess.run(['catdoc', temp_file_path], capture_output=True, text=True, timeout=30)
+                if result.returncode == 0 and result.stdout.strip():
+                    return result.stdout.strip()
+            except (subprocess.SubprocessError, FileNotFoundError) as e:
+                logger.info(f"catdoc不可用或失败: {e}")
+
+            # 尝试 textract（如果已安装）
+            try:
+                import textract
+                text = textract.process(temp_file_path).decode('utf-8', errors='ignore').strip()
+                if text:
+                    return text
             except Exception as e:
-                logger.error(f"备选DOC解析方案失败: {e}")
-            
-            raise Exception("DOC文件解析功能不可用，请联系管理员")
-            
-        except Exception as e:
-            logger.error(f"DOC文件解析失败: {e}")
-            raise Exception(f"DOC文件解析失败: {str(e)}")
+                logger.info(f"textract解析失败或未安装: {e}")
+
+            # Windows 下可选：使用 win32com 调用本地 Word（需安装 Office）
+            try:
+                import sys
+                if sys.platform.startswith('win'):
+                    import win32com.client
+                    word = win32com.client.Dispatch('Word.Application')
+                    word.Visible = False
+                    doc = word.Documents.Open(temp_file_path)
+                    text = doc.Content.Text
+                    doc.Close(False)
+                    word.Quit()
+                    text = (text or '').strip()
+                    if text:
+                        return text
+            except Exception as e:
+                logger.info(f"win32com 解析失败: {e}")
+
+            # 所有方案失败
+            logger.warning("DOC解析未提取到内容")
+            return ""
+        finally:
+            if os.path.exists(temp_file_path):
+                os.unlink(temp_file_path)
     
     async def _extract_from_docx(self, file_content: bytes) -> str:
         """从DOCX文件提取文本"""

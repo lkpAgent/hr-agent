@@ -153,7 +153,7 @@ class EmailFetchService:
         self,
         config: EmailConfig,
         limit: int = 10,
-        subject_keyword: str = "简历",
+        subject_keyword: list = None,
         output_dir: Optional[Path] = None,
     ) -> EmailFetchLog:
         """
@@ -202,8 +202,12 @@ class EmailFetchService:
                 if not msg:
                     continue
                 subject = (msg.subject or "").lower()
-                if subject_keyword and (subject_keyword.lower() not in subject):
+                # 判断subject是否包含subject_keyword里的关键词
+                # Set default value
+
+                if subject_keyword and not any(keyword.lower() in subject for keyword in subject_keyword):
                     continue
+
                 # save attachments
                 for att in (msg.attachments or []):
                     fname = att.get("filename") or "attachment"
@@ -237,7 +241,7 @@ class EmailFetchService:
                             ev_svc = ResumeEvaluationService(self.db)
                             user_id = config.created_by or None
                             if user_id:
-                                await ev_svc.evaluate_resume_auto(user_id=user_id, file_content=content, filename=fname)
+                                await ev_svc.evaluate_resume_auto(user_id=user_id,subject=subject, file_content=content, filename=fname)
                                 evaluations += 1
                         except Exception:
                             pass

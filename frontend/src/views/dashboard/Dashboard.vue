@@ -144,7 +144,7 @@
               </div>
             </div>
 
-            <div class="quick-action" @click="$router.push('/assistant/chat')">
+            <div class="quick-action" @click="$router.push('/assistant/qa')">
               <div class="action-icon assistant">
                 <el-icon><ChatDotRound /></el-icon>
               </div>

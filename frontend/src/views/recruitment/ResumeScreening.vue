@@ -48,38 +48,22 @@
 
             <!-- 筛选器 -->
             <div class="filters-section">
-              <div class="filter-group">
-                <el-select
-                  v-model="filters.experience"
-                  placeholder="工作经验"
-                  clearable
-                  size="small"
-                  style="width: 120px"
-                  @change="applyFilters"
-                >
-                  <el-option label="不限" value="" />
-                  <el-option label="应届生" value="0-1年" />
-                  <el-option label="1-3年" value="1-3年" />
-                  <el-option label="3-5年" value="3-5年" />
-                  <el-option label="5-10年" value="5-10年" />
-                  <el-option label="10年以上" value="10年以上" />
-                </el-select>
-              </div>
+              
               
               <div class="filter-group">
                 <el-select
-                  v-model="filters.education"
-                  placeholder="学历"
+                  v-model="filters.scoreBucket"
+                  placeholder="按分数"
                   clearable
                   size="small"
-                  style="width: 100px"
+                  style="width: 140px"
                   @change="applyFilters"
                 >
                   <el-option label="不限" value="" />
-                  <el-option label="专科" value="专科" />
-                  <el-option label="本科" value="本科" />
-                  <el-option label="硕士" value="硕士" />
-                  <el-option label="博士" value="博士" />
+                  <el-option label="60分以下" value="lt60" />
+                  <el-option label="60-79" value="60-79" />
+                  <el-option label="80-89" value="80-89" />
+                  <el-option label="90-100" value="90-100" />
                 </el-select>
               </div>
 
@@ -106,15 +90,27 @@
                 </el-empty>
               </div>
 
-              <div v-else class="resume-items">
-                <div
-                  v-for="resume in filteredResumeList"
-                  :key="resume.id"
-                  :class="['resume-item', { active: selectedResume?.id === resume.id }]"
-                  @click="selectResume(resume)"
-                >
+              <div v-else>
+                <div class="toolbar">
+                  <el-checkbox v-model="selectAll" @change="toggleSelectAll">全选</el-checkbox>
+                  <el-button size="small" type="primary" :disabled="selectedIds.length===0" @click="exportSelected">
+                    导出选中（{{ selectedIds.length }}）
+                  </el-button>
+                </div>
+                <div class="resume-items">
+                  <div
+                    v-for="resume in filteredResumeList"
+                    :key="resume.id"
+                    :class="['resume-item', { active: selectedResume?.id === resume.id }]"
+                    @click="selectResume(resume)"
+                  >
                   <div class="resume-item-header">
                     <div class="candidate-info">
+                      <el-checkbox
+                        v-model="selectionMap[resume.id]"
+                        @change="onItemSelectChange(resume)"
+                        class="item-checkbox"
+                      />
                       <h4 class="candidate-name">{{ resume.name }}</h4>
                       <div class="score-badge">
                         <el-tag :type="getScoreType(resume.matchScore)" size="small">
@@ -141,6 +137,7 @@
                     </div>
                   </div>
                 </div>
+              </div>
               </div>
 
               <!-- 分页 -->
@@ -411,8 +408,7 @@ const pagination = reactive({
 // 筛选条件
 const filters = reactive({
   keyword: '',
-  experience: '',
-  education: '',
+  scoreBucket: '',
   scoreRange: [0, 100]
 })
 
@@ -444,14 +440,19 @@ const filteredResumeList = computed(() => {
     )
   }
 
-  // 工作经验筛选
-  if (filters.experience) {
-    filtered = filtered.filter(resume => resume.experience === filters.experience)
-  }
+  // 工作经验筛选已移除
 
-  // 学历筛选
-  if (filters.education) {
-    filtered = filtered.filter(resume => resume.education === filters.education)
+  // 分数区间筛选（按 total_score 映射的 matchScore）
+  if (filters.scoreBucket) {
+    const s = filters.scoreBucket
+    filtered = filtered.filter(resume => {
+      const sc = Number(resume.matchScore || 0)
+      if (s === 'lt60') return sc < 60
+      if (s === '60-79') return sc >= 60 && sc <= 79
+      if (s === '80-89') return sc >= 80 && sc <= 89
+      if (s === '90-100') return sc >= 90 && sc <= 100
+      return true
+    })
   }
 
   // 评分范围筛选
@@ -469,6 +470,60 @@ const formattedResumeContent = computed(() => {
 })
 
 // 方法
+const selectionMap = reactive({})
+const selectedIds = ref([])
+const selectAll = ref(false)
+
+const onItemSelectChange = (resume) => {
+  const checked = !!selectionMap[resume.id]
+  const idx = selectedIds.value.indexOf(resume.id)
+  if (checked && idx === -1) selectedIds.value.push(resume.id)
+  if (!checked && idx !== -1) selectedIds.value.splice(idx, 1)
+}
+
+const toggleSelectAll = () => {
+  if (selectAll.value) {
+    selectedIds.value = filteredResumeList.value.map(r => r.id)
+    filteredResumeList.value.forEach(r => selectionMap[r.id] = true)
+  } else {
+    selectedIds.value = []
+    Object.keys(selectionMap).forEach(k => selectionMap[k] = false)
+  }
+}
+
+const exportSelected = () => {
+  if (selectedIds.value.length === 0) return
+  const rows = filteredResumeList.value
+    .filter(r => selectedIds.value.includes(r.id))
+    .map(r => ({
+      姓名: r.name || '',
+      职位: r.currentPosition || '',
+      分数: r.matchScore || 0,
+      学历: r.education || '',
+      工作年限: r.experience || '',
+      学校: r.school || '',
+      原文件名: r.originalFilename || '',
+      创建时间: r.createdAt || '',
+      简历内容: r.resumeContent || ''
+    }))
+  const header = ['姓名','职位','分数','学历','工作年限','学校','原文件名','创建时间','简历内容']
+  const toCsvValue = (v) => {
+    const s = String(v ?? '')
+    // const s = String(v ?? '').replace(/\r?\n/g, ' ').replace(/"/g, '""')
+    return '"' + s + '"'
+  }
+  const csv = [header.join(','), ...rows.map(row => header.map(h => toCsvValue(row[h])).join(','))].join('\n')
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  const ts = new Date().toISOString().slice(0,19).replace(/[:T]/g, '-')
+  a.download = `简历导出-${ts}.csv`
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
 const fetchResumeList = async () => {
   try {
     loading.value = true
@@ -493,11 +548,12 @@ const fetchResumeList = async () => {
         age: item.candidate_age,
         gender: item.candidate_gender,
         school: item.school,
-        matchScore: item.total_score,
+        matchScore: (typeof item.total_score === 'number' ? item.total_score : Number(item.total_score || 0)),
         skills: item.skills || [],
         highlights: item.highlights || [],
         resumeContent: item.resume_content,
         originalFilename: item.original_filename,
+        resume_content: item.resume_content,
         fileType: item.file_type,
         evaluationMetrics: item.evaluation_metrics || [],
         createdAt: item.created_at
@@ -505,9 +561,7 @@ const fetchResumeList = async () => {
       
       console.log('映射后的简历列表:', resumeList.value)
       
-      // 按创建时间降序排列
-      resumeList.value.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-      console.log('排序后的简历列表:', resumeList.value)
+      // 保留后端返回顺序，不在前端二次排序
       
       pagination.total = response.total || resumeList.value.length
     } else {
@@ -596,8 +650,7 @@ const applyFilters = () => {
 
 const resetFilters = () => {
   filters.keyword = ''
-  filters.experience = ''
-  filters.education = ''
+  filters.scoreBucket = ''
   filters.scoreRange = [0, 100]
 }
 
@@ -923,6 +976,12 @@ watch(selectedJDId, (newValue) => {
     min-height: 0;
     max-height: 500px;
   }
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 16px;
+  }
   
   .resume-items {
     flex: 1;
@@ -1013,6 +1072,7 @@ watch(selectedJDId, (newValue) => {
         }
       }
     }
+    .item-checkbox { margin-right: 8px; }
   }
   
   .pagination-container {

@@ -3,9 +3,6 @@ Lightweight email fetch scheduler using asyncio tasks
 """
 import asyncio
 from typing import Dict
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-
 from app.core.database import AsyncSessionLocal
 from app.models.email_config import EmailConfig
 from app.services.email_service import EmailConfigService, EmailFetchService
@@ -30,6 +27,7 @@ class EmailScheduler:
                 self.tasks[str(cfg.id)] = task
 
     async def _run_fetch_loop(self, config_id: str, interval_min: int, stopper: asyncio.Event):
+        subject_keyword = ['简历','招聘','岗位','BOSS直聘','职位']
         while not stopper.is_set():
             try:
                 async with AsyncSessionLocal() as db:
@@ -37,7 +35,7 @@ class EmailScheduler:
                     fetch_svc = EmailFetchService(db)
                     cfg = await cfg_svc.get(config_id)
                     if cfg and getattr(cfg, "auto_fetch", False) and getattr(cfg, "status", "active") == "active":
-                        log = await fetch_svc.fetch_recent_attachments(cfg, limit=10, subject_keyword="简历")
+                        log = await fetch_svc.fetch_recent_attachments(cfg, limit=10, subject_keyword=subject_keyword)
                         await db.commit()
             except Exception:
                 # swallow errors and continue
