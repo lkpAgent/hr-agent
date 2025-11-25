@@ -534,7 +534,9 @@ async def save_job_description(
             status=jd_data.status,
             meta_data=jd_data.meta_data,
             conversation_id=jd_data.conversation_id,
-            user_id=current_user.id
+            user_id=current_user.id,
+            created_by=current_user.id,
+            updated_by=current_user.id
         )
         
         db.add(jd)
@@ -584,6 +586,7 @@ async def update_job_description(
         update_data = jd_data.model_dump(exclude_unset=True)
         for field, value in update_data.items():
             setattr(jd, field, value)
+        jd.updated_by = current_user.id
         
         await db.commit()
         await db.refresh(jd)
@@ -841,7 +844,9 @@ async def save_scoring_criteria(
             meta_data=criteria_data.meta_data,
             conversation_id=criteria_data.conversation_id,
             job_description_id=criteria_data.job_description_id,
-            user_id=current_user.id
+            user_id=current_user.id,
+            created_by=current_user.id,
+            updated_by=current_user.id
         )
         
         db.add(criteria)
@@ -891,6 +896,7 @@ async def update_scoring_criteria(
         update_data = criteria_data.model_dump(exclude_unset=True)
         for field, value in update_data.items():
             setattr(criteria, field, value)
+        criteria.updated_by = current_user.id
         
         await db.commit()
         await db.refresh(criteria)

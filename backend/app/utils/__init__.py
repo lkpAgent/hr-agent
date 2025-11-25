@@ -2,10 +2,11 @@
 Utility modules
 """
 
+from .date_utils import *
+from .email_utils import *
 from .file_utils import *
 from .text_utils import *
 from .validation_utils import *
-from .date_utils import *
 
 __all__ = [
     # File utilities
@@ -35,4 +36,9 @@ __all__ = [
     "parse_datetime",
     "get_timezone",
     "days_between",
+    
+    # Email utilities
+    "EmailConfig",
+    "EmailMessage",
+    "EmailReader",
 ]

@@ -117,3 +117,12 @@ export const request = {
 }
 
 export default api
+
+// 导出各个模块的API
+export * from './auth'
+export * from './jd'
+export * from './resume'
+export * from './exam'
+export * from './knowledgeBase'
+export * from './hrWorkflows'
+export * from './admin'

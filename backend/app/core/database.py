@@ -61,7 +61,7 @@ async def init_db() -> None:
     try:
         async with engine.begin() as conn:
             # Import all models to ensure they are registered
-            from app.models import user, conversation, document, knowledge_base
+            from app.models import user, conversation, document, knowledge_base, email_config, role, user_role
             
             # Enable pgvector extension if using PostgreSQL
             if "postgresql" in settings.DATABASE_URL:

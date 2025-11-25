@@ -146,7 +146,49 @@ const routes = [
           }
         ]
       },
-     
+      {
+        path: 'admin',
+        name: 'Admin',
+        meta: { 
+          title: '系统管理',
+          icon: 'Setting',
+          requiresAuth: true,
+          onlySuper: true
+        },
+        children: [
+          {
+            path: '',
+            redirect: '/admin/users'
+          },
+          {
+            path: 'users',
+            name: 'UserManagement',
+            component: () => import('@/views/admin/UserManagement.vue'),
+            meta: { 
+              title: '用户管理',
+              requiresAuth: true
+            }
+          },
+          {
+            path: 'roles',
+            name: 'RoleManagement',
+            component: () => import('@/views/admin/RoleManagement.vue'),
+            meta: { 
+              title: '角色管理',
+              requiresAuth: true
+            }
+          },
+          {
+            path: 'email-configs',
+            name: 'EmailManagement',
+            component: () => import('@/views/admin/EmailManagement.vue'),
+            meta: { 
+              title: '邮箱管理',
+              requiresAuth: true
+            }
+          }
+        ]
+      },
       {
         path: 'profile',
         name: 'Profile',
@@ -224,6 +266,13 @@ router.beforeEach(async (to, from, next) => {
       next('/login')
       return
     }
+  }
+
+  // 超管专属路由拦截
+  const onlySuper = to.matched.some(record => record.meta.onlySuper)
+  if (onlySuper && !authStore.user?.is_superuser) {
+    next('/dashboard')
+    return
   }
   
   if (to.path === '/login' && authStore.isAuthenticated) {

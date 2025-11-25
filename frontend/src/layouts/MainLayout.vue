@@ -144,6 +144,7 @@ const sidebarCollapsed = ref(false)
 // 计算属性
 const user = computed(() => authStore.user)
 const userAvatar = computed(() => user.value?.avatar_url || '')
+const isSuper = computed(() => !!user.value?.is_superuser)
 
 // 当前激活的菜单
 const activeMenu = computed(() => {
@@ -167,7 +168,8 @@ const menuRoutes = computed(() => {
     .filter(route => 
       route.meta?.title && 
       !route.meta?.hideInMenu &&
-      route.path !== 'dashboard' // 工作台单独处理
+      route.path !== 'dashboard' && // 工作台单独处理
+      (!route.meta?.onlySuper || isSuper.value)
     )
     .map(route => {
       // 处理有子路由的菜单项
@@ -179,7 +181,8 @@ const menuRoutes = computed(() => {
             .filter(child => 
               child.meta?.title && 
               !child.meta?.hideInMenu &&
-              child.path !== '' // 过滤掉重定向路由
+              child.path !== '' && // 过滤掉重定向路由
+              (!child.meta?.onlySuper || isSuper.value)
             )
             .map(child => ({
               ...child,

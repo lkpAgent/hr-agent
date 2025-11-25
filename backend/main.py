@@ -13,6 +13,7 @@ from app.api.v1.api import api_router
 from app.core.middleware import setup_middleware
 from app.core.logging import setup_logging
 from app.core.exception_handlers import setup_exception_handlers
+from app.services.email_scheduler import EmailScheduler
 
 logger = logging.getLogger(__name__)
 
@@ -32,12 +33,35 @@ async def lifespan(app: FastAPI):
         logger.error(f"Failed to initialize database: {e}")
         raise
     
+    # Start email fetch scheduler
+    try:
+        app.state.email_scheduler = EmailScheduler()
+        await app.state.email_scheduler.start()
+        logger.info("Email scheduler started")
+    except Exception as e:
+        logger.warning(f"Email scheduler failed to start: {e}")
+    # Ensure default roles
+    try:
+        from app.core.database import AsyncSessionLocal
+        from app.services.role_service import RoleService
+        async with AsyncSessionLocal() as db:
+            rs = RoleService(db)
+            await rs.ensure_default_roles()
+            await db.commit()
+        logger.info("Default roles ensured")
+    except Exception as e:
+        logger.warning(f"Ensure default roles failed: {e}")
+
     logger.info("HR Agent Backend started successfully")
     yield
     
     # Shutdown
     logger.info("Shutting down HR Agent Backend...")
     try:
+        # Shutdown email scheduler
+        scheduler = getattr(app.state, "email_scheduler", None)
+        if scheduler:
+            await scheduler.shutdown()
         await close_db()
         logger.info("Database connections closed")
     except Exception as e:

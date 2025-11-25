@@ -25,6 +25,7 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     """Schema for creating a user"""
     password: str = Field(..., min_length=8, max_length=100)
+    role_id: Optional[UUID] = None
 
 
 class UserUpdate(BaseModel):
@@ -37,11 +38,20 @@ class UserUpdate(BaseModel):
     position: Optional[str] = Field(None, max_length=100)
     employee_id: Optional[str] = Field(None, max_length=50)
     role: Optional[UserRole] = None
+    role_id: Optional[UUID] = None
     bio: Optional[str] = Field(None, max_length=500)
     password: Optional[str] = Field(None, min_length=8, max_length=100)
     avatar_url: Optional[str] = None
     is_superuser: Optional[bool] = None
     is_verified: Optional[bool] = None
+
+
+class UserStatusUpdate(BaseModel):
+    status: str = Field(..., pattern="^(active|disabled)$")
+
+
+class UserPasswordReset(BaseModel):
+    password: str = Field(..., min_length=8, max_length=100)
 
 
 class UserInDB(UserBase):

@@ -8,6 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, delete, desc
 
 from app.models.user import User, UserRole
+from app.models.user_role import UserRole as UserRoleMap
+from app.models.role import Role
 from app.schemas.user import UserCreate, UserUpdate
 from app.core.security import get_password_hash, verify_password
 
@@ -47,12 +49,19 @@ class UserService:
                 position=user_data.position,
                 employee_id=user_data.employee_id,
                 role=user_data.role or UserRole.EMPLOYEE,
-                bio=user_data.bio
+                bio=user_data.bio,
+                created_by=None,
+                updated_by=None
             )
             
             self.db.add(user)
             await self.db.commit()
             await self.db.refresh(user)
+            # 标记创建与更新者（由上层endpoint补充具体ID）
+            # Assign role mapping if role_id provided
+            if user_data.role_id:
+                await self._set_user_roles(user.id, [user_data.role_id])
+                await self.db.commit()
             
             logger.info(f"Created user {user.id} with email {user.email}")
             return user
@@ -182,7 +191,7 @@ class UserService:
                 raise PermissionError("Insufficient permissions to update this user")
             
             # Prepare update data
-            update_data = user_data.dict(exclude_unset=True, exclude={'password'})
+            update_data = user_data.dict(exclude_unset=True, exclude={'password', 'role_id'})
             
             # Handle password update separately
             if user_data.password:
@@ -204,11 +213,16 @@ class UserService:
                 query = (
                     update(User)
                     .where(User.id == user_id)
-                    .values(**update_data)
+                    .values(**update_data, updated_by=current_user.id)
                 )
                 await self.db.execute(query)
                 await self.db.commit()
                 await self.db.refresh(user)
+
+            # Update role mapping if provided
+            if user_data.role_id:
+                await self._set_user_roles(user_id, [user_data.role_id])
+                await self.db.commit()
             
             logger.info(f"Updated user {user_id}")
             return user
@@ -298,6 +312,28 @@ class UserService:
             
         except Exception as e:
             logger.error(f"Error updating last login for user {user_id}: {e}")
+
+    async def _set_user_roles(self, user_id: UUID, role_ids):
+        try:
+            # Clear existing mappings
+            await self.db.execute(
+                delete(UserRoleMap).where(UserRoleMap.user_id == user_id)
+            )
+            # Insert new mappings
+            for rid in role_ids:
+                self.db.add(UserRoleMap(user_id=user_id, role_id=rid))
+        except Exception as e:
+            logger.error(f"Error setting user roles for {user_id}: {e}")
+            raise
+
+    async def get_user_roles(self, user_id: UUID):
+        try:
+            stmt = select(Role).join(UserRoleMap, Role.id == UserRoleMap.role_id).where(UserRoleMap.user_id == user_id)
+            result = await self.db.execute(stmt)
+            return [row[0] for row in result.all()]
+        except Exception as e:
+            logger.error(f"Error getting roles for user {user_id}: {e}")
+            raise
     
     def _can_update_user(self, current_user: User, target_user: User) -> bool:
         """Check if current user can update target user"""

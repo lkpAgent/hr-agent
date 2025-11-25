@@ -3,7 +3,7 @@ Main API router for v1 endpoints
 """
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import auth, users, conversations, documents, knowledge_base, chat, knowledge_assistant, hr_workflows, interview_plan, intent_router
+from app.api.v1.endpoints import auth, users, conversations, documents, knowledge_base, chat, knowledge_assistant, hr_workflows, interview_plan, intent_router, email_configs, roles, permissions
 from app.api.v1 import resume_evaluation
 
 api_router = APIRouter()
@@ -20,6 +20,9 @@ api_router.include_router(hr_workflows.router, prefix="/hr-workflows", tags=["hr
 api_router.include_router(resume_evaluation.router, prefix="/resume-evaluation", tags=["resume-evaluation"])
 api_router.include_router(interview_plan.router, prefix="/interview-plans", tags=["interview-plans"])
 api_router.include_router(intent_router.router, prefix="/intent", tags=["intent"])
+api_router.include_router(email_configs.router, prefix="/email-configs", tags=["email-configs"])
+api_router.include_router(roles.router, prefix="/roles", tags=["roles"])
+api_router.include_router(permissions.router, prefix="/permissions", tags=["permissions"])
 
 
 @api_router.get("/health")

@@ -17,7 +17,9 @@ from app.schemas.resume_evaluation import (
     EvaluationMetric
 )
 from app.services.dify_service import DifyService
+from app.services.llm_service import LLMService
 from app.services.resume_parser_service import ResumeParserService
+# 通过大模型进行JD匹配，而非embedding
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +30,7 @@ class ResumeEvaluationService:
     def __init__(self, db: AsyncSession):
         self.db = db
         self.dify_service = DifyService()
+        self.llm_service = LLMService()
         self.resume_parser = ResumeParserService()
     
     async def evaluate_resume(
@@ -127,6 +130,88 @@ class ResumeEvaluationService:
         except Exception as e:
             logger.error(f"简历评价失败: {e}")
             raise
+
+    async def evaluate_resume_auto(
+        self,
+        user_id: UUID,
+        file_content: bytes,
+        filename: str,
+        conversation_id: Optional[UUID] = None
+    ) -> Dict[str, Any]:
+        """无JD输入时，自动匹配最合适的JD并进行评价"""
+        # 解析文本（复用 evaluate_resume 的前置逻辑）
+        is_valid, message = self.resume_parser.validate_file(filename, len(file_content))
+        if not is_valid:
+            raise ValueError(message)
+        resume_text = await self.resume_parser.extract_text_from_file(file_content, filename)
+        if not resume_text or not resume_text.strip():
+            raise ValueError("无法从简历中提取有效文本")
+        # 自动匹配 JD
+        jd_id = await self._match_best_jd(resume_text, create_by=str(user_id))
+        if not jd_id:
+            raise ValueError("未匹配到合适的职位描述")
+        # 调用已有评价流程
+        return await self.evaluate_resume(
+            user_id=user_id,
+            file_content=file_content,
+            filename=filename,
+            job_description_id=jd_id,
+            conversation_id=conversation_id
+        )
+
+    async def _match_best_jd(self, resume_text: str,create_by: str) -> Optional[UUID]:
+        """通过大模型服务判断最匹配的JD"""
+        # 取所有 JD
+        result = await self.db.execute(select(JobDescription).where(JobDescription.created_by == create_by))
+        jds: List[JobDescription] = [row[0] for row in result.all()]
+        if not jds:
+            return None
+
+
+        # 组装简洁的 JD 选项，避免超长提示
+        jd_options = [
+            {
+                "id": str(jd.id),
+                "title": jd.title
+            }
+            for jd in jds
+        ]
+        # 构造提示词
+        prompt = (
+            "你是一个职位匹配助手。根据候选人的简历内容，从给定的JD列表中选择最匹配的一项。"
+            "请直接返回最匹配的第一条jd_id"
+        )
+        try:
+            # 使用通用 LLM 服务进行匹配，而不是 Dify 工作流
+            import json as _json
+            jd_compact = _json.dumps(jd_options, ensure_ascii=False)[:12000]
+            llm_input = (
+                f"{prompt}\n\n候选人简历：\n{resume_text[:8000]}\n\nJD列表(JSON)：\n{jd_compact}\n\n"
+                "输出要求：仅返回jd_id"
+            )
+            jd_id_str = await self.llm_service.generate_response(message=llm_input)
+            print(f"LLM JD匹配结果：{jd_id_str}")
+            if not jd_id_str:
+                raise ValueError("匹配结果不包含jd_id")
+            # 返回UUID
+            for jd in jds:
+                if str(jd.id) == jd_id_str:
+                    print(f"LLM JD匹配成功：{jd.title}")
+                    return jd.id
+            return None
+        except Exception as e:
+            logger.error(f"LLM JD匹配失败，回退关键词匹配: {e}")
+            # 回退：按关键词匹配（简单匹配）
+            keywords = ["Java", "Python", "前端", "后端", "AI", "算法", "产品", "测试"]
+            scores = []
+            lower_text = resume_text.lower()
+            for jd in jds:
+                agg = " ".join([jd.title or "", jd.requirements or "", jd.skills or ""]).lower()
+                score = sum(1 for kw in keywords if kw.lower() in lower_text and kw.lower() in agg)
+                scores.append(score)
+            import numpy as np
+            best_idx = int(np.argmax(scores)) if scores else 0
+            return jds[best_idx].id if jds else None
     
     async def _get_job_description(self, jd_id: UUID) -> Optional[JobDescription]:
         """获取职位描述"""

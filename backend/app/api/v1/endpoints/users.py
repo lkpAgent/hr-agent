@@ -7,7 +7,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.schemas.user import User as UserSchema, UserUpdate
+from app.schemas.user import User as UserSchema, UserUpdate, UserCreate, UserStatusUpdate, UserPasswordReset
+from app.schemas.role import Role as RoleSchema
 from app.services.user_service import UserService
 from app.api.deps import get_current_user, get_current_superuser
 
@@ -25,7 +26,7 @@ async def get_users(
     Get all users (admin only)
     """
     user_service = UserService(db)
-    users = await user_service.get_multi(skip=skip, limit=limit)
+    users = await user_service.get_users(skip=skip, limit=limit)
     return users
 
 
@@ -68,7 +69,7 @@ async def update_user(
     Update user
     """
     user_service = UserService(db)
-    user = await user_service.get_by_id(user_id)
+    user = await user_service.get_user(user_id)
     
     if not user:
         raise HTTPException(
@@ -83,7 +84,7 @@ async def update_user(
             detail="Not enough permissions"
         )
     
-    updated_user = await user_service.update(user, user_update)
+    updated_user = await user_service.update_user(user.id, user_update,current_user)
     return updated_user
 
 
@@ -107,3 +108,55 @@ async def delete_user(
     
     await user_service.delete(user)
     return {"message": "User deleted successfully"}
+
+
+@router.patch("/{user_id}/status")
+async def update_status(
+    user_id: str,
+    data: UserStatusUpdate,
+    current_user: UserSchema = Depends(get_current_superuser),
+    db: AsyncSession = Depends(get_db)
+) -> Any:
+    user_service = UserService(db)
+    user = await user_service.get_by_id(user_id)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    # Map status to is_active
+    is_active = True if data.status == "active" else False
+    await user_service.update_user(user.id, UserUpdate(is_active=is_active), current_user)
+    return {"message": "Status updated"}
+
+
+@router.post("/{user_id}/reset-password")
+async def reset_password(
+    user_id: str,
+    data: UserPasswordReset,
+    current_user: UserSchema = Depends(get_current_superuser),
+    db: AsyncSession = Depends(get_db)
+) -> Any:
+    user_service = UserService(db)
+    user = await user_service.get_by_id(user_id)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    await user_service.update_user(user.id, UserUpdate(password=data.password), current_user)
+    return {"message": "Password reset"}
+
+
+@router.get("/{user_id}/roles", response_model=List[RoleSchema])
+async def get_user_roles(
+    user_id: str,
+    current_user: UserSchema = Depends(get_current_superuser),
+    db: AsyncSession = Depends(get_db)
+) -> Any:
+    user_service = UserService(db)
+    roles = await user_service.get_user_roles(UUID(user_id))
+    return roles
+@router.post("/", response_model=UserSchema)
+async def create_user(
+    user_data: UserCreate,
+    current_user: UserSchema = Depends(get_current_superuser),
+    db: AsyncSession = Depends(get_db)
+) -> Any:
+    user_service = UserService(db)
+    user = await user_service.create_user(user_data)
+    return user
