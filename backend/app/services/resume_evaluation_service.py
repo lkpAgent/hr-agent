@@ -386,7 +386,11 @@ class ResumeEvaluationService:
                 
                 if 'total_score' not in result_data:
                     raise ValueError("缺少total_score字段")
-                
+                try:
+                    score = result_data.get('total_score', 0)
+                except (ValueError, TypeError):
+                    score = 0
+
                 # 构建评价指标列表
                 metrics = []
                 for metric_data in result_data.get('evaluation_metrics', []):

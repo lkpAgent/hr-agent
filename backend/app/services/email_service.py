@@ -243,10 +243,12 @@ class EmailFetchService:
                             if user_id:
                                 await ev_svc.evaluate_resume_auto(user_id=user_id,subject=subject, file_content=content, filename=fname)
                                 evaluations += 1
-                        except Exception:
+                        except Exception as e:
+                            print(e)
                             pass
-                    except Exception:
+                    except Exception as e:
                         # skip write errors
+                        print(e)
                         pass
 
             log.resumes_extracted = resumes

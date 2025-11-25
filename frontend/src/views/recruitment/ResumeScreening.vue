@@ -930,7 +930,7 @@ watch(selectedJDId, (newValue) => {
   flex-shrink: 0;
   
   .list-card {
-    height: 100%;
+   
     display: flex;
     flex-direction: column;
     background: rgba(255, 255, 255, 0.95);
@@ -974,7 +974,7 @@ watch(selectedJDId, (newValue) => {
     display: flex;
     flex-direction: column;
     min-height: 0;
-    max-height: 500px;
+    max-height: 600px;
   }
   .toolbar {
     display: flex;

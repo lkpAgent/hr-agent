@@ -9,6 +9,8 @@ from typing import BinaryIO, Tuple, Optional
 from uuid import UUID
 import mimetypes
 
+from bs4 import BeautifulSoup
+
 logger = logging.getLogger(__name__)
 
 
@@ -138,151 +140,92 @@ class ResumeParserService:
         except Exception as e:
             logger.error(f"PDF文件解析失败: {e}")
             raise Exception(f"PDF文件解析失败: {str(e)}")
-    
+
+    async def extract_text_with_advanced_formatting(self, html_content: str) -> str:
+        """高级格式保留：区分段落、列表、标题等"""
+        from bs4 import BeautifulSoup
+
+        soup = BeautifulSoup(html_content, 'html.parser')
+
+        # 移除不需要的元素
+        for element in soup(["script", "style", "head", "title", "meta"]):
+            element.decompose()
+
+        # 处理特定标签的格式
+        formatting_rules = {
+            'p': '\n\n',  # 段落：双换行
+            'br': '\n',  # 换行：单换行
+            'div': '\n',  # 分区：单换行
+            'li': '\n• ',  # 列表项：换行+项目符号
+            'h1': '\n\n# ',  # 一级标题
+            'h2': '\n\n## ',  # 二级标题
+            'h3': '\n\n### ',  # 三级标题
+            'blockquote': '\n> '  # 引用块
+        }
+
+        # 应用格式规则
+        for tag, prefix in formatting_rules.items():
+            for element in soup.find_all(tag):
+                # 在元素内容前添加格式前缀
+                element.insert_before(prefix)
+
+        # 获取文本
+        text = soup.get_text()
+
+        # 清理文本：合并多余空行，保留合理的段落间距
+        lines = []
+        empty_line_count = 0
+        for line in text.splitlines():
+            stripped_line = line.strip()
+            if stripped_line:
+                lines.append(stripped_line)
+                empty_line_count = 0
+            elif empty_line_count < 2:  # 最多保留两个连续空行
+                lines.append('')
+                empty_line_count += 1
+
+        return '\n'.join(lines)
+
     async def _extract_from_doc(self, file_content: bytes) -> str:
-        """从DOC（二进制/RTF兼容）文件提取文本"""
-        import tempfile
-        import os
-        import subprocess
-        text_result = ""
-
-        # RTF 兼容：有些 .doc 实际是 RTF 格式
+        """从DOC文件提取文本（简化：仅使用 docx2txt）"""
         try:
-            import re
-            def rtf_to_text_basic(rtf_bytes: bytes) -> str:
-                s = rtf_bytes.decode('latin-1', errors='ignore')
-                s = s.replace('\\par', '\n')
-                s = re.sub(r"\\'([0-9a-fA-F]{2})", lambda m: bytes.fromhex(m.group(1)).decode('latin-1', errors='ignore'), s)
-                s = s.replace('\\{', '{').replace('\\}', '}').replace('\\\\', '\\')
-                s = re.sub(r"\\[a-zA-Z]+-?\d* ?", "", s)
-                s = re.sub(r"[{}]", "", s)
-                s = re.sub(r"\s+", " ", s)
-                return s.strip()
-            header = file_content[:10]
-            if header.strip().lower().startswith(b"{\\rtf"):
-                text_result = rtf_to_text_basic(file_content)
-                if text_result:
-                    return text_result
-        except Exception:
-            pass
 
-        # 写入临时文件供外部工具/库解析
-        with tempfile.NamedTemporaryFile(suffix='.doc', delete=False) as temp_file:
-            temp_file.write(file_content)
-            temp_file_path = temp_file.name
+            with tempfile.NamedTemporaryFile(suffix='.doc', delete=False) as temp_file:
+                temp_file.write(file_content)
+                temp_file_path = temp_file.name
+            with open(temp_file_path, 'r', encoding='utf-8') as f:
+                html_content = f.read()
 
-        try:
-            # 优先尝试 antiword（适配较好）
-            try:
-                result = subprocess.run(['antiword', temp_file_path], capture_output=True, text=True, timeout=30)
-                if result.returncode == 0 and result.stdout.strip():
-                    return result.stdout.strip()
-            except (subprocess.SubprocessError, FileNotFoundError) as e:
-                logger.info(f"antiword不可用或失败: {e}")
+            text = await self.extract_text_with_advanced_formatting(html_content)
+            return text
+            # 提取纯文本
 
-            # 其次尝试 catdoc
-            try:
-                result = subprocess.run(['catdoc', temp_file_path], capture_output=True, text=True, timeout=30)
-                if result.returncode == 0 and result.stdout.strip():
-                    return result.stdout.strip()
-            except (subprocess.SubprocessError, FileNotFoundError) as e:
-                logger.info(f"catdoc不可用或失败: {e}")
 
-            # 尝试 textract（如果已安装）
-            try:
-                import textract
-                text = textract.process(temp_file_path).decode('utf-8', errors='ignore').strip()
-                if text:
-                    return text
-            except Exception as e:
-                logger.info(f"textract解析失败或未安装: {e}")
-
-            # Windows 下可选：使用 win32com 调用本地 Word（需安装 Office）
-            try:
-                import sys
-                if sys.platform.startswith('win'):
-                    import win32com.client
-                    word = win32com.client.Dispatch('Word.Application')
-                    word.Visible = False
-                    doc = word.Documents.Open(temp_file_path)
-                    text = doc.Content.Text
-                    doc.Close(False)
-                    word.Quit()
-                    text = (text or '').strip()
-                    if text:
-                        return text
-            except Exception as e:
-                logger.info(f"win32com 解析失败: {e}")
-
-            # 所有方案失败
-            logger.warning("DOC解析未提取到内容")
-            return ""
-        finally:
-            if os.path.exists(temp_file_path):
-                os.unlink(temp_file_path)
+        except Exception as e:
+            logger.error(f"DOC文件解析失败: {e}")
+            raise Exception(f"DOC文件解析失败: {str(e)}")
     
     async def _extract_from_docx(self, file_content: bytes) -> str:
-        """从DOCX文件提取文本"""
+        """从DOCX文件提取文本（简化：仅使用 python-docx）"""
         try:
             from docx import Document
             import io
-            import zipfile
-            import xml.etree.ElementTree as ET
-            
-            # 方法1: 使用python-docx解析
-            try:
-                doc = Document(io.BytesIO(file_content))
-                
-                # 提取所有段落的文本
-                text_content = []
-                for paragraph in doc.paragraphs:
-                    if paragraph.text.strip():
-                        text_content.append(paragraph.text)
-                
-                # 提取表格中的文本
-                for table in doc.tables:
-                    for row in table.rows:
-                        for cell in row.cells:
-                            if cell.text.strip():
-                                text_content.append(cell.text)
-                
-                result = '\n'.join(text_content)
-                if result.strip():
-                    return result
-                    
-            except Exception as e:
-                logger.warning(f"python-docx解析失败，尝试备用方法: {e}")
-            
-            # 方法2: 直接解析DOCX的XML结构
-            try:
-                text_content = []
-                with zipfile.ZipFile(io.BytesIO(file_content)) as docx:
-                    # 解析主文档内容
-                    if 'word/document.xml' in docx.namelist():
-                        document_xml = docx.read('word/document.xml')
-                        root = ET.fromstring(document_xml)
-                        
-                        # 查找所有文本节点
-                        for elem in root.iter():
-                            if elem.tag.endswith('}t') and elem.text:
-                                text_content.append(elem.text)
-                            elif elem.tag.endswith('}p') and elem.text:
-                                text_content.append(elem.text)
-                
-                result = ' '.join(text_content)
-                if result.strip():
-                    return result
-                    
-            except Exception as e:
-                logger.warning(f"XML解析失败: {e}")
-            
-            # 如果以上方法都失败，返回提示
-            return ""
-            
+
+            doc = Document(io.BytesIO(file_content))
+            text_content = []
+            for paragraph in doc.paragraphs:
+                if paragraph.text.strip():
+                    text_content.append(paragraph.text)
+            for table in doc.tables:
+                for row in table.rows:
+                    for cell in row.cells:
+                        if cell.text.strip():
+                            text_content.append(cell.text)
+            result = '\n'.join(text_content)
+            return result.strip() if result.strip() else ""
         except ImportError:
             logger.error("DOCX解析库未安装，请安装 python-docx")
-            raise Exception("DOCX文件解析功能不可用，请联系管理员")
-            
+            raise Exception("DOCX解析功能不可用，请联系管理员")
         except Exception as e:
             logger.error(f"DOCX文件解析失败: {e}")
             raise Exception(f"DOCX文件解析失败: {str(e)}")
