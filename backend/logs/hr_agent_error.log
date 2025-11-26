@@ -17314,3 +17314,583 @@ WHERE users.id = $1::UUID AND users.is_active = true]
 2025-11-22 15:25:01 - app.core.exception_handlers - ERROR - exception_handlers - http_exception_handler - HTTP Exception: Could not validate credentials
 2025-11-22 15:25:01 - app.api.deps - ERROR - deps - get_current_user - ❌ JWT decode error: Signature has expired.
 2025-11-22 15:25:01 - app.core.exception_handlers - ERROR - exception_handlers - http_exception_handler - HTTP Exception: Could not validate credentials
+2025-11-26 09:51:51 - app.services.conversation_service - ERROR - conversation_service - add_message - Error adding message to conversation eaa883e2-9486-4101-971f-738f3eaf61d7: 'parent_id' is an invalid keyword argument for Message
+2025-11-26 09:52:09 - app.services.conversation_service - ERROR - conversation_service - add_message - Error adding message to conversation eaa883e2-9486-4101-971f-738f3eaf61d7: 'parent_id' is an invalid keyword argument for Message
+2025-11-26 10:05:41 - app.services.conversation_service - ERROR - conversation_service - add_message - Error adding message to conversation eaa883e2-9486-4101-971f-738f3eaf61d7: 'parent_id' is an invalid keyword argument for Message
+2025-11-26 10:14:27 - app.api.deps - ERROR - deps - get_current_user - ❌ JWT decode error: Signature has expired.
+2025-11-26 10:14:27 - app.core.exception_handlers - ERROR - exception_handlers - http_exception_handler - HTTP Exception: Could not validate credentials
+2025-11-26 10:14:27 - app.api.deps - ERROR - deps - get_current_user - ❌ JWT decode error: Signature has expired.
+2025-11-26 10:14:27 - app.core.exception_handlers - ERROR - exception_handlers - http_exception_handler - HTTP Exception: Could not validate credentials
+2025-11-26 10:18:21 - app.services.conversation_service - ERROR - conversation_service - add_message - Error adding message to conversation 623fdfde-a2f7-4e8a-bbf8-67a26ceab827: 'parent_id' is an invalid keyword argument for Message
+2025-11-26 10:20:45 - app.services.conversation_service - ERROR - conversation_service - add_message - Error adding message to conversation 623fdfde-a2f7-4e8a-bbf8-67a26ceab827: 'parent_id' is an invalid keyword argument for Message
+2025-11-26 10:25:00 - app.services.conversation_service - ERROR - conversation_service - add_message - Error adding message to conversation 623fdfde-a2f7-4e8a-bbf8-67a26ceab827: 'parent_id' is an invalid keyword argument for Message
+2025-11-26 10:31:00 - app.services.conversation_service - ERROR - conversation_service - add_message - Error adding message to conversation 623fdfde-a2f7-4e8a-bbf8-67a26ceab827: 'parent_id' is an invalid keyword argument for Message
+2025-11-26 10:34:15 - app.services.conversation_service - ERROR - conversation_service - add_message - Error adding message to conversation 679f3a05-203b-49b1-b3c3-44c991048a51: 'parent_id' is an invalid keyword argument for Message
+2025-11-26 10:37:56 - app.services.conversation_service - ERROR - conversation_service - add_message - Error adding message to conversation 4ab17205-f081-47e6-b320-f5dbfcc68f3a: Unconsumed column names: message_count
+2025-11-26 10:45:39 - app.core.exception_handlers - ERROR - exception_handlers - generic_exception_handler - Unhandled Exception: 'ConversationService' object has no attribute 'get_by_id'
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 98, in receive
+    return self.receive_nowait()
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 93, in receive_nowait
+    raise WouldBlock
+anyio.WouldBlock
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 78, in call_next
+    message = await recv_stream.receive()
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 118, in receive
+    raise EndOfStream
+anyio.EndOfStream
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\errors.py", line 162, in __call__
+    await self.app(scope, receive, _send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 108, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "E:\workspace-py\hr-agent\backend\app\core\middleware.py", line 48, in dispatch
+    response = await call_next(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 84, in call_next
+    raise app_exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 70, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 108, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "E:\workspace-py\hr-agent\backend\app\core\middleware.py", line 25, in dispatch
+    response = await call_next(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 84, in call_next
+    raise app_exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 70, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\cors.py", line 83, in __call__
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\exceptions.py", line 79, in __call__
+    raise exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\exceptions.py", line 68, in __call__
+    await self.app(scope, receive, sender)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\middleware\asyncexitstack.py", line 20, in __call__
+    raise e
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\middleware\asyncexitstack.py", line 17, in __call__
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 718, in __call__
+    await route.handle(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 276, in handle
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 66, in app
+    response = await func(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\routing.py", line 274, in app
+    raw_response = await run_endpoint_function(
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\routing.py", line 191, in run_endpoint_function
+    return await dependant.call(**values)
+  File "E:\workspace-py\hr-agent\backend\app\api\v1\endpoints\conversations.py", line 188, in get_conversation_messages
+    conversation = await conversation_service.get_by_id(conversation_id)
+AttributeError: 'ConversationService' object has no attribute 'get_by_id'
+2025-11-26 10:45:42 - app.api.deps - ERROR - deps - get_current_user - ❌ JWT decode error: Signature has expired.
+2025-11-26 10:45:42 - app.core.exception_handlers - ERROR - exception_handlers - http_exception_handler - HTTP Exception: Could not validate credentials
+2025-11-26 10:45:52 - app.core.exception_handlers - ERROR - exception_handlers - generic_exception_handler - Unhandled Exception: 'ConversationService' object has no attribute 'get_by_id'
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 98, in receive
+    return self.receive_nowait()
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 93, in receive_nowait
+    raise WouldBlock
+anyio.WouldBlock
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 78, in call_next
+    message = await recv_stream.receive()
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 118, in receive
+    raise EndOfStream
+anyio.EndOfStream
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\errors.py", line 162, in __call__
+    await self.app(scope, receive, _send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 108, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "E:\workspace-py\hr-agent\backend\app\core\middleware.py", line 48, in dispatch
+    response = await call_next(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 84, in call_next
+    raise app_exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 70, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 108, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "E:\workspace-py\hr-agent\backend\app\core\middleware.py", line 25, in dispatch
+    response = await call_next(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 84, in call_next
+    raise app_exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 70, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\cors.py", line 91, in __call__
+    await self.simple_response(scope, receive, send, request_headers=headers)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\cors.py", line 146, in simple_response
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\exceptions.py", line 79, in __call__
+    raise exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\exceptions.py", line 68, in __call__
+    await self.app(scope, receive, sender)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\middleware\asyncexitstack.py", line 20, in __call__
+    raise e
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\middleware\asyncexitstack.py", line 17, in __call__
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 718, in __call__
+    await route.handle(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 276, in handle
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 66, in app
+    response = await func(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\routing.py", line 274, in app
+    raw_response = await run_endpoint_function(
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\routing.py", line 191, in run_endpoint_function
+    return await dependant.call(**values)
+  File "E:\workspace-py\hr-agent\backend\app\api\v1\endpoints\conversations.py", line 158, in delete_conversation
+    conversation = await conversation_service.get_by_id(conversation_id)
+AttributeError: 'ConversationService' object has no attribute 'get_by_id'
+2025-11-26 10:54:31 - app.core.exception_handlers - ERROR - exception_handlers - generic_exception_handler - Unhandled Exception: 'ConversationService' object has no attribute 'get_by_id'
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 98, in receive
+    return self.receive_nowait()
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 93, in receive_nowait
+    raise WouldBlock
+anyio.WouldBlock
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 78, in call_next
+    message = await recv_stream.receive()
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 118, in receive
+    raise EndOfStream
+anyio.EndOfStream
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\errors.py", line 162, in __call__
+    await self.app(scope, receive, _send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 108, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "E:\workspace-py\hr-agent\backend\app\core\middleware.py", line 48, in dispatch
+    response = await call_next(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 84, in call_next
+    raise app_exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 70, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 108, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "E:\workspace-py\hr-agent\backend\app\core\middleware.py", line 25, in dispatch
+    response = await call_next(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 84, in call_next
+    raise app_exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 70, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\cors.py", line 91, in __call__
+    await self.simple_response(scope, receive, send, request_headers=headers)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\cors.py", line 146, in simple_response
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\exceptions.py", line 79, in __call__
+    raise exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\exceptions.py", line 68, in __call__
+    await self.app(scope, receive, sender)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\middleware\asyncexitstack.py", line 20, in __call__
+    raise e
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\middleware\asyncexitstack.py", line 17, in __call__
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 718, in __call__
+    await route.handle(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 276, in handle
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 66, in app
+    response = await func(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\routing.py", line 274, in app
+    raw_response = await run_endpoint_function(
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\routing.py", line 191, in run_endpoint_function
+    return await dependant.call(**values)
+  File "E:\workspace-py\hr-agent\backend\app\api\v1\endpoints\conversations.py", line 159, in delete_conversation
+    """
+AttributeError: 'ConversationService' object has no attribute 'get_by_id'
+2025-11-26 10:55:45 - app.core.exception_handlers - ERROR - exception_handlers - generic_exception_handler - Unhandled Exception: 'ConversationService' object has no attribute 'delete'
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 98, in receive
+    return self.receive_nowait()
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 93, in receive_nowait
+    raise WouldBlock
+anyio.WouldBlock
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 78, in call_next
+    message = await recv_stream.receive()
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 118, in receive
+    raise EndOfStream
+anyio.EndOfStream
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\errors.py", line 162, in __call__
+    await self.app(scope, receive, _send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 108, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "E:\workspace-py\hr-agent\backend\app\core\middleware.py", line 48, in dispatch
+    response = await call_next(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 84, in call_next
+    raise app_exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 70, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 108, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "E:\workspace-py\hr-agent\backend\app\core\middleware.py", line 25, in dispatch
+    response = await call_next(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 84, in call_next
+    raise app_exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 70, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\cors.py", line 91, in __call__
+    await self.simple_response(scope, receive, send, request_headers=headers)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\cors.py", line 146, in simple_response
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\exceptions.py", line 79, in __call__
+    raise exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\exceptions.py", line 68, in __call__
+    await self.app(scope, receive, sender)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\middleware\asyncexitstack.py", line 20, in __call__
+    raise e
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\middleware\asyncexitstack.py", line 17, in __call__
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 718, in __call__
+    await route.handle(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 276, in handle
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 66, in app
+    response = await func(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\routing.py", line 274, in app
+    raw_response = await run_endpoint_function(
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\routing.py", line 191, in run_endpoint_function
+    return await dependant.call(**values)
+  File "E:\workspace-py\hr-agent\backend\app\api\v1\endpoints\conversations.py", line 177, in delete_conversation
+    await conversation_service.delete(conversation)
+AttributeError: 'ConversationService' object has no attribute 'delete'
+2025-11-26 10:57:23 - app.core.exception_handlers - ERROR - exception_handlers - generic_exception_handler - Unhandled Exception: Unable to serialize unknown type: <class 'app.models.conversation.Message'>
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 98, in receive
+    return self.receive_nowait()
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 93, in receive_nowait
+    raise WouldBlock
+anyio.WouldBlock
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 78, in call_next
+    message = await recv_stream.receive()
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 118, in receive
+    raise EndOfStream
+anyio.EndOfStream
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\errors.py", line 162, in __call__
+    await self.app(scope, receive, _send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 108, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "E:\workspace-py\hr-agent\backend\app\core\middleware.py", line 48, in dispatch
+    response = await call_next(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 84, in call_next
+    raise app_exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 70, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 108, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "E:\workspace-py\hr-agent\backend\app\core\middleware.py", line 25, in dispatch
+    response = await call_next(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 84, in call_next
+    raise app_exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 70, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\cors.py", line 83, in __call__
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\exceptions.py", line 79, in __call__
+    raise exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\exceptions.py", line 68, in __call__
+    await self.app(scope, receive, sender)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\middleware\asyncexitstack.py", line 20, in __call__
+    raise e
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\middleware\asyncexitstack.py", line 17, in __call__
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 718, in __call__
+    await route.handle(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 276, in handle
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 66, in app
+    response = await func(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\routing.py", line 292, in app
+    content = await serialize_response(
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\routing.py", line 160, in serialize_response
+    return field.serialize(
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\_compat.py", line 147, in serialize
+    return self._type_adapter.dump_python(
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\pydantic\type_adapter.py", line 314, in dump_python
+    return self.serializer.to_python(
+pydantic_core._pydantic_core.PydanticSerializationError: Unable to serialize unknown type: <class 'app.models.conversation.Message'>
+2025-11-26 10:59:17 - app.core.exception_handlers - ERROR - exception_handlers - generic_exception_handler - Unhandled Exception: Unable to serialize unknown type: <class 'app.models.conversation.Message'>
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 98, in receive
+    return self.receive_nowait()
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 93, in receive_nowait
+    raise WouldBlock
+anyio.WouldBlock
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 78, in call_next
+    message = await recv_stream.receive()
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 118, in receive
+    raise EndOfStream
+anyio.EndOfStream
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\errors.py", line 162, in __call__
+    await self.app(scope, receive, _send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 108, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "E:\workspace-py\hr-agent\backend\app\core\middleware.py", line 48, in dispatch
+    response = await call_next(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 84, in call_next
+    raise app_exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 70, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 108, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "E:\workspace-py\hr-agent\backend\app\core\middleware.py", line 25, in dispatch
+    response = await call_next(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 84, in call_next
+    raise app_exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 70, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\cors.py", line 83, in __call__
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\exceptions.py", line 79, in __call__
+    raise exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\exceptions.py", line 68, in __call__
+    await self.app(scope, receive, sender)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\middleware\asyncexitstack.py", line 20, in __call__
+    raise e
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\middleware\asyncexitstack.py", line 17, in __call__
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 718, in __call__
+    await route.handle(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 276, in handle
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 66, in app
+    response = await func(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\routing.py", line 292, in app
+    content = await serialize_response(
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\routing.py", line 160, in serialize_response
+    return field.serialize(
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\_compat.py", line 147, in serialize
+    return self._type_adapter.dump_python(
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\pydantic\type_adapter.py", line 314, in dump_python
+    return self.serializer.to_python(
+pydantic_core._pydantic_core.PydanticSerializationError: Unable to serialize unknown type: <class 'app.models.conversation.Message'>
+2025-11-26 10:59:27 - app.core.exception_handlers - ERROR - exception_handlers - generic_exception_handler - Unhandled Exception: Unable to serialize unknown type: <class 'app.models.conversation.Message'>
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 98, in receive
+    return self.receive_nowait()
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 93, in receive_nowait
+    raise WouldBlock
+anyio.WouldBlock
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 78, in call_next
+    message = await recv_stream.receive()
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 118, in receive
+    raise EndOfStream
+anyio.EndOfStream
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\errors.py", line 162, in __call__
+    await self.app(scope, receive, _send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 108, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "E:\workspace-py\hr-agent\backend\app\core\middleware.py", line 48, in dispatch
+    response = await call_next(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 84, in call_next
+    raise app_exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 70, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 108, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "E:\workspace-py\hr-agent\backend\app\core\middleware.py", line 25, in dispatch
+    response = await call_next(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 84, in call_next
+    raise app_exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 70, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\cors.py", line 83, in __call__
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\exceptions.py", line 79, in __call__
+    raise exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\exceptions.py", line 68, in __call__
+    await self.app(scope, receive, sender)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\middleware\asyncexitstack.py", line 20, in __call__
+    raise e
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\middleware\asyncexitstack.py", line 17, in __call__
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 718, in __call__
+    await route.handle(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 276, in handle
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 66, in app
+    response = await func(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\routing.py", line 292, in app
+    content = await serialize_response(
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\routing.py", line 160, in serialize_response
+    return field.serialize(
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\_compat.py", line 147, in serialize
+    return self._type_adapter.dump_python(
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\pydantic\type_adapter.py", line 314, in dump_python
+    return self.serializer.to_python(
+pydantic_core._pydantic_core.PydanticSerializationError: Unable to serialize unknown type: <class 'app.models.conversation.Message'>
+2025-11-26 10:59:43 - app.core.exception_handlers - ERROR - exception_handlers - generic_exception_handler - Unhandled Exception: Unable to serialize unknown type: <class 'app.models.conversation.Message'>
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 98, in receive
+    return self.receive_nowait()
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 93, in receive_nowait
+    raise WouldBlock
+anyio.WouldBlock
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 78, in call_next
+    message = await recv_stream.receive()
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 118, in receive
+    raise EndOfStream
+anyio.EndOfStream
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\errors.py", line 162, in __call__
+    await self.app(scope, receive, _send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 108, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "E:\workspace-py\hr-agent\backend\app\core\middleware.py", line 48, in dispatch
+    response = await call_next(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 84, in call_next
+    raise app_exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 70, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 108, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "E:\workspace-py\hr-agent\backend\app\core\middleware.py", line 25, in dispatch
+    response = await call_next(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 84, in call_next
+    raise app_exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 70, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\cors.py", line 83, in __call__
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\exceptions.py", line 79, in __call__
+    raise exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\exceptions.py", line 68, in __call__
+    await self.app(scope, receive, sender)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\middleware\asyncexitstack.py", line 20, in __call__
+    raise e
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\middleware\asyncexitstack.py", line 17, in __call__
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 718, in __call__
+    await route.handle(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 276, in handle
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 66, in app
+    response = await func(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\routing.py", line 292, in app
+    content = await serialize_response(
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\routing.py", line 160, in serialize_response
+    return field.serialize(
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\_compat.py", line 147, in serialize
+    return self._type_adapter.dump_python(
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\pydantic\type_adapter.py", line 314, in dump_python
+    return self.serializer.to_python(
+pydantic_core._pydantic_core.PydanticSerializationError: Unable to serialize unknown type: <class 'app.models.conversation.Message'>
+2025-11-26 11:01:28 - app.core.exception_handlers - ERROR - exception_handlers - generic_exception_handler - Unhandled Exception: Unable to serialize unknown type: <class 'app.models.conversation.Message'>
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 98, in receive
+    return self.receive_nowait()
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 93, in receive_nowait
+    raise WouldBlock
+anyio.WouldBlock
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 78, in call_next
+    message = await recv_stream.receive()
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\anyio\streams\memory.py", line 118, in receive
+    raise EndOfStream
+anyio.EndOfStream
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\errors.py", line 162, in __call__
+    await self.app(scope, receive, _send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 108, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "E:\workspace-py\hr-agent\backend\app\core\middleware.py", line 48, in dispatch
+    response = await call_next(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 84, in call_next
+    raise app_exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 70, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 108, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "E:\workspace-py\hr-agent\backend\app\core\middleware.py", line 25, in dispatch
+    response = await call_next(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 84, in call_next
+    raise app_exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\base.py", line 70, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\cors.py", line 83, in __call__
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\exceptions.py", line 79, in __call__
+    raise exc
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\middleware\exceptions.py", line 68, in __call__
+    await self.app(scope, receive, sender)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\middleware\asyncexitstack.py", line 20, in __call__
+    raise e
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\middleware\asyncexitstack.py", line 17, in __call__
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 718, in __call__
+    await route.handle(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 276, in handle
+    await self.app(scope, receive, send)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\starlette\routing.py", line 66, in app
+    response = await func(request)
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\routing.py", line 292, in app
+    content = await serialize_response(
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\routing.py", line 160, in serialize_response
+    return field.serialize(
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\fastapi\_compat.py", line 147, in serialize
+    return self._type_adapter.dump_python(
+  File "D:\ProgramData\Anaconda3\envs\python310\lib\site-packages\pydantic\type_adapter.py", line 314, in dump_python
+    return self.serializer.to_python(
+pydantic_core._pydantic_core.PydanticSerializationError: Unable to serialize unknown type: <class 'app.models.conversation.Message'>
