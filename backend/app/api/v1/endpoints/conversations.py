@@ -1,6 +1,7 @@
 """
 Conversation management endpoints
 """
+import uuid
 from typing import Any, List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -88,7 +89,8 @@ async def get_conversation(
     Get conversation by ID
     """
     conversation_service = ConversationService(db)
-    conversation = await conversation_service.get_by_id(conversation_id)
+    conversation = await conversation_service.get_conversation(uuid.UUID(conversation_id), current_user.id)
+
     
     if not conversation:
         raise HTTPException(
@@ -127,7 +129,8 @@ async def update_conversation(
     Update conversation
     """
     conversation_service = ConversationService(db)
-    conversation = await conversation_service.get_by_id(conversation_id)
+
+    conversation = await conversation_service.get_conversation(uuid.UUID(conversation_id), current_user.id)
     
     if not conversation:
         raise HTTPException(
@@ -141,7 +144,7 @@ async def update_conversation(
             detail="Not enough permissions"
         )
     
-    updated_conversation = await conversation_service.update(conversation, conversation_update)
+    updated_conversation = await conversation_service.update_conversation(conversation.id,current_user.id, conversation_update)
     return updated_conversation
 
 
@@ -155,7 +158,9 @@ async def delete_conversation(
     Delete conversation
     """
     conversation_service = ConversationService(db)
-    conversation = await conversation_service.get_by_id(conversation_id)
+
+    conversation = await conversation_service.get_conversation(uuid.UUID(conversation_id), current_user.id)
+
     
     if not conversation:
         raise HTTPException(
@@ -169,7 +174,7 @@ async def delete_conversation(
             detail="Not enough permissions"
         )
     
-    await conversation_service.delete(conversation)
+    await conversation_service.delete_conversation(conversation.id,current_user.id)
     return {"message": "Conversation deleted successfully"}
 
 
@@ -185,7 +190,8 @@ async def get_conversation_messages(
     Get messages from a conversation
     """
     conversation_service = ConversationService(db)
-    conversation = await conversation_service.get_by_id(conversation_id)
+    conversation = await conversation_service.get_conversation(uuid.UUID(conversation_id), current_user.id)
+
     
     if not conversation:
         raise HTTPException(
@@ -200,8 +206,27 @@ async def get_conversation_messages(
         )
     
     messages = await conversation_service.get_conversation_messages(
-        conversation_id=conversation_id,
+        conversation_id=uuid.UUID(conversation_id),
         skip=skip,
         limit=limit
     )
-    return messages
+    
+    # Convert messages to dict to avoid PydanticSerializationError
+    result = []
+    for message in messages:
+        result.append({
+            "id": message.id,
+            "conversation_id": message.conversation_id,
+            "content": message.content,
+            "role": message.role,
+            "model_name": message.model_name,
+            "context": message.context,
+            "meta_data": message.meta_data,
+            "rating": message.rating,
+            "feedback": message.feedback,
+            "parent_message_id": message.parent_message_id,
+            "created_at": message.created_at,
+            "updated_at": message.updated_at
+        })
+    
+    return result

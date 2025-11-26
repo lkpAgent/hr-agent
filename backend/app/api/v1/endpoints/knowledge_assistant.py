@@ -14,6 +14,8 @@ from app.schemas.user import User as UserSchema
 from app.services.enhanced_document_service import EnhancedDocumentService
 from app.services.lightweight_document_service import LightweightDocumentService
 from app.services.rag_service import RAGService
+from app.services.conversation_service import ConversationService
+from app.models.conversation import MessageRole
 from app.core.config import settings
 from app.api.deps import get_current_user
 
@@ -104,6 +106,7 @@ async def ask_knowledge_assistant(
     knowledge_base_id: str = Form(None),
     context_limit: int = Form(5),
     conversation_history: str = Form("[]"),  # JSON string of conversation history
+    conversation_id: str = Form(...),
     current_user: UserSchema = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ) -> Any:
@@ -111,8 +114,9 @@ async def ask_knowledge_assistant(
     Ask a question to the knowledge assistant using RAG workflow with streaming response
     """
     try:
-        # Initialize RAG service
+        # Initialize services
         rag_service = RAGService(db)
+        conv_service = ConversationService(db)
         
         # Convert knowledge_base_id from string to UUID if provided
         kb_id = None
@@ -129,9 +133,23 @@ async def ask_knowledge_assistant(
         except json.JSONDecodeError:
             conv_history = []
         
+        # Validate conversation id (must exist and belong to current user)
+        from uuid import UUID
+        try:
+            conv_uuid = UUID(conversation_id)
+        except Exception:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid conversation_id")
+
+        conversation = await conv_service.get_conversation(conv_uuid, current_user.id)
+        if not conversation:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found or no permission")
+        conv_id = str(conversation.id)
+        
         # Use RAG service to generate answer with streaming
         async def generate_stream():
             try:
+                assistant_buffer = ""
+                start_sources = []
                 # Use the new streaming method from RAG service
                 async for chunk in rag_service.ask_question_stream(
                     question=question,
@@ -140,8 +158,36 @@ async def ask_knowledge_assistant(
                     conversation_history=conv_history,
                     context_limit=context_limit
                 ):
-                    yield f"data: {json.dumps(chunk, ensure_ascii=False)}\n\n"
-                    
+                    if chunk.get("type") == "start":
+                        start_sources = chunk.get("sources") or []
+                        payload = {**chunk, "conversation_id": conv_id}
+                        yield f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
+                    elif chunk.get("type") == "chunk":
+                        assistant_buffer += chunk.get("content", "")
+                        yield f"data: {json.dumps(chunk, ensure_ascii=False)}\n\n"
+                    elif chunk.get("type") == "end":
+                        # Persist messages to conversation
+                        payload = {**chunk, "conversation_id": conv_id}
+                        yield f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
+                    else:
+                        yield f"data: {json.dumps(chunk, ensure_ascii=False)}\n\n"
+                try:
+                    from uuid import UUID
+                    await conv_service.add_message(
+                        conversation_id=UUID(conv_id),
+                        content=question,
+                        role=MessageRole.USER,
+                        context={"knowledge_base_id": str(kb_id) if kb_id else None}
+                    )
+                    await conv_service.add_message(
+                        conversation_id=UUID(conv_id),
+                        content=assistant_buffer,
+                        role=MessageRole.ASSISTANT,
+                        context={"sources": start_sources}
+                    )
+                except Exception as e:
+                    print(f'save message error:{str(e)}')
+                    pass
             except Exception as e:
                 error_data = {
                     "type": "error",

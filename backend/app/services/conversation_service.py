@@ -169,29 +169,29 @@ class ConversationService:
                 role=role,
                 model_name=model_name,
                 context=context or {},
-                parent_id=parent_id
+                parent_message_id=parent_id
             )
             
             self.db.add(message)
-            
+            print('save message success')
             # Update conversation message count and last activity
             await self.db.execute(
                 update(Conversation)
                 .where(Conversation.id == conversation_id)
                 .values(
-                    message_count=Conversation.message_count + 1,
+                    total_messages=Conversation.total_messages + 1,
                     updated_at=func.now()
                 )
             )
             
             await self.db.commit()
             await self.db.refresh(message)
-            
+            print('update conversation message number success')
             logger.info(f"Added message to conversation {conversation_id}")
             return message
             
         except Exception as e:
-            await self.db.rollback()
+            # await self.db.rollback()
             logger.error(f"Error adding message to conversation {conversation_id}: {e}")
             raise
     

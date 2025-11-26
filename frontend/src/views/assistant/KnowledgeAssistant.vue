@@ -39,7 +39,7 @@
                 <el-button 
                   type="primary" 
                   :icon="Clock" 
-                  @click="showChatHistory = true"
+                  @click="openChatHistory"
                   circle
                   title="历史对话"
                 />
@@ -401,8 +401,11 @@ const uploadData = computed(() => ({
 // 生命周期
 onMounted(() => {
   loadKnowledgeBases()
-  loadChatHistory()
 })
+const openChatHistory = async () => {
+  showChatHistory.value = true
+  await loadChatHistory()
+}
 
 // 方法
 const loadKnowledgeBases = async () => {
@@ -423,6 +426,7 @@ const handleKnowledgeBaseChange = (value) => {
   // 清空当前对话和文档片段
   messages.value = []
   documentChunks.value = []
+  currentConversationId.value = null
 }
 
 const sendMessage = async () => {
@@ -457,6 +461,20 @@ const sendMessage = async () => {
   isLoading.value = true
   
   try {
+    // 若当前无会话，先创建会话
+    if (!currentConversationId.value) {
+      const conversationData = {
+        title: question.length > 50 ? question.slice(0, 50) + '...' : question,
+        description: question.slice(0, 100),
+        meta_data: { knowledge_base_id: selectedKnowledgeBase.value }
+      }
+      const resp = await createConversation(conversationData)
+      if (resp?.id) {
+        currentConversationId.value = resp.id
+      } else {
+        throw new Error('创建会话失败')
+      }
+    }
     // 滚动到底部
     await nextTick()
     scrollToBottom()
@@ -476,6 +494,7 @@ const sendMessage = async () => {
     formData.append('knowledge_base_id', selectedKnowledgeBase.value)
     formData.append('context_limit', '5')
     formData.append('conversation_history', JSON.stringify(conversationHistory))
+    formData.append('conversation_id', String(currentConversationId.value))
     
     console.log('发送问题:', question)
     console.log('知识库ID:', selectedKnowledgeBase.value)
@@ -514,6 +533,9 @@ const sendMessage = async () => {
             if (data.type === 'start') {
               // 设置来源信息
               assistantMessage.sources = data.sources || []
+              if (data.conversation_id) {
+                currentConversationId.value = data.conversation_id
+              }
               documentChunks.value = (data.sources || []).map((source, index) => ({
                 content: source.content || source.page_content,
                 source: source.document_title || source.title || '未知文档',
@@ -539,6 +561,9 @@ const sendMessage = async () => {
             } else if (data.type === 'end') {
               // 流式传输完成
               assistantMessage.isStreaming = false
+              if (data.conversation_id) {
+                currentConversationId.value = data.conversation_id
+              }
               
               // 如果end响应中包含sources，更新相关文档片段
               if (data.sources && data.sources.length > 0) {
@@ -557,7 +582,8 @@ const sendMessage = async () => {
               }
               
               console.log('流式传输完成，最终内容长度:', assistantMessage.content.length)
-              saveChatSession()
+              // 刷新历史对话列表
+              loadChatHistory()
             } else if (data.type === 'error') {
               console.error('流式传输错误:', data.error)
               throw new Error(data.error)
@@ -649,8 +675,9 @@ const getScoreType = (score) => {
 const loadChatHistory = async () => {
   try {
     const response = await getConversations()
-    if (response.data && Array.isArray(response.data)) {
-      chatHistory.value = response.data.map(conv => ({
+    const list = Array.isArray(response) ? response : (response.items || response.data || [])
+    if (Array.isArray(list)) {
+      chatHistory.value = list.map(conv => ({
         id: conv.id,
         title: conv.title || `对话 ${conv.id}`,
         preview: conv.description || '',
@@ -698,8 +725,9 @@ const loadChatSession = async (session) => {
   try {
     // 从后端加载完整的对话消息
     const response = await getConversationMessages(session.id)
-    if (response.data && Array.isArray(response.data)) {
-      messages.value = response.data.map(msg => ({
+    const list = Array.isArray(response) ? response : (response.items || response.data || [])
+    if (Array.isArray(list)) {
+      messages.value = list.map(msg => ({
         type: msg.role === 'user' ? 'user' : 'assistant',
         content: msg.content,
         sources: msg.sources || [],
