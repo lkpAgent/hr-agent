@@ -1,6 +1,7 @@
 """
 统一文档处理方法：extract_text_from_file，
 支持多种格式：docx,doc,pdf,txt，同时对同一种格式,均使用了多种解析方法，以增加解析成功率
+TODO: 对于部分老版的doc格式，会出现正文解析完成后，后面还会跟一堆的乱码
 """
 import os
 import re
