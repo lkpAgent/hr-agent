@@ -1,5 +1,6 @@
 """
-Unified document processing utilities for text extraction and MIME detection
+统一文档处理方法：extract_text_from_file，
+支持多种格式：docx,doc,pdf,txt，同时对同一种格式,均使用了多种解析方法，以增加解析成功率
 """
 import os
 import re
