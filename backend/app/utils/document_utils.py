@@ -95,15 +95,6 @@ async def extract_text_from_file(file_path: str, mime_type: Optional[str] = None
 
         if mime == 'application/pdf':
             try:
-                import pdfplumber
-                with pdfplumber.open(file_path) as pdf:
-                    text = ''
-                    for page in pdf.pages:
-                        page_text = page.extract_text() or ''
-                        text += (page_text + '\n')
-                return text.strip()
-            except Exception as e:
-                logger.error('pdfplumber extract pdf error,will use fitz')
                 try:
                     text = ''
                     doc = fitz.open(file_path)
@@ -119,6 +110,16 @@ async def extract_text_from_file(file_path: str, mime_type: Optional[str] = None
                     print(text)
                 except Exception as e:
                     print(f"fitz抽取pdf失败: {e}")
+
+            except Exception as e:
+                print('pdfplumber extract pdf error,will use fitz',str(e))
+                import pdfplumber
+                with pdfplumber.open(file_path) as pdf:
+                    text = ''
+                    for page in pdf.pages:
+                        page_text = page.extract_text() or ''
+                        text += (page_text + '\n')
+                return text.strip()
 
 
         if mime == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
