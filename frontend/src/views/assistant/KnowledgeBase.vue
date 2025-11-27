@@ -225,7 +225,7 @@
       <!-- 文档预览对话框 -->
       <el-dialog
         v-model="showPreviewDialog"
-        :title="`文档预览 - ${previewDocument?.name}`"
+        :title="`文档预览 - ${previewDocument?.filename}`"
         width="80%"
         class="preview-dialog"
       >

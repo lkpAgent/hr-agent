@@ -7,24 +7,18 @@ import hashlib
 from typing import List, Optional, Dict, Any, BinaryIO
 from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update, delete, desc, func, text
-from sqlalchemy.orm import selectinload
+from sqlalchemy import select,  desc, text
 
 # LangChain imports
 from langchain_core.documents import Document as LangChainDocument
 from langchain_postgres import PGVector
 
-# Document processing imports
-import PyPDF2
-from docx import Document as DocxDocument
 import tempfile
 
 from app.models.document import Document
-from app.models.knowledge_base import KnowledgeBase
 from app.services.llm_service import LLMService
 from app.utils.document_utils import get_mime_type_from_filename, extract_text_from_file
 from app.services.embedding_service import get_embedding_service
-from app.schemas.document import DocumentCreate, DocumentUpdate
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -187,31 +181,95 @@ class EnhancedDocumentService:
                         current_chunk += "\n" + line
                     else:
                         current_chunk = line
-            if current_chunk:
-                chunks.append(current_chunk)
+            if current_chunk :
+                if len(current_chunk ) > max_length:
+                    sub_chunks = [current_chunk[i:i + max_length] for i in range(0, len(current_chunk), max_length)]
+                    chunks.extend(sub_chunks)
+                else:
+                    chunks.append(current_chunk)
         else:
             # 没有换行符则直接按长度分割
             chunks = [chunk[i:i + max_length] for i in range(0, len(chunk), max_length)]
 
         return chunks
 
-    def _merge_short_chunks(self, chunks: List[str], min_length: int = 50, max_length: int = 1000) -> List[str]:
-        """合并过短片段，避免产生极短段落，同时不超过最大长度"""
+    def _merge_short_chunks(self, chunks: List[str], min_length: int = 100, max_length: int = 1000) -> List[str]:
+        """
+        合并过短的文本块，保证合并后的文本块长度在合理范围内
+
+        Args:
+            chunks: 文本块列表
+            min_length: 最小长度阈值，小于此长度的块会被合并
+            max_length: 最大长度阈值，合并后的块不能超过此长度
+
+        Returns:
+            合并后的文本块列表
+        """
         if not chunks:
             return []
-        merged: List[str] = []
+
+        merged_chunks = []
         i = 0
+
         while i < len(chunks):
-            cur = chunks[i]
-            if len(cur) < min_length and i + 1 < len(chunks):
-                nxt = chunks[i + 1]
-                if len(cur) + len(nxt) <= max_length:
-                    merged.append(cur + ("\n" if cur and nxt and not cur.endswith("\n") else "") + nxt)
-                    i += 2
-                    continue
-            merged.append(cur)
-            i += 1
-        return merged
+            current_chunk = chunks[i]
+            current_length = len(current_chunk)
+
+            # 如果当前块长度足够，直接保留
+            if current_length >= min_length:
+                merged_chunks.append(current_chunk)
+                i += 1
+                continue
+
+            # 当前块过短，需要合并
+            # 优先尝试与前面的块合并
+            can_merge_with_prev = (
+                merged_chunks and
+                len(merged_chunks[-1]) + current_length <= max_length
+            )
+
+            # 尝试与后面的块合并
+            can_merge_with_next = (
+                i + 1 < len(chunks) and
+                current_length + len(chunks[i + 1]) <= max_length
+            )
+
+            # 决策合并策略
+            if can_merge_with_prev and can_merge_with_next:
+                # 前后都可以合并，选择合并后长度更接近理想长度的方案
+                prev_merged_length = len(merged_chunks[-1]) + current_length
+                next_merged_length = current_length + len(chunks[i + 1])
+
+                # 选择合并后长度更接近 (min_length + max_length) / 2 的方案
+                ideal_length = (min_length + max_length) // 2
+                prev_diff = abs(prev_merged_length - ideal_length)
+                next_diff = abs(next_merged_length - ideal_length)
+
+                if prev_diff <= next_diff:
+                    # 与前面的块合并
+                    merged_chunks[-1] += "\n" + current_chunk
+                    i += 1
+                else:
+                    # 与后面的块合并，跳过下一个块
+                    chunks[i + 1] = current_chunk + "\n" + chunks[i + 1]
+                    i += 1
+
+            elif can_merge_with_prev:
+                # 只能与前面的块合并
+                merged_chunks[-1] += "\n" + current_chunk
+                i += 1
+
+            elif can_merge_with_next:
+                # 只能与后面的块合并，跳过下一个块
+                chunks[i + 1] = current_chunk + "\n" + chunks[i + 1]
+                i += 1
+
+            else:
+                # 无法合并，保留原样
+                merged_chunks.append(current_chunk)
+                i += 1
+
+        return merged_chunks
 
     async def _split_text(self, content: str) -> List[str]:
         """主分割流程：使用 LLM 分割点 + 切分 + 长度约束"""
@@ -230,7 +288,7 @@ class EnhancedDocumentService:
             else:
                 normalized.append(ch)
         # 4) 合并过短片段（<50）
-        normalized = self._merge_short_chunks(normalized, min_length=50, max_length=1000)
+        normalized = self._merge_short_chunks(normalized, min_length=200, max_length=1000)
         # 5) 去除空白
         normalized = [c.strip() for c in normalized if c and c.strip()]
         return normalized
@@ -294,8 +352,12 @@ class EnhancedDocumentService:
 
             try:
                 # Extract text content
-                extracted_content = extract_text_from_file(temp_file_path, mime_type)
-
+                extracted_content = await extract_text_from_file(temp_file_path, mime_type)
+                if extracted_content:
+                    preview = extracted_content[:200] + "..." if len(extracted_content) > 200 else extracted_content
+                    print(f"抽取成功: {preview}")
+                else:
+                    print("未抽取到内容")
                 # Generate summary
                 summary = await self.llm_service.summarize_text(extracted_content) if extracted_content else None
 

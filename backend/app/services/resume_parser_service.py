@@ -45,7 +45,7 @@ class ResumeParserService:
     async def extract_text_from_file(self, file_content: bytes, filename: str) -> str:
         """统一委派到文档工具模块进行文本抽取"""
         try:
-            return extract_text_from_bytes(file_content, filename)
+            return await extract_text_from_bytes(file_content, filename)
         except Exception as e:
             logger.error(f"提取文本内容失败: {e}")
             raise Exception(f"文件解析失败: {str(e)}")
