@@ -67,6 +67,8 @@ class EmailConfigService:
 
     async def delete(self, config: EmailConfig) -> None:
         await self.db.delete(config)
+        await self.db.commit()
+        await self.db.flush()
 
     async def test_connection(self, config: EmailConfig, password: Optional[str] = None) -> bool:
         reader_cfg = ReaderConfig(
@@ -152,6 +154,7 @@ class EmailFetchService:
     async def fetch_recent_attachments(
         self,
         config: EmailConfig,
+        creeate_by: UUID,
         limit: int = 10,
         subject_keyword: list = None,
         output_dir: Optional[Path] = None,
@@ -217,7 +220,7 @@ class EmailFetchService:
                     # 去重：按原始文件名检查是否已存在评价记录
                     try:
                         print(f"检查 {fname} 是否已存在评价记录")
-                        existing = await self.db.execute(select(ResumeEvaluation).where(ResumeEvaluation.original_filename == fname))
+                        existing = await self.db.execute(select(ResumeEvaluation).where(ResumeEvaluation.user_id == creeate_by , ResumeEvaluation.original_filename == fname))
                         records = existing.scalars().first()
                         if records:
                             print(f"{fname} 已存在评价记录，跳过")

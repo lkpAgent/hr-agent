@@ -18,6 +18,7 @@ if __name__ == '__main__':
     # file_path = r'E:\个人文件\安云数智.律为\项目相关\HRagent培训课件内容\湖南省水文条例_20250731.docx'
     # file_path = r'E:\个人文件\安云数智.律为\项目相关\HRagent培训课件内容\【测试工程师_长沙 7-10K】郑微微 5年.pdf'
     file_path = r'E:\个人文件\安云数智.律为\项目相关\AI知识竞赛\中国电子院E起创-“AI+”创新应用大赛报名表 -数字孪生下的利润预测模型0411 - 副本.doc'
+    file_path = r'E:\个人文件\安云数智.律为\产品相关\HR智能体平台\智联招聘_张为1_大数据开发_中文_20181119_1542608584687.docx'
     text = asyncio.run(extract_text_from_file(file_path))
     print("=== 提取的纯文本 ===")
     print(text)

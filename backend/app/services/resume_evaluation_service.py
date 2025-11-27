@@ -102,6 +102,7 @@ class ResumeEvaluationService:
             # 7. 保存评价结果
             evaluation_record = await self._save_evaluation_result(
                 user_id=user_id,
+                created_by=user_id,
                 file_info=file_info,
                 resume_text=resume_text,
                 ai_result=ai_result,
@@ -455,6 +456,7 @@ class ResumeEvaluationService:
     async def _save_evaluation_result(
         self,
         user_id: UUID,
+        created_by: UUID,
         file_info: Dict[str, Any],
         resume_text: str,
         ai_result: AIEvaluationResult,
@@ -467,6 +469,8 @@ class ResumeEvaluationService:
             # 直接创建ResumeEvaluation对象
             evaluation = ResumeEvaluation(
                 user_id=user_id,
+                created_by = created_by,
+                updated_by= created_by,
                 original_filename=file_info['filename'],
                 file_path=file_info.get('file_path'),
                 file_type=file_info['file_type'],
@@ -488,7 +492,6 @@ class ResumeEvaluationService:
             self.db.add(evaluation)
             await self.db.commit()
             await self.db.refresh(evaluation)
-            
             return evaluation
             
         except Exception as e:

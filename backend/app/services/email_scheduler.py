@@ -43,7 +43,7 @@ class EmailScheduler:
                             kws = parts if parts else ['简历']
                         else:
                             kws = ['简历','招聘','岗位','职位']
-                        log = await fetch_svc.fetch_recent_attachments(cfg, limit=10, subject_keyword=kws)
+                        log = await fetch_svc.fetch_recent_attachments(cfg, cfg.created_by, limit=10, subject_keyword=kws)
                         await db.commit()
             except Exception:
                 # swallow errors and continue

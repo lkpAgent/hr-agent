@@ -180,6 +180,10 @@
                   <el-icon><Check /></el-icon>
                   保存
                 </el-button>
+                <el-button v-if="!isCreatingNew" type="danger" @click="deleteEmail" :disabled="saving">
+                  <el-icon><Warning /></el-icon>
+                  删除
+                </el-button>
               </div>
             </div>
 
@@ -586,6 +590,31 @@ const fetchEmailList = async () => {
     ElMessage.error('获取邮箱列表失败')
   } finally {
     emailListLoading.value = false
+  }
+}
+
+const deleteEmail = async () => {
+  try {
+    if (!selectedEmail.value?.id) {
+      ElMessage.error('请选择要删除的邮箱配置')
+      return
+    }
+    await ElMessageBox.confirm('确定要删除该邮箱配置吗？该操作不可恢复。', '提示', {
+      confirmButtonText: '删除',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+    await emailConfigApi.deleteEmailConfig(selectedEmail.value.id)
+    ElMessage.success('删除成功')
+    selectedEmail.value = null
+    isCreatingNew.value = false
+    resetEmailForm()
+    await fetchEmailList()
+  } catch (error) {
+    if (error) {
+      console.error('删除邮箱配置失败:', error)
+      ElMessage.error('删除邮箱配置失败')
+    }
   }
 }
 

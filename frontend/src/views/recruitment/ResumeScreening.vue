@@ -66,6 +66,22 @@
                   <el-option label="90-100" value="90-100" />
                 </el-select>
               </div>
+              <div class="filter-group">
+                <el-select
+                  v-model="filters.dateRange"
+                  placeholder="按时间"
+                  clearable
+                  size="small"
+                  style="width: 160px"
+                  @change="applyFilters"
+                >
+                  <el-option label="不限" value="" />
+                  <el-option label="今天" value="today" />
+                  <el-option label="最近三天" value="last3" />
+                  <el-option label="最近一周" value="last7" />
+                  <el-option label="最近一个月" value="last30" />
+                </el-select>
+              </div>
 
               <div class="filter-group">
                 <el-button @click="resetFilters" size="small">
@@ -409,7 +425,8 @@ const pagination = reactive({
 const filters = reactive({
   keyword: '',
   scoreBucket: '',
-  scoreRange: [0, 100]
+  scoreRange: [0, 100],
+  dateRange: ''
 })
 
 // 上传相关
@@ -453,6 +470,32 @@ const filteredResumeList = computed(() => {
       if (s === '90-100') return sc >= 90 && sc <= 100
       return true
     })
+  }
+
+  // 按创建时间筛选
+  if (filters.dateRange) {
+    const now = new Date()
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const inRange = (d) => {
+      const dt = d ? new Date(d) : null
+      if (!dt || isNaN(dt.getTime())) return false
+      const diffMs = now.getTime() - dt.getTime()
+      const oneDay = 24 * 60 * 60 * 1000
+      if (filters.dateRange === 'today') {
+        return dt >= startOfToday
+      }
+      if (filters.dateRange === 'last3') {
+        return diffMs <= 3 * oneDay
+      }
+      if (filters.dateRange === 'last7') {
+        return diffMs <= 7 * oneDay
+      }
+      if (filters.dateRange === 'last30') {
+        return diffMs <= 30 * oneDay
+      }
+      return true
+    }
+    filtered = filtered.filter(resume => inRange(resume.createdAt || resume.created_at))
   }
 
   // 评分范围筛选
@@ -652,6 +695,7 @@ const resetFilters = () => {
   filters.keyword = ''
   filters.scoreBucket = ''
   filters.scoreRange = [0, 100]
+  filters.dateRange = ''
 }
 
 // 操作按钮处理函数

@@ -125,21 +125,22 @@ async def extract_text_from_file(file_path: str, mime_type: Optional[str] = None
 
             from docx import Document as DocxDocument
             try:
-                doc = DocxDocument(file_path)
-                parts = []
-                for p in doc.paragraphs:
-                    if p.text:
-                        parts.append(p.text)
-                if parts:
-                    print("docx解析成功")
-                    return '\n'.join(parts).strip()
-                else:
-                    import docx2txt
-                    try:
-                        text = docx2txt.process(file_path)
-                        return text.strip() if text else ''
-                    except Exception as e:
-                        print(f"docx2txt 读取失败: {e}")
+                import docx2txt
+                try:
+                    text = docx2txt.process(file_path)
+                    return text.strip() if text else ''
+                except Exception as e:
+                    print(f"docx2txt 读取失败: {e}")
+                    doc = DocxDocument(file_path)
+                    parts = []
+                    for p in doc.paragraphs:
+                        if p.text:
+                            parts.append(p.text)
+                    if parts:
+                        print("docx解析成功")
+                        return '\n'.join(parts).strip()
+                    else:
+                        print("docx解析失败")
                         return ''
             except Exception as e:
                 print(f"docx抽取失败: {e}")
