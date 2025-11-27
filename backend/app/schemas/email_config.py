@@ -19,6 +19,8 @@ class EmailConfigBase(BaseModel):
     fetch_interval: int = Field(30, ge=1, le=1440)
     auto_fetch: bool = False
     status: str = Field("active")
+    # Comma-separated keywords for subject filtering; supports full/half width commas
+    subject_keywords: Optional[str] = None
 
 
 class EmailConfigCreate(EmailConfigBase):
@@ -38,6 +40,7 @@ class EmailConfigUpdate(BaseModel):
     auto_fetch: Optional[bool] = None
     status: Optional[str] = None
     password: Optional[str] = Field(None, min_length=0, max_length=512)
+    subject_keywords: Optional[str] = None
 
 
 class EmailConfigInDB(EmailConfigBase):

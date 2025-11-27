@@ -39,7 +39,7 @@
                 <el-button 
                   type="primary" 
                   :icon="Clock" 
-                  @click="showChatHistory = true"
+                  @click="openChatHistory"
                   circle
                   title="历史对话"
                 />
@@ -366,6 +366,8 @@ const showChatHistory = ref(false)
 const uploading = ref(false)
 const fileList = ref([])
 const messagesContainer = ref(null)
+// 当前会话ID（用于多轮对话绑定同一会话）
+const currentConversationId = ref(null)
 
 // 历史对话列表
 const chatHistory = ref([])
@@ -378,6 +380,8 @@ const selectedKnowledgeBase = ref('')
 
 // 生命周期
 onMounted(async () => {
+  // 进入页面时清空当前会话ID，确保首轮对话不带ID
+  currentConversationId.value = null
   await loadKnowledgeBases()
   await loadChatHistory()
   applyRouteParamsAndMaybeAsk()
@@ -429,7 +433,6 @@ const loadKnowledgeBases = async () => {
   } catch (error) {
     console.error('加载知识库失败:', error)
     ElMessage.error('加载知识库失败')
-    // 开发环境兜底：提供一个演示知识库，支持根据路由kb_id设置
     if (import.meta.env.DEV) {
       const fallbackKbId = (route.query.kb_id || route.query.kbId || 'demo-kb').toString()
       knowledgeBases.value = [{ id: fallbackKbId, name: '演示知识库', document_count: 0 }]
@@ -504,6 +507,28 @@ const sendMessage = async () => {
       .slice(-10)
       .map(msg => ({ role: msg.type === 'user' ? 'user' : 'assistant', content: msg.content }))
 
+    // 若无会话ID，首次提交时创建会话（标题基于本次问题）
+    if (!currentConversationId.value) {
+      const conversationPayload = {
+        title: question.length > 50 ? question.slice(0, 50) + '...' : question,
+        description: question.slice(0, 100),
+        meta_data: { knowledge_base_id: selectedKnowledgeBase.value || null }
+      }
+      try {
+        const created = await api.post('/conversations/', conversationPayload)
+        if (created && created.id) {
+          currentConversationId.value = created.id
+        } else {
+          throw new Error('创建会话失败')
+        }
+      } catch (e) {
+        console.error('创建会话失败:', e)
+        ElMessage.error('创建会话失败')
+        isLoading.value = false
+        return
+      }
+    }
+
     // 使用 FormData 发送数据，因为后端期望 Form 格式
     const formData = new FormData()
     formData.append('question', question)
@@ -512,6 +537,7 @@ const sendMessage = async () => {
     }
     formData.append('context_limit', '5')
     formData.append('conversation_history', JSON.stringify(conversationHistory))
+    formData.append('conversation_id', String(currentConversationId.value))
     
     console.log('发送问题:', question)
     console.log('知识库ID:', selectedKnowledgeBase.value || '(未选择)')
@@ -550,6 +576,9 @@ const sendMessage = async () => {
             if (data.type === 'start') {
               // 设置来源信息
               assistantMessage.sources = data.sources || []
+              if (data.conversation_id) {
+                currentConversationId.value = data.conversation_id
+              }
               documentChunks.value = (data.sources || []).map((source, index) => ({
                 content: source.content || source.page_content,
                 source: source.document_title || source.title || '未知文档',
@@ -571,6 +600,9 @@ const sendMessage = async () => {
             } else if (data.type === 'end') {
               // 流式传输完成
               assistantMessage.isStreaming = false
+              if (data.conversation_id) {
+                currentConversationId.value = data.conversation_id
+              }
               
               // 如果end响应中包含sources，更新相关文档片段
               if (data.sources && data.sources.length > 0) {
@@ -675,60 +707,60 @@ const getScoreType = (score) => {
   return 'info'
 }
 
-// 历史对话相关方法
-const loadChatHistory = () => {
-  const saved = localStorage.getItem('chat_history')
-  if (saved) {
-    try {
-      chatHistory.value = JSON.parse(saved)
-    } catch (error) {
-      console.error('加载历史对话失败:', error)
-      chatHistory.value = []
-    }
-  }
-}
-
-const saveChatSession = () => {
-  if (messages.value.length === 0) return
-  
-  const session = {
-    id: Date.now(),
-    title: messages.value[0]?.content?.substring(0, 30) + '...',
-    preview: messages.value[0]?.content?.substring(0, 100) + '...',
-    messages: [...messages.value],
-    messageCount: messages.value.length,
-    timestamp: new Date(),
-    knowledgeBaseId: selectedKnowledgeBase.value
-  }
-  
-  // 保持最多20个历史对话
-  chatHistory.value.unshift(session)
-  if (chatHistory.value.length > 20) {
-    chatHistory.value = chatHistory.value.slice(0, 20)
-  }
-  
-  localStorage.setItem('chat_history', JSON.stringify(chatHistory.value))
-}
-
-const loadChatSession = (session) => {
-  messages.value = [...session.messages]
-  selectedKnowledgeBase.value = session.knowledgeBaseId
-  showChatHistory.value = false
-  
-  // 重新生成文档片段（如果有助手消息）
-  const lastAssistantMessage = messages.value.filter(m => m.type === 'assistant').pop()
-  if (lastAssistantMessage && lastAssistantMessage.sources) {
-    documentChunks.value = lastAssistantMessage.sources.map((source, index) => ({
-      content: source.content,
-      source: source.document_title || source.title,
-      score: source.similarity_score || source.score || 0.8,
-      highlighted: false
+// 历史对话相关方法（后端加载）
+const loadChatHistory = async () => {
+  try {
+    const res = await api.get('/conversations/', { params: { skip: 0, limit: 100 } })
+    const list = Array.isArray(res) ? res : (res.items || [])
+    chatHistory.value = list.map(conv => ({
+      id: conv.id,
+      title: conv.title || `对话 ${conv.id}`,
+      preview: conv.description || '',
+      messageCount: conv.message_count || 0,
+      timestamp: new Date(conv.updated_at || conv.created_at),
+      knowledgeBaseId: conv.meta_data?.knowledge_base_id || null
     }))
+  } catch (error) {
+    console.error('加载历史对话失败:', error)
+    ElMessage.error('加载历史对话失败')
   }
-  
-  nextTick(() => {
+}
+
+const loadChatSession = async (session) => {
+  try {
+    const res = await api.get(`/conversations/${session.id}/messages`)
+    const list = Array.isArray(res) ? res : (res.items || [])
+    messages.value = list.map(msg => ({
+      type: msg.role === 'user' ? 'user' : 'assistant',
+      content: msg.content,
+      sources: msg.context?.sources || [],
+      isStreaming: false
+    }))
+    selectedKnowledgeBase.value = session.knowledgeBaseId
+    showChatHistory.value = false
+    
+    // 如果最后一条助手消息包含sources，渲染文档片段
+    const lastAssistantMessage = messages.value.filter(m => m.type === 'assistant').pop()
+    if (lastAssistantMessage && lastAssistantMessage.sources) {
+      documentChunks.value = lastAssistantMessage.sources.map(source => ({
+        content: source.content,
+        source: source.document_title || source.title,
+        score: source.similarity_score || source.score || 0.8,
+        highlighted: false
+      }))
+    }
+    
+    await nextTick()
     scrollToBottom()
-  })
+  } catch (error) {
+    console.error('加载会话消息失败:', error)
+    ElMessage.error('加载会话消息失败')
+  }
+}
+
+const openChatHistory = async () => {
+  showChatHistory.value = true
+  await loadChatHistory()
 }
 
 const deleteChatSession = async (index) => {
@@ -738,13 +770,41 @@ const deleteChatSession = async (index) => {
       cancelButtonText: '取消',
       type: 'warning'
     })
-    
+
+    const session = chatHistory.value[index]
+    if (!session?.id) {
+      ElMessage.error('会话ID缺失，无法删除')
+      return
+    }
+
+    await api.delete(`/conversations/${session.id}`)
+
+    if (currentConversationId.value === session.id) {
+      currentConversationId.value = null
+      resetChatView()
+    }
+
+    // 从列表移除并提示
     chatHistory.value.splice(index, 1)
-    localStorage.setItem('chat_history', JSON.stringify(chatHistory.value))
     ElMessage.success('历史对话已删除')
-  } catch {
-    // 用户取消
+  } catch (err) {
+    // 用户取消或请求失败
+    if (err) {
+      console.error('删除历史对话失败:', err)
+      ElMessage.error('删除历史对话失败')
+    }
   }
+}
+
+const resetChatView = () => {
+  messages.value = []
+  documentChunks.value = []
+  currentMessage.value = ''
+  isLoading.value = false
+  showChatHistory.value = false
+  nextTick(() => {
+    scrollToBottom()
+  })
 }
 
 // 文档上传相关方法

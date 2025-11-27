@@ -5,6 +5,7 @@
     <content url="file://$MODULE_DIR$/backend">
       <excludeFolder url="file://$MODULE_DIR$/backend/venv" />
     </content>
+    <content url="file://$MODULE_DIR$/frontend" />
     <orderEntry type="jdk" jdkName="Python 3.12 virtualenv at E:\workspace-py\hr-agent\backend\venv" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>

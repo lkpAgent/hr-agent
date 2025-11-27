@@ -750,18 +750,12 @@ async def generate_scoring_criteria(
         
         # 构建查询内容
         query_parts = [
-            f"请基于以下JD内容，生成详细的简历评分标准：\n{request.jd_content}",
-            "\n请生成包含以下维度的评分标准：",
-            "1. 技能匹配度（40%）",
-            "2. 工作经验匹配度（30%）", 
-            "3. 教育背景匹配度（15%）",
-            "4. 项目经验匹配度（15%）",
-            "\n每个维度请提供具体的评分细则和分数区间。"
+            f"请基于以下JD内容，生成详细的简历评分标准。JD内容：\n{request.jd_content}",
         ]
-        
+
         if request.job_title:
             query_parts.append(f"\n岗位名称：{request.job_title}")
-            
+
         if request.requirements:
             if request.requirements.get('experience'):
                 query_parts.append(f"经验要求：{request.requirements['experience']}")
@@ -773,7 +767,7 @@ async def generate_scoring_criteria(
                     query_parts.append(f"技能要求：{', '.join(skills)}")
                 else:
                     query_parts.append(f"技能要求：{skills}")
-        
+
         query = "\n".join(query_parts)
         
         # 额外输入参数

@@ -41,6 +41,8 @@ markdown>=3.5.0  # Markdown文件处理
 chardet>=5.2.0   # 文件编码检测
 pdfplumber>=0.11.7  #pdf内容提取
 docx2txt>=0.8    # DOC文件处理（旧版Word）
+pymupdf==1.23.7 #旧doc文档处理
+olefile==0.47
 # 工作流编排和智能体
 celery>=5.3.0    # 异步任务队列
 redis>=5.0.0     # Redis缓存和消息队列

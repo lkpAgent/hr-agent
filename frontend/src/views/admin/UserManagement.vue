@@ -295,6 +295,29 @@
                     </el-col>
                   </el-row>
 
+                  <el-row :gutter="16" v-if="!isCreatingNew">
+                    <el-col :span="12">
+                      <el-form-item label="新密码（留空则不修改）" prop="editPassword">
+                        <el-input 
+                          v-model="userForm.editPassword" 
+                          type="password"
+                          placeholder="请输入新密码（可选）"
+                          show-password
+                        />
+                      </el-form-item>
+                    </el-col>
+                    <el-col :span="12">
+                      <el-form-item label="确认新密码" prop="editConfirmPassword">
+                        <el-input 
+                          v-model="userForm.editConfirmPassword" 
+                          type="password"
+                          placeholder="请再次输入新密码"
+                          show-password
+                        />
+                      </el-form-item>
+                    </el-col>
+                  </el-row>
+
                   <el-form-item label="用户状态" prop="status">
                     <el-radio-group v-model="userForm.status">
                       <el-radio label="active">启用</el-radio>
@@ -394,7 +417,7 @@ const pagination = reactive({
 
 // 用户表单
 const userFormRef = ref()
-const userForm = reactive({
+  const userForm = reactive({
   username: '',
   email: '',
   full_name: '',
@@ -403,11 +426,13 @@ const userForm = reactive({
   role_id: '',
   status: 'active',
   password: '',
-  confirmPassword: ''
-})
+  confirmPassword: '',
+  editPassword: '',
+  editConfirmPassword: ''
+  })
 
 // 表单验证规则
-const userRules = {
+  const userRules = {
   username: [
     { required: true, message: '请输入用户名', trigger: 'blur' },
     { min: 3, max: 20, message: '用户名长度在3-20个字符之间', trigger: 'blur' }
@@ -439,7 +464,28 @@ const userRules = {
       trigger: 'blur'
     }
   ]
-}
+  ,
+  editPassword: [
+    {
+      validator: (rule, value, callback) => {
+        if (!value) return callback()
+        if (value.length < 6) return callback(new Error('密码长度至少6位'))
+        callback()
+      },
+      trigger: 'blur'
+    }
+  ],
+  editConfirmPassword: [
+    {
+      validator: (rule, value, callback) => {
+        if (!userForm.editPassword && !value) return callback()
+        if (value !== userForm.editPassword) return callback(new Error('两次输入的密码不一致'))
+        callback()
+      },
+      trigger: 'blur'
+    }
+  ]
+  }
 
 // 重置密码相关
 const resetPasswordDialog = reactive({
@@ -501,6 +547,8 @@ const selectUser = async (user) => {
   userForm.status = user.status || 'active'
   userForm.password = ''
   userForm.confirmPassword = ''
+  userForm.editPassword = ''
+  userForm.editConfirmPassword = ''
 }
 
 const resetUserForm = () => {
@@ -515,6 +563,8 @@ const resetUserForm = () => {
   userForm.status = 'active'
   userForm.password = ''
   userForm.confirmPassword = ''
+  userForm.editPassword = ''
+  userForm.editConfirmPassword = ''
   
   if (userFormRef.value) {
     userFormRef.value.clearValidate()
@@ -541,11 +591,15 @@ const saveUser = async () => {
       // 调用创建用户API
     await userApi.createUser(userData)
     ElMessage.success('用户创建成功')
-    } else {
-      // 调用更新用户API
+  } else {
+    // 编辑场景：如果填写了新密码，则传给后端，后端仅在非空时更新
+    if (userForm.editPassword && userForm.editPassword.trim().length > 0) {
+      userData.password = userForm.editPassword.trim()
+    }
+    // 调用更新用户API
     await userApi.updateUser(selectedUser.value.id, userData)
     ElMessage.success('用户更新成功')
-    }
+  }
     
     await fetchUserList()
   } catch (error) {

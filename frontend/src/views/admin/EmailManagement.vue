@@ -193,162 +193,105 @@
                 label-position="top"
                 class="email-form"
               >
-                <!-- 基本信息 -->
                 <el-card class="form-card">
                   <template #header>
                     <div class="card-header">
                       <el-icon><InfoFilled /></el-icon>
-                      <span>基本信息</span>
+                      <span>邮箱配置</span>
                     </div>
                   </template>
-
                   <el-row :gutter="16">
-                    <el-col :span="12">
+                    <el-col :span="8">
                       <el-form-item label="配置名称" prop="name">
                         <el-input v-model="emailForm.name" placeholder="如：招聘邮箱" />
                       </el-form-item>
                     </el-col>
-                    <el-col :span="12">
+                    <el-col :span="8">
                       <el-form-item label="邮箱地址" prop="email">
                         <el-input v-model="emailForm.email" placeholder="hr@company.com" />
                       </el-form-item>
                     </el-col>
                   </el-row>
-
-                  <el-form-item label="状态" prop="status">
-                    <el-radio-group v-model="emailForm.status">
-                      <el-radio label="active">启用</el-radio>
-                      <el-radio label="inactive">禁用</el-radio>
-                    </el-radio-group>
-                  </el-form-item>
-                </el-card>
-
-                <!-- IMAP配置 -->
-                <el-card class="form-card">
-                  <template #header>
-                    <div class="card-header">
-                      <el-icon><Download /></el-icon>
-                      <span>IMAP接收配置</span>
-                    </div>
-                  </template>
-
-                  <el-row :gutter="16">
-                    <el-col :span="12">
+                  <el-row :gutter="24">
+                    <el-col :span="8">
                       <el-form-item label="IMAP服务器" prop="imap_server">
                         <el-input v-model="emailForm.imap_server" placeholder="imap.company.com" />
                       </el-form-item>
                     </el-col>
-                    <el-col :span="6">
-                      <el-form-item label="端口" prop="imap_port">
-                        <el-input-number 
-                          v-model="emailForm.imap_port" 
-                          :min="1" 
-                          :max="65535" 
-                          controls-position="right"
-                          style="width: 100%"
-                        />
+                    <el-col :span="8">
+                      <el-form-item label="IMAP端口" prop="imap_port">
+                        <el-input-number v-model="emailForm.imap_port" :min="1" :max="65535" controls-position="right" style="width: 100%" />
                       </el-form-item>
                     </el-col>
-                    <el-col :span="6">
-                      <el-form-item label="SSL加密" prop="imap_ssl">
+                    <el-col :span="8">
+                      <el-form-item label="IMAP SSL" prop="imap_ssl">
                         <el-switch v-model="emailForm.imap_ssl" />
                       </el-form-item>
                     </el-col>
+
                   </el-row>
-                </el-card>
-
-                <!-- SMTP配置 -->
-                <el-card class="form-card">
-                  <template #header>
-                    <div class="card-header">
-                      <el-icon><Upload /></el-icon>
-                      <span>SMTP发送配置</span>
-                    </div>
-                  </template>
-
-                  <el-row :gutter="16">
-                    <el-col :span="12">
+                  <el-row :gutter="24">
+                    <el-col :span="8">
                       <el-form-item label="SMTP服务器" prop="smtp_server">
                         <el-input v-model="emailForm.smtp_server" placeholder="smtp.company.com" />
                       </el-form-item>
                     </el-col>
-                    <el-col :span="6">
-                      <el-form-item label="端口" prop="smtp_port">
-                        <el-input-number 
-                          v-model="emailForm.smtp_port" 
-                          :min="1" 
-                          :max="65535" 
-                          controls-position="right"
-                          style="width: 100%"
-                        />
+                    <el-col :span="8">
+                      <el-form-item label="SMTP端口" prop="smtp_port">
+                        <el-input-number v-model="emailForm.smtp_port" :min="1" :max="65535" controls-position="right" style="width: 100%" />
                       </el-form-item>
                     </el-col>
-                    <el-col :span="6">
-                      <el-form-item label="SSL加密" prop="smtp_ssl">
+                    <el-col :span="8">
+                      <el-form-item label="SMTP SSL" prop="smtp_ssl">
                         <el-switch v-model="emailForm.smtp_ssl" />
                       </el-form-item>
                     </el-col>
                   </el-row>
-                </el-card>
-
-                <!-- 认证信息 -->
-                <el-card class="form-card">
-                  <template #header>
-                    <div class="card-header">
-                      <el-icon><Key /></el-icon>
-                      <span>认证信息</span>
-                    </div>
-                  </template>
-
-                  <el-form-item label="邮箱密码" prop="password">
-                    <el-input 
-                      v-model="emailForm.password" 
-                      type="password"
-                      placeholder="请输入邮箱密码"
-                      show-password
-                    />
-                    <template #suffix v-if="!isCreatingNew">
-                      <el-tooltip content="如果不需要修改密码，请留空" placement="top">
-                        <el-icon><InfoFilled /></el-icon>
-                      </el-tooltip>
-                    </template>
-                  </el-form-item>
-                </el-card>
-
-                <!-- 抓取设置 -->
-                <el-card class="form-card">
-                  <template #header>
-                    <div class="card-header">
-                      <el-icon><Clock /></el-icon>
-                      <span>简历抓取设置</span>
-                    </div>
-                  </template>
-
-                  <el-row :gutter="16">
+                  <el-row :gutter="24">
                     <el-col :span="8">
-                      <el-form-item label="抓取间隔(分钟)" prop="fetch_interval">
-                        <el-input-number 
-                          v-model="emailForm.fetch_interval" 
-                          :min="1" 
-                          :max="1440" 
-                          controls-position="right"
-                          style="width: 100%"
-                        />
+                      <el-form-item label="邮箱密码" prop="password">
+                        <el-input v-model="emailForm.password" type="password" placeholder="请输入邮箱密码" show-password />
                       </el-form-item>
                     </el-col>
                     <el-col :span="8">
+                      <el-form-item label="抓取间隔(分钟)" prop="fetch_interval">
+                        <el-input-number v-model="emailForm.fetch_interval" :min="1" :max="1440" controls-position="right" style="width: 100%" />
+                      </el-form-item>
+                    </el-col>
+                    <el-col :span="6">
                       <el-form-item label="自动抓取" prop="auto_fetch">
                         <el-switch v-model="emailForm.auto_fetch" />
                       </el-form-item>
                     </el-col>
+                  </el-row>
+                  <el-row :gutter="24">
+                    <el-col :span="16">
+                      <el-form-item label="邮件主题关键词" prop="password">
+                        <el-input v-model="emailForm.subject_keywords" type="text" placeholder="多个关键词用,隔开，如：简历,岗位,招聘" />
+                      </el-form-item>
+                    </el-col>
                     <el-col :span="8">
-                      <el-form-item label="抓取状态" prop="connection_status" v-if="!isCreatingNew">
-                        <el-tag :type="getConnectionType(emailForm.connection_status)">
-                          {{ getConnectionText(emailForm.connection_status) }}
-                        </el-tag>
+                      <el-form-item label="示例">
+                        <el-text>简历,岗位,招聘</el-text>
                       </el-form-item>
                     </el-col>
                   </el-row>
+                  <el-row :gutter="16">
+                    <el-col :span="12">
+                      <el-form-item label="状态" prop="status">
+                        <el-radio-group v-model="emailForm.status">
+                          <el-radio label="active">启用</el-radio>
+                          <el-radio label="inactive">禁用</el-radio>
+                        </el-radio-group>
+                      </el-form-item>
+                    </el-col>
+                    <el-col :span="12" v-if="!isCreatingNew">
+                      <el-form-item label="连接状态" prop="connection_status">
+                        <el-tag :type="getConnectionType(emailForm.connection_status)">{{ getConnectionText(emailForm.connection_status) }}</el-tag>
+                      </el-form-item>
+                    </el-col>
+                  </el-row>
+
                 </el-card>
               </el-form>
             </div>
@@ -480,6 +423,7 @@ const selectEmail = (email) => {
   emailForm.fetch_interval = email.fetch_interval
   emailForm.auto_fetch = email.auto_fetch
   emailForm.status = email.status
+  emailForm.subject_keywords = email.subject_keywords || ''
   emailForm.connection_status = email.connection_status
   
   // 加载日志
@@ -499,6 +443,7 @@ const resetEmailForm = () => {
   emailForm.fetch_interval = 30
   emailForm.auto_fetch = false
   emailForm.status = 'active'
+  emailForm.subject_keywords = ''
   emailForm.connection_status = 'unknown'
   
   if (emailFormRef.value) {
@@ -511,19 +456,20 @@ const saveEmail = async () => {
     await emailFormRef.value.validate()
     saving.value = true
     
-    const emailData = {
-      name: emailForm.name,
-      email: emailForm.email,
-      imap_server: emailForm.imap_server,
-      imap_port: emailForm.imap_port,
-      imap_ssl: emailForm.imap_ssl,
-      smtp_server: emailForm.smtp_server,
-      smtp_port: emailForm.smtp_port,
-      smtp_ssl: emailForm.smtp_ssl,
-      fetch_interval: emailForm.fetch_interval,
-      auto_fetch: emailForm.auto_fetch,
-      status: emailForm.status
-    }
+  const emailData = {
+    name: emailForm.name,
+    email: emailForm.email,
+    imap_server: emailForm.imap_server,
+    imap_port: emailForm.imap_port,
+    imap_ssl: emailForm.imap_ssl,
+    smtp_server: emailForm.smtp_server,
+    smtp_port: emailForm.smtp_port,
+    smtp_ssl: emailForm.smtp_ssl,
+    fetch_interval: emailForm.fetch_interval,
+    auto_fetch: emailForm.auto_fetch,
+    status: emailForm.status,
+    subject_keywords: emailForm.subject_keywords
+  }
     
     // 如果有密码才包含在数据中
     if (emailForm.password) {

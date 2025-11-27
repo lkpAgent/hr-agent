@@ -22,7 +22,8 @@ class KnowledgeBaseService:
     
     async def create_knowledge_base(
         self,
-        kb_data: KnowledgeBaseCreate
+        kb_data: KnowledgeBaseCreate,
+        current_user: UUID
     ) -> KnowledgeBase:
         """Create a new knowledge base"""
         try:
@@ -33,7 +34,9 @@ class KnowledgeBaseService:
                 is_searchable=kb_data.is_searchable,
                 category=kb_data.category,
                 tags=kb_data.tags or [],
-                meta_data=kb_data.meta_data or {}
+                meta_data=kb_data.meta_data or {},
+                created_by=current_user,
+                updated_by=current_user
             )
             
             self.db.add(knowledge_base)
@@ -96,7 +99,7 @@ class KnowledgeBaseService:
             # For now, return all public knowledge bases
             # In the future, this could include user-specific access control
             query = select(KnowledgeBase).where(
-                KnowledgeBase.is_public == True
+                KnowledgeBase.created_by == user_id
             ).order_by(desc(KnowledgeBase.created_at)).offset(skip).limit(limit)
             
             result = await self.db.execute(query)
@@ -106,9 +109,9 @@ class KnowledgeBaseService:
             logger.error(f"Error getting accessible knowledge bases for user {user_id}: {e}")
             raise
     
-    async def create(self, kb_data: KnowledgeBaseCreate) -> KnowledgeBase:
+    async def create(self, kb_data: KnowledgeBaseCreate, current_user: UUID) -> KnowledgeBase:
         """Create a new knowledge base (alias for create_knowledge_base)"""
-        return await self.create_knowledge_base(kb_data)
+        return await self.create_knowledge_base(kb_data, current_user)
     
     async def get_by_id(self, kb_id: str) -> Optional[KnowledgeBase]:
         """Get a knowledge base by ID (alias for get_knowledge_base)"""

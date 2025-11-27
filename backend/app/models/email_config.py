@@ -33,6 +33,8 @@ class EmailConfig(BaseModel):
     # Fetch settings
     fetch_interval = Column(Integer, nullable=False, default=30)
     auto_fetch = Column(Boolean, nullable=False, default=False)
+    # Subject keywords for filtering resume emails (comma-separated, supports full/half width commas)
+    subject_keywords = Column(Text, nullable=True)
 
     # Status
     status = Column(String(50), nullable=False, default="active")

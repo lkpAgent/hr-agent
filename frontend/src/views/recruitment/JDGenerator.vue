@@ -2321,17 +2321,22 @@ onUnmounted(() => {
 
 // 评分标准操作栏样式
 .scoring-actions {
-  position: relative;
-  z-index: 10; // 提高层级，确保不被SVG背景覆盖
+  position: sticky;
+  top: 0;
+  z-index: 20; // 提高层级，确保始终可见
   display: flex;
   gap: 12px;
-  margin-bottom: 20px;
-  padding: 16px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  margin-bottom: 12px;
+  padding: 12px 16px;
+  background: #fff;
+  border-bottom: 1px solid #ebeef5;
+}
+.scoring-content {
+  height: auto !important;
+  max-height: none !important;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto !important;
 }
 
 // 评分标准容器样式

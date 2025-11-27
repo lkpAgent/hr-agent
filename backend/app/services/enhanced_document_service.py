@@ -22,6 +22,7 @@ import tempfile
 from app.models.document import Document
 from app.models.knowledge_base import KnowledgeBase
 from app.services.llm_service import LLMService
+from app.utils.document_utils import get_mime_type_from_filename, extract_text_from_file
 from app.services.embedding_service import get_embedding_service
 from app.schemas.document import DocumentCreate, DocumentUpdate
 from app.core.config import settings
@@ -280,20 +281,20 @@ class EnhancedDocumentService:
             file_hash = hashlib.sha256(file_content).hexdigest()
 
             # Check if document already exists
-            existing_doc = await self._get_document_by_hash(file_hash, user_id)
+            existing_doc = await self._get_document_by_hash(file_hash, user_id, knowledge_base_id)
             if existing_doc:
                 logger.info(f"Document with hash {file_hash} already exists")
                 return existing_doc
 
             # Determine MIME type
-            mime_type = self._get_mime_type(filename)
+            mime_type = get_mime_type_from_filename(filename)
 
             # Save file temporarily for processing
             temp_file_path = await self._save_temp_file(file_content, filename)
 
             try:
                 # Extract text content
-                extracted_content = await self._extract_text_content(temp_file_path, mime_type)
+                extracted_content = extract_text_from_file(temp_file_path, mime_type)
 
                 # Generate summary
                 summary = await self.llm_service.summarize_text(extracted_content) if extracted_content else None
@@ -629,29 +630,20 @@ class EnhancedDocumentService:
     async def _get_document_by_hash(
         self,
         file_hash: str,
-        user_id: UUID
+        user_id: UUID,
+        knowledge_base_id: Optional[UUID] = None
     ) -> Optional[Document]:
         """Get document by file hash"""
         query = select(Document).where(
             Document.file_hash == file_hash,
+            Document.knowledge_base_id ==knowledge_base_id,
             Document.user_id == user_id
         )
         result = await self.db.execute(query)
         return result.scalar_one_or_none()
 
     def _get_mime_type(self, filename: str) -> str:
-        """Determine MIME type from filename"""
-        extension = filename.lower().split('.')[-1] if '.' in filename else ''
-        mime_types = {
-            'pdf': 'application/pdf',
-            'doc': 'application/msword',
-            'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            'txt': 'text/plain',
-            'md': 'text/markdown',
-            'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'xls': 'application/vnd.ms-excel'
-        }
-        return mime_types.get(extension, 'application/octet-stream')
+        return get_mime_type_from_filename(filename)
 
     async def _save_temp_file(self, content: bytes, filename: str) -> str:
         """Save file temporarily for processing"""
@@ -686,39 +678,7 @@ class EnhancedDocumentService:
         return file_path
 
     async def _extract_text_content(self, file_path: str, mime_type: str) -> str:
-        """Extract text content from file"""
-        try:
-            if mime_type == 'text/plain' or mime_type == 'text/markdown':
-                with open(file_path, 'r', encoding='utf-8') as f:
-                    return f.read()
-            
-            elif mime_type == 'application/pdf':
-                text = ""
-                with open(file_path, 'rb') as f:
-                    pdf_reader = PyPDF2.PdfReader(f)
-                    for page in pdf_reader.pages:
-                        text += page.extract_text() + "\n"
-                return text.strip()
-            
-            elif mime_type in ['application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']:
-                if mime_type == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
-                    doc = DocxDocument(file_path)
-                    text = ""
-                    for paragraph in doc.paragraphs:
-                        text += paragraph.text + "\n"
-                    return text.strip()
-                else:
-                    # For .doc files, we'd need python-docx2txt or similar
-                    logger.warning(f"Unsupported document format: {mime_type}")
-                    return ""
-            
-            else:
-                logger.warning(f"Unsupported file type: {mime_type}")
-                return ""
-                
-        except Exception as e:
-            logger.error(f"Error extracting text from {file_path}: {e}")
-            return ""
+        return extract_text_from_file(file_path, mime_type)
 
     async def get_document_by_id(
         self,

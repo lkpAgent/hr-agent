@@ -8,6 +8,7 @@ import tempfile
 from typing import BinaryIO, Tuple, Optional
 from uuid import UUID
 import mimetypes
+from app.utils.document_utils import extract_text_from_bytes, get_mime_type_from_filename
 
 from bs4 import BeautifulSoup
 
@@ -42,21 +43,9 @@ class ResumeParserService:
         return True, "文件验证通过"
     
     async def extract_text_from_file(self, file_content: bytes, filename: str) -> str:
-        """从文件中提取文本内容"""
+        """统一委派到文档工具模块进行文本抽取"""
         try:
-            _, ext = os.path.splitext(filename.lower())
-            
-            if ext == '.txt':
-                return await self._extract_from_txt(file_content)
-            elif ext == '.pdf':
-                return await self._extract_from_pdf(file_content)
-            elif ext == '.doc':
-                return await self._extract_from_doc(file_content)
-            elif ext == '.docx':
-                return await self._extract_from_docx(file_content)
-            else:
-                raise ValueError(f"不支持的文件格式: {ext}")
-                
+            return extract_text_from_bytes(file_content, filename)
         except Exception as e:
             logger.error(f"提取文本内容失败: {e}")
             raise Exception(f"文件解析失败: {str(e)}")

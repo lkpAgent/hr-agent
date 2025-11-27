@@ -43,7 +43,7 @@ async def create_knowledge_base(
     Create a new knowledge base
     """
     kb_service = KnowledgeBaseService(db)
-    knowledge_base = await kb_service.create(kb_data)
+    knowledge_base = await kb_service.create(kb_data, current_user.id)
     return knowledge_base
 
 

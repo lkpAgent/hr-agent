@@ -2,6 +2,7 @@
 Lightweight email fetch scheduler using asyncio tasks
 """
 import asyncio
+import re
 from typing import Dict
 from app.core.database import AsyncSessionLocal
 from app.models.email_config import EmailConfig
@@ -27,7 +28,6 @@ class EmailScheduler:
                 self.tasks[str(cfg.id)] = task
 
     async def _run_fetch_loop(self, config_id: str, interval_min: int, stopper: asyncio.Event):
-        subject_keyword = ['简历','招聘','岗位','BOSS直聘','职位']
         while not stopper.is_set():
             try:
                 async with AsyncSessionLocal() as db:
@@ -35,7 +35,15 @@ class EmailScheduler:
                     fetch_svc = EmailFetchService(db)
                     cfg = await cfg_svc.get(config_id)
                     if cfg and getattr(cfg, "auto_fetch", False) and getattr(cfg, "status", "active") == "active":
-                        log = await fetch_svc.fetch_recent_attachments(cfg, limit=10, subject_keyword=subject_keyword)
+                        # Parse keywords from config.subject_keywords, support full/half width commas
+                        raw = (getattr(cfg, 'subject_keywords', '') or '').strip()
+                        print('subject_keywords:',raw)
+                        if raw:
+                            parts = [p.strip() for p in re.split(r"[,，]", raw) if p.strip()]
+                            kws = parts if parts else ['简历']
+                        else:
+                            kws = ['简历','招聘','岗位','职位']
+                        log = await fetch_svc.fetch_recent_attachments(cfg, limit=10, subject_keyword=kws)
                         await db.commit()
             except Exception:
                 # swallow errors and continue

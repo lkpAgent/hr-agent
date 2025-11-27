@@ -114,7 +114,65 @@ class RAGService:
         )
         
         return rag_chain
-    
+
+    def _should_use_knowledge_base(self, question: str) -> bool:
+        """Decide whether the user's question should use knowledge base retrieval.
+        Returns True if KB should be used, otherwise False.
+        """
+        try:
+
+
+            # LLM-based classification with explicit instruction and examples
+            classification_prompt = (
+                "你是一个分类器。判断该问题是否需要基于知识库内容回答还是由大模型自主回答。\n"
+                "只有用户在明显是闲聊的内容才输出GENERAL。\n"
+                "其他情况都输出KB\n"
+                "示例：\n"
+                "问：讲个笑话\n答：GENERAL\n"
+                "问：你好\n答：GENERAL\n"
+                "问：你是谁\n答：GENERAL\n"
+                "问：作首诗\n答：GENERAL\n"
+                "而其他情况或者判断不准的时候，都输出KB\n"
+                f"问：{question}\n答："
+            )
+            # Use a deterministic classifier LLM
+            from langchain_openai import ChatOpenAI
+            classifier_llm = ChatOpenAI(
+                model=settings.LLM_MODEL,
+                api_key=settings.LLM_API_KEY,
+                base_url=settings.LLM_BASE_URL,
+                temperature=0,
+                max_tokens=10
+            )
+            resp = classifier_llm.invoke(classification_prompt)
+            content = getattr(resp, "content", str(resp))
+            return "KB" in (content or "").upper()
+        except Exception as e:
+            logger.warning(f"KB intent detection failed, defaulting to KB: {e}")
+            return True
+
+    def _create_general_chat_chain(self, conversation_history: List[Dict[str, str]]):
+        """General chat chain without KB context."""
+        system_prompt = (
+            "你是一个智能助手。直接根据用户问题进行回答，不使用任何知识库上下文。"
+            "保持回答准确、简洁、有帮助。"
+        )
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", system_prompt),
+            MessagesPlaceholder(variable_name="chat_history"),
+            ("human", "{question}")
+        ])
+        chain = (
+            {
+                "question": RunnablePassthrough(),
+                "chat_history": lambda x: conversation_history
+            }
+            | prompt
+            | self.llm
+            | StrOutputParser()
+        )
+        return chain
+
     async def ask_question_stream(
         self,
         question: str,
@@ -137,7 +195,39 @@ class RAGService:
             Dict containing streaming response data
         """
         try:
-            # Create collection name for user's documents
+            conversation_history = conversation_history or []
+
+            # Intent detection first
+            use_kb = self._should_use_knowledge_base(question)
+            print('use_kb=======', use_kb)
+            # If a specific knowledge base is provided, always use KB retrieval
+            # if knowledge_base_id:
+            #     use_kb = True
+
+            logger.info(f"ask_question_stream: use_kb={use_kb}, knowledge_base_id={knowledge_base_id}, user_id={user_id}")
+
+            if not use_kb:
+                # Stream general LLM answer without KB retrieval
+                yield {
+                    "type": "start",
+                    "question": question,
+                    "sources": [],
+                    "context_used": False,
+                    "num_sources": 0
+                }
+                general_chain = self._create_general_chat_chain(conversation_history)
+                async for chunk in general_chain.astream(question):
+                    if chunk:
+                        yield {"type": "chunk", "content": chunk}
+                yield {"type": "end", "complete": True, "sources": [], "num_sources": 0}
+                return
+
+            # Optionally enhance query for KB retrieval
+            # enhance = self._enhance_query_for_kb(question, conversation_history)
+            # rewritten_query = enhance.get("rewritten_query", question)
+            # expanded_keywords = enhance.get("expanded_keywords", [])
+
+            # Create collection name for user's documents (chunks only)
             collection_name = f"document_chunks_{user_id}".replace("-", "_")
             
             # Connect to vector store
