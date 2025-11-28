@@ -496,10 +496,11 @@
                :class="['document-item', { selected: selectedKnowledgeFiles.some(f => f.id === doc.id) }]"
                @click="toggleKnowledgeFile(doc)"
              >
-               <el-checkbox 
-                 :model-value="selectedKnowledgeFiles.some(f => f.id === doc.id)"
-                 @change="toggleKnowledgeFile(doc)"
-               />
+              <el-checkbox 
+                v-model="docSelectionMap[doc.id]"
+                @change="onDocCheckboxChange(doc)"
+                @click.stop
+              />
                <el-icon><Document /></el-icon>
                <span class="document-name">{{ doc.filename || doc.original_filename || '未命名文档' }}</span>
                <span class="document-size">{{ formatFileSize(doc.file_size) }}</span>
@@ -560,6 +561,7 @@ const knowledgeDocuments = ref([])
 const documentsLoading = ref(false)
 const documentSearchKeyword = ref('')
 const selectedKnowledgeFiles = ref([])
+const docSelectionMap = reactive({})
 
 // 表单数据
 const form = reactive({
@@ -1073,8 +1075,21 @@ const toggleKnowledgeFile = (file) => {
   const index = selectedKnowledgeFiles.value.findIndex(f => f.id === file.id)
   if (index > -1) {
     selectedKnowledgeFiles.value.splice(index, 1)
+    docSelectionMap[file.id] = false
   } else {
     selectedKnowledgeFiles.value.push(file)
+    docSelectionMap[file.id] = true
+  }
+}
+
+const onDocCheckboxChange = (file) => {
+  const checked = !!docSelectionMap[file.id]
+  const exists = selectedKnowledgeFiles.value.some(f => f.id === file.id)
+  if (checked && !exists) {
+    selectedKnowledgeFiles.value.push(file)
+  } else if (!checked && exists) {
+    const idx = selectedKnowledgeFiles.value.findIndex(f => f.id === file.id)
+    if (idx > -1) selectedKnowledgeFiles.value.splice(idx, 1)
   }
 }
 
@@ -1142,6 +1157,8 @@ const saveExam = async () => {
 const openKnowledgeDialog = async () => {
   showKnowledgeDialog.value = true
   selectedKnowledgeFiles.value = [...form.knowledgeFiles]
+  Object.keys(docSelectionMap).forEach(k => delete docSelectionMap[k])
+  selectedKnowledgeFiles.value.forEach(f => { docSelectionMap[f.id] = true })
   
   // 重置选择状态
   selectedKnowledgeBase.value = ''
@@ -1160,6 +1177,10 @@ const onKnowledgeBaseChange = async (knowledgeBaseId) => {
   
   if (knowledgeBaseId) {
     await fetchKnowledgeDocuments(knowledgeBaseId)
+    Object.keys(docSelectionMap).forEach(k => delete docSelectionMap[k])
+    knowledgeDocuments.value.forEach(doc => {
+      docSelectionMap[doc.id] = selectedKnowledgeFiles.value.some(f => f.id === doc.id)
+    })
   }
 }
 

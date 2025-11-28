@@ -56,7 +56,7 @@
                   placeholder="按分数"
                   clearable
                   size="small"
-                  style="width: 140px"
+                  style="width: 120px"
                   @change="applyFilters"
                 >
                   <el-option label="不限" value="" />
@@ -72,7 +72,7 @@
                   placeholder="按时间"
                   clearable
                   size="small"
-                  style="width: 160px"
+                  style="width: 120px"
                   @change="applyFilters"
                 >
                   <el-option label="不限" value="" />
@@ -84,9 +84,9 @@
               </div>
 
               <div class="filter-group">
-                <el-button @click="resetFilters" size="small">
+                <el-button @click="refreshResumeList" size="small">
                   <el-icon><Refresh /></el-icon>
-                  重置
+                  刷新
                 </el-button>
               </div>
             </div>
@@ -566,6 +566,11 @@ const exportSelected = () => {
   a.click()
   document.body.removeChild(a)
   URL.revokeObjectURL(url)
+}
+
+const refreshResumeList = () => {
+  pagination.page = 1
+  fetchResumeList()
 }
 const fetchResumeList = async () => {
   try {
