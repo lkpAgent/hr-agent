@@ -134,6 +134,8 @@
                 <el-button size="small" @click.stop="viewResume(candidate)">
                   查看简历
                 </el-button>
+
+
               </div>
             </div>
             
@@ -318,6 +320,10 @@
                         <el-icon><Close /></el-icon>
                         取消编辑
                       </el-button>
+                      <el-button  type="danger" @click="deleteInterviewPlan">
+                        <el-icon></el-icon>
+                        删除方案
+                      </el-button>
                     </div>
                     <div class="action-group">
                       <el-button type="primary" @click="startInterview" :disabled="isEditingPlan">
@@ -428,7 +434,7 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted, nextTick } from 'vue'
-import { ElMessage } from 'element-plus'
+import {ElMessage, ElMessageBox} from 'element-plus'
 import { 
   VideoCamera, 
   Search, 
@@ -672,6 +678,7 @@ const refreshCandidates = async () => {
 }
 
 const viewResume = (candidate) => {
+  console.log('查看简历：', candidate)
   selectCandidate(candidate)
   activeTab.value = 'resume'
 }
@@ -726,7 +733,7 @@ const generateInterviewPlan = async (candidate) => {
           
           // 调试：输出原始行数据
           if (l.startsWith('data:')) {
-            console.log('原始SSE数据行:', l)
+            // console.log('原始SSE数据行:', l)
           }
           
           if (l.startsWith('event:') || l.startsWith('id:') || l.startsWith('retry:')) continue
@@ -832,6 +839,34 @@ const regeneratePlan = () => {
   }
   generateInterviewPlan(selectedCandidate.value)
 }
+
+
+const deleteInterviewPlan = async (candidate) => {
+  try {
+    console.log('deleteInterviewPlan 被调用', interviewPlan.value.id)
+    await ElMessageBox.confirm(
+      `确定要删除 ${selectedCandidate.value.name} 的面试方案吗？`,
+      '确认删除',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+
+
+    await resumeApi.deleteInterviewPlan(interviewPlan.value.id)
+    ElMessage.success('删除成功')
+    interviewPlan.value = null
+
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('删除面试方案失败:', error)
+      ElMessage.error('删除失败')
+    }
+  }
+}
+
 
 // 编辑面试方案相关方法
 const toggleEditPlan = () => {

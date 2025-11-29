@@ -661,6 +661,7 @@ const viewResumeDetail = (resume) => {
 
 const deleteResume = async (resume) => {
   try {
+    console.log('删除简历:', resume)
     await ElMessageBox.confirm(
       `确定要删除 ${resume.name} 的简历吗？`,
       '确认删除',
@@ -881,6 +882,7 @@ onMounted(() => {
   fetchResumeList()
   fetchJDList()
 })
+
 
 // 监听JD选择变化
 watch(selectedJDId, (newValue) => {

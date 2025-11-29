@@ -3,8 +3,8 @@ Main API router for v1 endpoints
 """
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import auth, users, conversations, documents, knowledge_base, chat, knowledge_assistant, hr_workflows, interview_plan, intent_router, email_configs, roles, permissions
-from app.api.v1 import resume_evaluation
+from app.api.v1.endpoints import auth, users, conversations, documents, knowledge_base, chat, knowledge_assistant, \
+    hr_workflows, interview_plan, intent_router, email_configs, roles, permissions, resume_evaluation
 
 api_router = APIRouter()
 

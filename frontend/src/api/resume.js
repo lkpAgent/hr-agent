@@ -25,8 +25,12 @@ export const resumeApi = {
   deleteResume: (evaluationId) => {
     return request.delete(`/resume-evaluation/${evaluationId}`)
   },
+    // 获取简历列表
+  deleteInterviewPlan(planId) {
+      return request.delete(`/interview-plans/${planId}`)
+  },
 
-  // 更新简历状态
+    // 更新简历状态
   updateResumeStatus: (evaluationId, status) => {
     return request.put(`/resume-evaluation/${evaluationId}/status?status=${status}`)
   }

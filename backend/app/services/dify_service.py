@@ -87,7 +87,7 @@ class DifyService:
                                 chunk = chunk[6:]
                             
                             # Skip empty lines and [DONE] markers
-                            if not chunk or chunk == "[DONE]":
+                            if not chunk or chunk == "[DONE]" or chunk == "event: ping":
                                 continue
                             
                             try:

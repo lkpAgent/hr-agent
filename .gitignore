@@ -198,3 +198,4 @@ secrets/
 */__pycache__/
 .idea/*
 **.pyc
+*/*.d.ts
